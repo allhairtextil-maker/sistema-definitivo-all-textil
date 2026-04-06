@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>ALL HAIR — Sincronizar Firebase</title>
+<style>
+  body{font-family:'DM Sans',sans-serif;background:#f8fafc;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0}
+  .card{background:#fff;border-radius:16px;padding:40px;max-width:480px;width:100%;box-shadow:0 4px 24px rgba(0,0,0,0.08);text-align:center}
+  h1{font-size:22px;font-weight:800;margin-bottom:8px}
+  p{color:#64748b;font-size:14px;margin-bottom:24px}
+  .btn{background:linear-gradient(135deg,#8b5cf6,#ec4899);color:#fff;border:none;padding:14px 28px;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;width:100%;margin-bottom:10px;font-family:inherit}
+  .btn-sec{background:#f1f5f9;color:#1e293b;border:none;padding:12px 28px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;width:100%;font-family:inherit}
+  .status{margin-top:20px;padding:12px 16px;border-radius:10px;font-size:13px;font-weight:600;display:none}
+  .status.ok{background:#d1fae5;color:#065f46;display:block}
+  .status.err{background:#fee2e2;color:#991b1b;display:block}
+  .status.info{background:#ede9fe;color:#5b21b6;display:block}
+  .progress{margin-top:16px;background:#e2e8f0;border-radius:20px;height:8px;overflow:hidden;display:none}
+  .progress-bar{height:100%;background:linear-gradient(90deg,#8b5cf6,#ec4899);border-radius:20px;transition:width .3s;width:0%}
+</style>
+</head>
+<body>
+<div class="card">
+  <div style="font-size:40px;margin-bottom:12px">☁️</div>
+  <h1>Sincronizar com Firebase</h1>
+  <p>Suba seus dados locais para a nuvem ou baixe os dados mais recentes.</p>
+
+  <button class="btn" onclick="uploadFirebase()">⬆️ Subir dados locais → Firebase</button>
+  <button class="btn-sec" onclick="downloadFirebase()">⬇️ Baixar dados do Firebase → Local</button>
+  <button class="btn-sec" style="margin-top:6px" onclick="window.location.href='dashboard.html'">← Voltar ao sistema</button>
+
+  <div class="progress" id="prog"><div class="progress-bar" id="prog-bar"></div></div>
+  <div class="status" id="status"></div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAS9JeVtbfRekXIvKeEvnttTinJ4UT7zko",
+  authDomain: "all-hair-sistema-ed955.firebaseapp.com",
+  projectId: "all-hair-sistema-ed955",
+  storageBucket: "all-hair-sistema-ed955.firebasestorage.app",
+  messagingSenderId: "480465865239",
+  appId: "1:480465865239:web:6033e24988303beba92a52"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const EMPRESA = 'allhair';
+
+const KEYS = [
+  'allhair_pedidos','allhair_clientes','allhair_produtos','allhair_producoes2',
+  'allhair_estoque_v2','allhair_compras','allhair_fornecedores2','allhair_representantes',
+  'allhair_comissoes','allhair_config','allhair_socios','allhair_socios_mov',
+  'allhair_movimentos','allhair_caixa','allhair_contas_bancarias','allhair_despesas',
+  'allhair_recebimentos','allhair_pagamentos','allhair_apagar','allhair_a_receber',
+  'allhair_cores','allhair_embalagens','allhair_etiquetas','allhair_caixas',
+  'allhair_reservas','allhair_envios_v2','allhair_faccionistas','allhair_leads',
+  'allhair_melhorias','allhair_usuarios','allhair_sessao',
+];
+
+function setStatus(msg, type){ const el=document.getElementById('status'); el.textContent=msg; el.className='status '+type; }
+function setProgress(pct){ const p=document.getElementById('prog'); p.style.display='block'; document.getElementById('prog-bar').style.width=pct+'%'; }
+
+window.uploadFirebase = async function(){
+  setStatus('Subindo dados para o Firebase...','info');
+  setProgress(0);
+  let done=0, total=KEYS.filter(k=>localStorage.getItem(k)).length;
+  for(const key of KEYS){
+    const val=localStorage.getItem(key);
+    if(val){
+      try{
+        await setDoc(doc(db,EMPRESA,key),{value:JSON.parse(val),updatedAt:new Date().toISOString()});
+        done++;
+        setProgress(Math.round(done/total*100));
+      }catch(e){ console.error(key,e); }
+    }
+  }
+  setStatus(`✅ ${done} coleções salvas no Firebase com sucesso!`,'ok');
+};
+
+window.downloadFirebase = async function(){
+  setStatus('Baixando dados do Firebase...','info');
+  setProgress(0);
+  let done=0;
+  for(let i=0;i<KEYS.length;i++){
+    const key=KEYS[i];
+    try{
+      const snap=await getDoc(doc(db,EMPRESA,key));
+      if(snap.exists()){ localStorage.setItem(key,JSON.stringify(snap.data().value)); done++; }
+    }catch(e){ console.error(key,e); }
+    setProgress(Math.round((i+1)/KEYS.length*100));
+  }
+  setStatus(`✅ ${done} coleções baixadas do Firebase! Recarregando...`,'ok');
+  setTimeout(()=>{ window.location.href='dashboard.html'; },2000);
+};
+</script>
+</body>
+</html>
