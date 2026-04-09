@@ -3415,16 +3415,7 @@ function renderDashboard(){
     localStorage.setItem('allhair_pagamentos',JSON.stringify(p));}catch(e){}
   }
   // Init
-  function _initDash(){
-    try{
-      renderDashboard();
-    }catch(e){
-      var el=document.getElementById('dash-ped-count');
-      if(el)el.textContent='ERRO: '+e.message;
-      console.error('renderDashboard error:',e.message, e.stack);
-    }
-  }
-  // Also expose window.render for firebase-sync
+  // Expose window.render for firebase-sync auto-reload
   window.render = function(){
     producoes = JSON.parse(localStorage.getItem('allhair_producoes2')||'[]');
     envios    = JSON.parse(localStorage.getItem('allhair_envios_v2')||'[]');
@@ -3436,13 +3427,10 @@ function renderDashboard(){
     if(!estoque.virado) estoque.virado={};
     if(!estoque.virando) estoque.virando={};
     if(!estoque.embalado) estoque.embalado={};
-    try{renderDashboard();}catch(e){console.error(e);}
+    try{renderDashboard();}catch(e){console.error('renderDashboard:',e);}
   };
-  if(document.readyState==='loading'){
-    document.addEventListener('DOMContentLoaded',_initDash);
-  } else {
-    _initDash();
-  }
+  // Call renderDashboard directly — script is at end of body so DOM is ready
+  try{ renderDashboard(); }catch(e){ console.error('init renderDashboard:',e); }
 </script>
 </div>
 </div>
