@@ -2625,6 +2625,8 @@ main { padding: 24px 28px; }
   }
 
   function updateCounts(){
+    produtos=JSON.parse(localStorage.getItem('allhair_produtos')||'[]');
+    cores=JSON.parse(localStorage.getItem('allhair_cores')||'[]');
     document.getElementById('tc-prod').textContent=produtos.length;
     document.getElementById('tc-cores').textContent=cores.length;
     document.getElementById('tc-emb').textContent=embalagens.length;
@@ -2870,7 +2872,7 @@ main { padding: 24px 28px; }
       nome,
       ref:document.getElementById('p-ref')?.value||'',
       tecidoTipo:document.getElementById('p-tecido-tipo')?.value||'liso',
-      codigo:document.getElementById('p-codigo').value,
+      codigo:document.getElementById('p-codigo')?.value||'',
       status:document.getElementById('p-status').value,tecido,
       rendimento:parseFloat(rendimento),
       poliester:parseFloat(document.getElementById('p-poliester').value||80),
