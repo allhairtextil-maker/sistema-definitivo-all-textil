@@ -2978,6 +2978,12 @@ main { padding: 24px 28px; }
     renderProdutos();renderCores();renderEmbalagens();renderEtiquetas();renderCaixas();updateCounts();
   };
   renderProdutos();renderCores();updateCounts();
+  // Force re-render after 2s to catch Firebase sync
+  setTimeout(function(){
+    produtos=JSON.parse(localStorage.getItem('allhair_produtos')||'[]');
+    cores=JSON.parse(localStorage.getItem('allhair_cores')||'[]');
+    renderProdutos();renderCores();updateCounts();
+  }, 2000);
 </script>
 </div>
 </div>
