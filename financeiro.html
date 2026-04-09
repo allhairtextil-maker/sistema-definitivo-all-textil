@@ -2084,7 +2084,6 @@ main { padding: 24px 28px; }
 <body>
 <script>(function(){var s=localStorage.getItem("allhair_sessao");if(!s){window.location.href="login.html";}})();</script>
 <script src="acesso.js"></script>
-<script src="firebase-sync.js"></script>
 
 
 <div class="sidebar">
@@ -2971,7 +2970,7 @@ main { padding: 24px 28px; }
     el.innerHTML=html;
   }
 
-  function render(){
+  window.render=function render(){
     const mn = mesNome(mesAtual);
     ['mes-label-resumo','mes-label-dre','mes-label-fluxo'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=mn.charAt(0).toUpperCase()+mn.slice(1);});
     renderResumo();
@@ -3704,5 +3703,6 @@ main { padding: 24px 28px; }
   window.toggleStatus=toggleStatus;
 })();
 </script>
+<script src="firebase-sync.js"></script>
 </body>
 </html>

@@ -73,8 +73,10 @@
       showIndicator('✅ Sincronizado!', '#059669');
       setTimeout(hideIndicator, 2000);
       // Reload page content after sync
-      if (loaded > 0 && typeof window.init === 'function') window.init();
-      else if (loaded > 0 && typeof window.render === 'function') window.render();
+      if (loaded > 0) {
+        if (typeof window.render === 'function') window.render();
+        else if (typeof window.init === 'function') window.init();
+      }
       console.log('Firebase sync down: ' + loaded + ' keys');
     } catch(e) {
       console.warn('Firebase sync failed, using local data:', e);
@@ -100,7 +102,7 @@
     document.addEventListener('DOMContentLoaded', syncDown);
   } else {
     // Small delay to let page JS initialize first
-    setTimeout(syncDown, 300);
+    setTimeout(syncDown, 1000);
   }
 
   // Expose manual sync

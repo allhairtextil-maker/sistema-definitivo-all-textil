@@ -2083,7 +2083,6 @@ main { padding: 24px 28px; }
 <body>
 <script>(function(){var s=localStorage.getItem("allhair_sessao");if(!s){window.location.href="login.html";}})();</script>
 <script src="acesso.js"></script>
-<script src="firebase-sync.js"></script>
 
 
 <div class="sidebar">
@@ -2905,6 +2904,8 @@ main { padding: 24px 28px; }
   function deleteProduto(id){if(!confirm('Excluir este produto?'))return;produtos=produtos.filter(x=>x.id!==id);save();renderProdutos();updateCounts();}
 
   function renderProdutos(){
+    // Reload from localStorage in case Firebase updated it
+    produtos=JSON.parse(localStorage.getItem('allhair_produtos')||'[]');
     const q=(document.getElementById('search-prod').value||'').toLowerCase();
     const f=produtos.filter(p=>((p.ref?'['+p.ref+'] ':'')+p.nome).toLowerCase().includes(q)||(p.codigo||'').toLowerCase().includes(q)||(p.ncm||'').includes(q)||(p.ean13||'').includes(q));
     updateCounts();
@@ -2965,6 +2966,15 @@ main { padding: 24px 28px; }
     }).join('');
   }
 
+  // Expose render for firebase-sync auto-reload
+  window.render = function(){
+    produtos  = JSON.parse(localStorage.getItem('allhair_produtos')||'[]');
+    cores     = JSON.parse(localStorage.getItem('allhair_cores')||'[]');
+    embalagens= JSON.parse(localStorage.getItem('allhair_embalagens')||'[]');
+    etiquetas = JSON.parse(localStorage.getItem('allhair_etiquetas')||'[]');
+    caixas    = JSON.parse(localStorage.getItem('allhair_caixas')||'[]');
+    renderProdutos();renderCores();renderEmbalagens();renderEtiquetas();renderCaixas();updateCounts();
+  };
   renderProdutos();renderCores();updateCounts();
 </script>
 </div>
@@ -3085,5 +3095,6 @@ main { padding: 24px 28px; }
   window.toggleStatus=toggleStatus;
 })();
 </script>
+<script src="firebase-sync.js"></script>
 </body>
 </html>
