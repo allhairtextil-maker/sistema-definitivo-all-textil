@@ -2107,7 +2107,9 @@ main { padding: 24px 28px; }
 </div>
 <div class="page-content">
 <div class="tabs-bar">
-  <div class="tab active" onclick="switchTab('clientes')">👥 Clientes <span class="tab-count" id="tc-cli">0</span></div>
+  <div class="tab active" onclick="switchTab('clientes')">👥 Clientes</div>
+  <div class="tab" onclick="switchTab('abc')">📊 Curva ABC</div>
+  <div class="tab" onclick="switchTab('inativos')">⚠️ Inativos <span class="tab-count" id="tc-cli">0</span></div>
   <div class="tab" onclick="switchTab('transportadoras')">🚚 Transportadoras <span class="tab-count" id="tc-transp">0</span></div>
 </div>
 
@@ -2303,6 +2305,139 @@ main { padding: 24px 28px; }
   let clientes = JSON.parse(localStorage.getItem('allhair_clientes') || '[]');
   let transportadoras = JSON.parse(localStorage.getItem('allhair_transportadoras') || '[]');
   let editingCliId = null, editingTranspId = null;
+
+
+  function renderABC(){
+    var wrap=document.getElementById('abc-wrap');
+    if(!wrap)return;
+    var pedidos=JSON.parse(localStorage.getItem('allhair_pedidos')||'[]');
+    
+    // Calculate total per client
+    var totais={};
+    pedidos.filter(function(p){return p.status==='finalizado';}).forEach(function(p){
+      var cid=p.clienteId||p.clienteNome;
+      var total=(p.itens||[]).reduce(function(s,i){return s+Number(i.total||0);},0);
+      if(!totais[cid])totais[cid]={nome:p.clienteNome,total:0,pedidos:0};
+      totais[cid].total+=total;
+      totais[cid].pedidos++;
+    });
+    
+    var lista=Object.values(totais).sort(function(a,b){return b.total-a.total;});
+    var totalGeral=lista.reduce(function(s,x){return s+x.total;},0);
+    
+    if(!lista.length){
+      wrap.innerHTML='<div style="text-align:center;padding:40px;color:var(--text2)">Nenhum pedido finalizado ainda.</div>';
+      return;
+    }
+    
+    var acum=0;
+    var rows=lista.map(function(cl,i){
+      acum+=cl.total;
+      var pctAcum=totalGeral>0?acum/totalGeral*100:0;
+      var pctTotal=totalGeral>0?cl.total/totalGeral*100:0;
+      var cat=pctAcum<=80?'A':pctAcum<=95?'B':'C';
+      var corCat={'A':'#10b981','B':'#3b82f6','C':'#94a3b8'}[cat];
+      return '<tr style="border-bottom:1px solid var(--border)">'+
+        '<td style="padding:10px 12px;font-weight:700;color:var(--text2)">'+(i+1)+'</td>'+
+        '<td style="padding:10px 12px"><span style="background:'+corCat+'20;color:'+corCat+';padding:2px 10px;border-radius:20px;font-weight:800;font-size:12px">'+cat+'</span></td>'+
+        '<td style="padding:10px 12px;font-weight:700">'+cl.nome+'</td>'+
+        '<td style="padding:10px 12px;font-weight:700;color:var(--purple)">'+fmt(cl.total)+'</td>'+
+        '<td style="padding:10px 12px;text-align:center">'+cl.pedidos+'</td>'+
+        '<td style="padding:10px 12px;color:var(--text2)">'+pctTotal.toFixed(1)+'%</td>'+
+        '<td style="padding:10px 12px">'+
+          '<div style="background:var(--bg);border-radius:20px;height:6px;overflow:hidden;width:100px">'+
+            '<div style="height:100%;border-radius:20px;background:'+corCat+';width:'+Math.min(100,pctTotal*3)+'%"></div>'+
+          '</div>'+
+        '</td>'+
+      '</tr>';
+    });
+    
+    // Summary cards
+    var clA=lista.filter(function(_,i){var a=0;for(var j=0;j<=i;j++)a+=lista[j].total;return a/totalGeral<=0.8;});
+    var clB=lista.filter(function(_,i){var a=0;for(var j=0;j<=i;j++)a+=lista[j].total;var p=a/totalGeral;return p>0.8&&p<=0.95;});
+    var clC=lista.filter(function(_,i){var a=0;for(var j=0;j<=i;j++)a+=lista[j].total;return a/totalGeral>0.95;});
+    
+    wrap.innerHTML=
+      '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px">'+
+      [
+        {cat:'A',desc:'Clientes estratégicos',qtd:clA.length,pct:'80%',fat:clA.reduce(function(s,x){return s+x.total;},0),cor:'#10b981'},
+        {cat:'B',desc:'Clientes importantes',qtd:clB.length,pct:'15%',fat:clB.reduce(function(s,x){return s+x.total;},0),cor:'#3b82f6'},
+        {cat:'C',desc:'Clientes potenciais',qtd:clC.length,pct:'5%',fat:clC.reduce(function(s,x){return s+x.total;},0),cor:'#94a3b8'},
+      ].map(function(k){
+        return '<div style="background:var(--white);border:1px solid var(--border);border-radius:14px;padding:16px;border-left:4px solid '+k.cor+'">'+
+          '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">'+
+            '<span style="background:'+k.cor+'20;color:'+k.cor+';padding:3px 12px;border-radius:20px;font-weight:900;font-size:14px">'+k.cat+'</span>'+
+            '<span style="font-size:13px;color:var(--text2)">'+k.desc+'</span>'+
+          '</div>'+
+          '<div style="font-size:22px;font-weight:900;color:'+k.cor+'">'+k.qtd+' clientes</div>'+
+          '<div style="font-size:12px;color:var(--text2);margin-top:4px">Representam '+k.pct+' do faturamento · '+fmt(k.fat)+'</div>'+
+        '</div>';
+      }).join('')+
+      '</div>'+
+      '<div style="background:var(--white);border:1px solid var(--border);border-radius:14px;overflow:hidden">'+
+        '<table style="width:100%;border-collapse:collapse">'+
+          '<thead><tr style="background:var(--bg)">'+
+            '<th style="padding:8px 12px;text-align:left;font-size:11px;font-weight:700;color:var(--text2)">#</th>'+
+            '<th style="padding:8px 12px;font-size:11px;font-weight:700;color:var(--text2)">CLASSE</th>'+
+            '<th style="padding:8px 12px;text-align:left;font-size:11px;font-weight:700;color:var(--text2)">CLIENTE</th>'+
+            '<th style="padding:8px 12px;text-align:left;font-size:11px;font-weight:700;color:var(--text2)">FATURAMENTO</th>'+
+            '<th style="padding:8px 12px;text-align:center;font-size:11px;font-weight:700;color:var(--text2)">PEDIDOS</th>'+
+            '<th style="padding:8px 12px;text-align:left;font-size:11px;font-weight:700;color:var(--text2)">% DO TOTAL</th>'+
+            '<th style="padding:8px 12px;font-size:11px;font-weight:700;color:var(--text2)">PARTICIPAÇÃO</th>'+
+          '</tr></thead>'+
+          '<tbody>'+rows.join('')+'</tbody>'+
+        '</table>'+
+      '</div>';
+  }
+
+  function renderInativos(){
+    var wrap=document.getElementById('inativos-wrap');
+    if(!wrap)return;
+    var dias=parseInt(document.getElementById('dias-inativo')?.value||60);
+    var pedidos=JSON.parse(localStorage.getItem('allhair_pedidos')||'[]');
+    var hoje=new Date(); hoje.setHours(0,0,0,0);
+    var limite=new Date(hoje); limite.setDate(limite.getDate()-dias);
+    
+    // Last order per client
+    var ultimoPedido={};
+    pedidos.forEach(function(p){
+      if(!p.data)return;
+      var d=new Date(p.data+' 00:00');
+      var cid=p.clienteId||p.clienteNome;
+      if(!ultimoPedido[cid]||d>ultimoPedido[cid].data){
+        ultimoPedido[cid]={data:d,nome:p.clienteNome,total:(p.itens||[]).reduce(function(s,i){return s+Number(i.total||0);},0)};
+      }
+    });
+    
+    var inativos=Object.values(ultimoPedido).filter(function(c){return c.data<limite;});
+    inativos.sort(function(a,b){return a.data-b.data});
+    
+    if(!inativos.length){
+      wrap.innerHTML='<div style="text-align:center;padding:40px;color:var(--green);font-weight:700;font-size:15px">✅ Nenhum cliente inativo há mais de '+dias+' dias!</div>';
+      return;
+    }
+    
+    wrap.innerHTML='<div style="background:var(--white);border:1px solid var(--border);border-radius:14px;overflow:hidden">'+
+      '<div style="padding:12px 16px;border-bottom:1px solid var(--border);background:#fff7ed;font-weight:800;color:#92400e">'+
+        '⚠️ '+inativos.length+' cliente(s) sem compra há mais de '+dias+' dias'+
+      '</div>'+
+      inativos.map(function(cl){
+        var diasSem=Math.ceil((hoje-cl.data)/(1000*60*60*24));
+        var cor=diasSem>120?'#ef4444':diasSem>90?'#f59e0b':'#94a3b8';
+        return '<div style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px">'+
+          '<div style="width:10px;height:10px;border-radius:50%;background:'+cor+';flex-shrink:0"></div>'+
+          '<div style="flex:1">'+
+            '<div style="font-weight:700">'+cl.nome+'</div>'+
+            '<div style="font-size:12px;color:var(--text2)">Último pedido: '+cl.data.toLocaleDateString('pt-BR')+'</div>'+
+          '</div>'+
+          '<div style="text-align:right">'+
+            '<div style="font-size:13px;font-weight:900;color:'+cor+'">'+diasSem+' dias sem comprar</div>'+
+            '<div style="font-size:11px;color:var(--text2)">Último valor: '+fmt(cl.total)+'</div>'+
+          '</div>'+
+        '</div>';
+      }).join('')+
+    '</div>';
+  }
 
   function saveData() {
     localStorage.setItem('allhair_clientes', JSON.stringify(clientes));

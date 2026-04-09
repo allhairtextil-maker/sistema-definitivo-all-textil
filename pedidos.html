@@ -2156,7 +2156,9 @@ main { padding: 24px 28px; }
 <div id="ped-dash" style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:20px"></div>
 <div id="ped-atraso-banner" style="display:none;margin-bottom:16px"></div>
 <div class="tabs-bar">
-  <div class="tab active" onclick="switchTab('kanban')">📋 Kanban <span class="tab-count" id="tc-kanban">0</span></div>
+  <div class="tab active" onclick="switchTab('kanban')">📋 Kanban</div>
+  <div class="tab" onclick="switchTab('agenda')">📅 Agenda de Entregas</div>
+  <div class="tab" onclick="switchTab('ciclo')">⏱️ Ciclo do Pedido <span class="tab-count" id="tc-kanban">0</span></div>
   <div class="tab" onclick="switchTab('lista')">📑 Todos os Pedidos <span class="tab-count" id="tc-lista">0</span></div>
 </div>
 
@@ -2358,6 +2360,164 @@ main { padding: 24px 28px; }
   let reservas = JSON.parse(localStorage.getItem('allhair_reservas') || '{}');
   let config   = JSON.parse(localStorage.getItem('allhair_config')   || '{}');
   let estoque  = JSON.parse(localStorage.getItem('allhair_estoque_v2') || '{}');
+
+
+  function renderAgenda(){
+    var alertasEl=document.getElementById('agenda-alertas');
+    var semanasEl=document.getElementById('agenda-semanas');
+    if(!semanasEl)return;
+    
+    var hoje=new Date(); hoje.setHours(0,0,0,0);
+    var abertos=pedidos.filter(function(p){return ['recebido','producao','pronto'].includes(p.status)&&p.entrega;});
+    abertos.sort(function(a,b){return new Date(a.entrega)-new Date(b.entrega);});
+    
+    // Alertas críticos
+    var atrasados=abertos.filter(function(p){return new Date(p.entrega+' 00:00')<hoje;});
+    var hoje3=new Date(hoje); hoje3.setDate(hoje3.getDate()+3);
+    var urgentes=abertos.filter(function(p){var d=new Date(p.entrega+' 00:00');return d>=hoje&&d<=hoje3;});
+    
+    var alertasHtml='';
+    if(atrasados.length)alertasHtml+='<div style="background:#fee2e2;border:1px solid #fca5a5;border-left:4px solid #ef4444;border-radius:8px;padding:12px 16px;margin-bottom:8px"><div style="font-weight:800;color:#ef4444">🚨 '+atrasados.length+' pedido(s) em atraso</div><div style="font-size:12px;color:#991b1b;margin-top:4px">'+atrasados.map(function(p){return p.clienteNome;}).join(', ')+'</div></div>';
+    if(urgentes.length)alertasHtml+='<div style="background:#fef3c7;border:1px solid #fcd34d;border-left:4px solid #f59e0b;border-radius:8px;padding:12px 16px"><div style="font-weight:800;color:#92400e">⚠️ '+urgentes.length+' entrega(s) nos próximos 3 dias</div><div style="font-size:12px;color:#78350f;margin-top:4px">'+urgentes.map(function(p){return p.clienteNome+' ('+new Date(p.entrega+' 00:00').toLocaleDateString('pt-BR')+')';}).join(' · ')+'</div></div>';
+    if(alertasEl)alertasEl.innerHTML=alertasHtml;
+    
+    // Group by week
+    if(!abertos.length){
+      semanasEl.innerHTML='<div style="text-align:center;padding:40px;color:var(--text2)"><div style="font-size:32px;margin-bottom:8px">📅</div><div>Nenhuma entrega agendada</div></div>';
+      return;
+    }
+    
+    var semanas={};
+    abertos.forEach(function(p){
+      var d=new Date(p.entrega+' 00:00');
+      var sem=new Date(d); sem.setDate(sem.getDate()-sem.getDay());
+      var key=sem.toISOString().split('T')[0];
+      if(!semanas[key])semanas[key]={inicio:sem,pedidos:[]};
+      semanas[key].pedidos.push(p);
+    });
+    
+    semanasEl.innerHTML=Object.keys(semanas).sort().map(function(key){
+      var sem=semanas[key];
+      var fim=new Date(sem.inicio); fim.setDate(fim.getDate()+6);
+      var isPast=fim<hoje;
+      return '<div style="background:var(--white);border:1px solid var(--border);border-radius:14px;overflow:hidden">'+
+        '<div style="padding:12px 16px;background:'+(isPast?'#fee2e2':'var(--purple-light)')+';border-bottom:1px solid var(--border)">'+
+          '<div style="font-weight:800;font-size:14px;color:'+(isPast?'#ef4444':'var(--purple)')+'">'+
+            'Semana de '+sem.inicio.toLocaleDateString('pt-BR')+ ' a '+fim.toLocaleDateString('pt-BR')+
+            ' <span style="font-size:12px;font-weight:600">('+sem.pedidos.length+' entrega(s))</span>'+
+          '</div>'+
+        '</div>'+
+        sem.pedidos.map(function(p){
+          var diasFaltam=Math.ceil((new Date(p.entrega+' 00:00')-hoje)/(1000*60*60*24));
+          var cor=diasFaltam<0?'#ef4444':diasFaltam<=3?'#f59e0b':'#10b981';
+          var total=(p.itens||[]).reduce(function(s,i){return s+Number(i.total||0);},0);
+          return '<div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px">'+
+            '<div style="width:8px;height:8px;border-radius:50%;background:'+cor+';flex-shrink:0"></div>'+
+            '<div style="flex:1">'+
+              '<div style="font-weight:700">'+p.clienteNome+'</div>'+
+              '<div style="font-size:12px;color:var(--text2)">'+new Date(p.entrega+' 00:00').toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'})+'</div>'+
+            '</div>'+
+            '<div style="text-align:right">'+
+              '<div style="font-weight:800;color:var(--purple)">'+fmt(total)+'</div>'+
+              '<div style="font-size:11px;font-weight:700;color:'+cor+'">'+
+                (diasFaltam<0?Math.abs(diasFaltam)+'d atraso':diasFaltam===0?'Hoje!':diasFaltam+'d')+
+              '</div>'+
+            '</div>'+
+            '<div style="background:'+(['recebido'].includes(p.status)?'#fef3c7':p.status==='producao'?'#ede9fe':'#d1fae5')+';color:'+(['recebido'].includes(p.status)?'#92400e':p.status==='producao'?'#5b21b6':'#065f46')+';padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700">'+p.status+'</div>'+
+          '</div>';
+        }).join('')+
+      '</div>';
+    }).join('');
+  }
+
+  function renderCiclo(){
+    var kpisEl=document.getElementById('ciclo-kpis');
+    var garEl=document.getElementById('ciclo-gargalos');
+    var listaEl=document.getElementById('ciclo-lista');
+    if(!kpisEl)return;
+    
+    var finalizados=pedidos.filter(function(p){return p.status==='finalizado'&&p.data&&p.entrega;});
+    
+    if(!finalizados.length){
+      kpisEl.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:30px;color:var(--text2)">Nenhum pedido finalizado ainda para calcular ciclo.</div>';
+      return;
+    }
+    
+    var ciclos=finalizados.map(function(p){
+      var inicio=new Date(p.data+' 00:00');
+      var fim=new Date(p.entrega+' 00:00');
+      return Math.ceil((fim-inicio)/(1000*60*60*24));
+    }).filter(function(d){return d>0;});
+    
+    var mediaCiclo=ciclos.length?ciclos.reduce(function(s,d){return s+d;},0)/ciclos.length:0;
+    var minCiclo=ciclos.length?Math.min.apply(null,ciclos):0;
+    var maxCiclo=ciclos.length?Math.max.apply(null,ciclos):0;
+    
+    // Status distribution
+    var statusDist={};
+    pedidos.forEach(function(p){statusDist[p.status]=(statusDist[p.status]||0)+1;});
+    
+    kpisEl.innerHTML=[
+      {icon:'⏱️',label:'Ciclo médio',val:mediaCiclo.toFixed(1)+' dias',sub:'do pedido à entrega',cor:'var(--purple)'},
+      {icon:'🏆',label:'Mais rápido',val:minCiclo+' dias',sub:'melhor desempenho',cor:'#10b981'},
+      {icon:'🐢',label:'Mais lento',val:maxCiclo+' dias',sub:'pior desempenho',cor:'#f59e0b'},
+      {icon:'📊',label:'Total analisados',val:finalizados.length+' pedidos',sub:'pedidos finalizados',cor:'var(--blue)'},
+    ].map(function(k){
+      return '<div style="background:var(--white);border:1px solid var(--border);border-radius:14px;padding:16px 18px">'+
+        '<div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px">'+k.icon+' '+k.label+'</div>'+
+        '<div style="font-size:22px;font-weight:900;color:'+k.cor+';margin-bottom:2px">'+k.val+'</div>'+
+        '<div style="font-size:11px;color:var(--text2)">'+k.sub+'</div>'+
+      '</div>';
+    }).join('');
+    
+    // Status distribution
+    if(garEl){
+      var statusLabels={'recebido':'Aguardando produção','producao':'Em produção','pronto':'Pronto p/ envio','finalizado':'Finalizado','cancelado':'Cancelado'};
+      garEl.innerHTML='<div style="background:var(--white);border:1px solid var(--border);border-radius:14px;padding:16px">'+
+        '<div style="font-weight:800;font-size:14px;margin-bottom:14px">📊 Distribuição por Status</div>'+
+        '<div style="display:flex;flex-direction:column;gap:8px">'+
+        Object.entries(statusDist).map(function(e){
+          var pct=Math.round(e[1]/pedidos.length*100);
+          var cores={'recebido':'#f59e0b','producao':'#8b5cf6','pronto':'#3b82f6','finalizado':'#10b981','cancelado':'#ef4444'};
+          var cor=cores[e[0]]||'#94a3b8';
+          return '<div style="display:flex;align-items:center;gap:10px">'+
+            '<span style="font-size:13px;font-weight:600;width:160px">'+( statusLabels[e[0]]||e[0])+'</span>'+
+            '<div style="flex:1;background:var(--bg);border-radius:20px;height:8px;overflow:hidden">'+
+              '<div style="height:100%;border-radius:20px;background:'+cor+';width:'+pct+'%"></div>'+
+            '</div>'+
+            '<span style="font-size:13px;font-weight:700;color:'+cor+';width:50px;text-align:right">'+e[1]+' ('+pct+'%)</span>'+
+          '</div>';
+        }).join('')+
+        '</div></div>';
+    }
+    
+    // Last 10 finalized with their cycle
+    if(listaEl){
+      listaEl.innerHTML='<div style="background:var(--white);border:1px solid var(--border);border-radius:14px;overflow:hidden">'+
+        '<div style="padding:12px 16px;border-bottom:1px solid var(--border);font-weight:800">Últimos pedidos finalizados</div>'+
+        '<table style="width:100%;border-collapse:collapse">'+
+        '<thead><tr style="background:var(--bg)">'+
+          '<th style="padding:8px 12px;text-align:left;font-size:11px;font-weight:700;color:var(--text2)">CLIENTE</th>'+
+          '<th style="padding:8px 12px;text-align:center;font-size:11px;font-weight:700;color:var(--text2)">ABERTURA</th>'+
+          '<th style="padding:8px 12px;text-align:center;font-size:11px;font-weight:700;color:var(--text2)">ENTREGA</th>'+
+          '<th style="padding:8px 12px;text-align:center;font-size:11px;font-weight:700;color:var(--text2)">CICLO</th>'+
+          '<th style="padding:8px 12px;text-align:right;font-size:11px;font-weight:700;color:var(--text2)">VALOR</th>'+
+        '</tr></thead><tbody>'+
+        finalizados.slice(-10).reverse().map(function(p){
+          var dias=Math.ceil((new Date(p.entrega+' 00:00')-new Date(p.data+' 00:00'))/(1000*60*60*24));
+          var cor=dias<=7?'#10b981':dias<=15?'#f59e0b':'#ef4444';
+          var total=(p.itens||[]).reduce(function(s,i){return s+Number(i.total||0);},0);
+          return '<tr style="border-bottom:1px solid var(--border)">'+
+            '<td style="padding:10px 12px;font-weight:600">'+p.clienteNome+'</td>'+
+            '<td style="padding:10px 12px;text-align:center;font-size:12px;color:var(--text2)">'+new Date(p.data+' 00:00').toLocaleDateString('pt-BR')+'</td>'+
+            '<td style="padding:10px 12px;text-align:center;font-size:12px;color:var(--text2)">'+new Date(p.entrega+' 00:00').toLocaleDateString('pt-BR')+'</td>'+
+            '<td style="padding:10px 12px;text-align:center"><span style="background:'+cor+'20;color:'+cor+';padding:2px 10px;border-radius:20px;font-size:12px;font-weight:700">'+dias+'d</span></td>'+
+            '<td style="padding:10px 12px;text-align:right;font-weight:700">'+fmt(total)+'</td>'+
+          '</tr>';
+        }).join('')+
+        '</tbody></table></div>';
+    }
+  }
 
   function saveReservas(){ localStorage.setItem('allhair_reservas', JSON.stringify(reservas)); }
 
@@ -2585,6 +2745,8 @@ main { padding: 24px 28px; }
   function nextNum(){ const nums=pedidos.map(p=>parseInt((p.numero||'0').replace(/\D/g,''))||0); return 'PED-'+ String((Math.max(0,...nums)+1)).padStart(4,'0'); }
 
   function switchTab(tab){
+    if(tab==='agenda'){renderAgenda();}
+    if(tab==='ciclo'){renderCiclo();}
     document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
     document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
     document.querySelector('.tab[onclick="switchTab(\''+tab+'\')"]').classList.add('active');

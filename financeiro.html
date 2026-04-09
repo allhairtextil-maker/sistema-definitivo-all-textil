@@ -2307,6 +2307,26 @@ main { padding: 24px 28px; }
   </div>
 </div>
 
+<div class="tab-content" id="tab-saude">
+<main>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+    <h1 class="page-title">💚 Saúde Financeira</h1>
+    <div class="mes-selector">
+      <button class="mes-btn" onclick="mesAnterior()">‹</button>
+      <div class="mes-label" id="mes-label-saude"></div>
+      <button class="mes-btn" onclick="mesProximo()">›</button>
+    </div>
+  </div>
+  <div id="saude-kpis" style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px"></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+    <div id="saude-equilibrio"></div>
+    <div id="saude-reserva"></div>
+  </div>
+  <div id="saude-fluxo-projecao" style="margin-bottom:16px"></div>
+  <div id="saude-alertas"></div>
+</main>
+</div>
+
 <div class="tab-content" id="tab-dre">
 <main>
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
@@ -2972,7 +2992,7 @@ main { padding: 24px 28px; }
 
   window.render=function render(){
     const mn = mesNome(mesAtual);
-    ['mes-label-resumo','mes-label-dre','mes-label-fluxo'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=mn.charAt(0).toUpperCase()+mn.slice(1);});
+    ['mes-label-resumo','mes-label-dre','mes-label-fluxo','mes-label-saude'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=mn.charAt(0).toUpperCase()+mn.slice(1);});
     renderResumo();
     renderReceber();
     renderPagar();
@@ -3279,6 +3299,119 @@ main { padding: 24px 28px; }
         <button class="btn-icon danger" onclick="delDespesa('${d.id}')">🗑️</button>
       </div></td>
     </tr>`).join('');
+  }
+
+
+  function renderSaude(){
+    var contas=JSON.parse(localStorage.getItem('allhair_contas_bancarias')||'[]');
+    var mn=mesNome(mesAtual);
+    var el=document.getElementById('mes-label-saude');
+    if(el)el.textContent=mn.charAt(0).toUpperCase()+mn.slice(1);
+    
+    var recMes=getReceitaMes();
+    var despMes=getDespesasMes();
+    var lucro=recMes-despMes;
+    var margem=recMes>0?lucro/recMes*100:0;
+    var totalRec=getTotalReceber();
+    var totalPag=getTotalPagar();
+    var saldo=contas.reduce(function(s,ct){return s+Number(ct.saldo||0);},0);
+    
+    // Despesas fixas mensais
+    var despFixas=despesas.filter(function(d){return d.tipo==='fixo'&&d.ativo;})
+      .reduce(function(s,d){return s+Number(d.valor||0);},0);
+    
+    // Ponto de equilíbrio
+    var margemContrib=recMes>0?margem/100:0.3;
+    var pontoEq=margemContrib>0?despFixas/margemContrib:0;
+    var pctEq=pontoEq>0?Math.min(100,recMes/pontoEq*100):0;
+    
+    // KPIs
+    var kpisEl=document.getElementById('saude-kpis');
+    if(kpisEl){
+      kpisEl.innerHTML=[
+        {icon:'💰',label:'Faturamento',val:fmt(recMes),sub:'A receber: '+fmt(totalRec),cor:recMes>0?'#10b981':'#94a3b8'},
+        {icon:'💸',label:'Despesas',val:fmt(despMes),sub:'A pagar: '+fmt(totalPag),cor:'#ef4444'},
+        {icon:lucro>=0?'📈':'📉',label:'Resultado',val:fmt(lucro),sub:'Margem: '+fmtPct(margem),cor:lucro>=0?'#10b981':'#ef4444'},
+        {icon:'🏦',label:'Saldo Caixa',val:fmt(saldo),sub:saldo>despFixas?'Cobre '+Math.floor(saldo/Math.max(despFixas,1))+'x desp. fixas':'Atenção ao caixa',cor:saldo>despFixas?'#10b981':'#f59e0b'},
+      ].map(function(k){
+        return '<div style="background:var(--white);border:1px solid var(--border);border-radius:14px;padding:18px 20px">'+
+          '<div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">'+k.icon+' '+k.label+'</div>'+
+          '<div style="font-size:24px;font-weight:900;color:'+k.cor+';margin-bottom:4px">'+k.val+'</div>'+
+          '<div style="font-size:12px;color:var(--text2)">'+k.sub+'</div>'+
+        '</div>';
+      }).join('');
+    }
+    
+    // Ponto de equilíbrio
+    var eqEl=document.getElementById('saude-equilibrio');
+    if(eqEl){
+      var eqCor=pctEq>=100?'#10b981':pctEq>=70?'#f59e0b':'#ef4444';
+      eqEl.innerHTML='<div style="background:var(--white);border:1px solid var(--border);border-radius:14px;padding:18px">'+
+        '<div style="font-weight:800;font-size:14px;margin-bottom:12px">⚖️ Ponto de Equilíbrio</div>'+
+        '<div style="display:flex;justify-content:space-between;margin-bottom:6px">'+
+          '<span style="font-size:13px;color:var(--text2)">Meta mínima para cobrir fixos</span>'+
+          '<span style="font-weight:800;color:'+eqCor+'">'+Math.round(pctEq)+'%</span>'+
+        '</div>'+
+        '<div style="background:var(--bg);border-radius:20px;height:8px;overflow:hidden;margin-bottom:10px">'+
+          '<div style="height:100%;border-radius:20px;background:'+eqCor+';width:'+pctEq+'%;transition:width 1s"></div>'+
+        '</div>'+
+        '<div style="display:flex;justify-content:space-between;font-size:12px">'+
+          '<span style="color:var(--text2)">Atual: <strong>'+fmt(recMes)+'</strong></span>'+
+          '<span style="color:var(--text2)">Mínimo: <strong>'+fmt(pontoEq)+'</strong></span>'+
+        '</div>'+
+        (recMes<pontoEq?'<div style="margin-top:10px;padding:8px 12px;background:#fef3c7;border-radius:8px;font-size:12px;font-weight:600;color:#92400e">⚠️ Faltam '+fmt(pontoEq-recMes)+' para cobrir os custos fixos</div>':
+        '<div style="margin-top:10px;padding:8px 12px;background:#d1fae5;border-radius:8px;font-size:12px;font-weight:600;color:#065f46">✅ Custos fixos cobertos! Lucro de '+fmt(recMes-pontoEq)+'</div>')+
+      '</div>';
+    }
+    
+    // Projeção 30/60/90 dias
+    var diasMes=new Date(new Date().getFullYear(),new Date().getMonth()+1,0).getDate();
+    var diaAtual=new Date().getDate();
+    var ritmo=diaAtual>0?recMes/diaAtual:0;
+    var proj30=ritmo*30, proj60=ritmo*60, proj90=ritmo*90;
+    var projEl=document.getElementById('saude-fluxo-projecao');
+    if(projEl){
+      projEl.innerHTML='<div style="background:var(--white);border:1px solid var(--border);border-radius:14px;padding:18px">'+
+        '<div style="font-weight:800;font-size:14px;margin-bottom:14px">📅 Projeção de Faturamento</div>'+
+        '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">'+
+        [
+          {label:'30 dias',val:proj30,sub:'Próximo mês'},
+          {label:'60 dias',val:proj60,sub:'2 meses'},
+          {label:'90 dias',val:proj90,sub:'Trimestre'},
+        ].map(function(p){
+          return '<div style="background:var(--bg);border-radius:10px;padding:14px;text-align:center">'+
+            '<div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:6px">'+p.label+'</div>'+
+            '<div style="font-size:20px;font-weight:900;color:var(--purple)">'+fmt(p.val)+'</div>'+
+            '<div style="font-size:11px;color:var(--text2);margin-top:4px">'+p.sub+'</div>'+
+          '</div>';
+        }).join('')+
+        '</div>'+
+        '<div style="margin-top:12px;padding:10px 14px;background:var(--bg);border-radius:8px;font-size:12px;color:var(--text2)">'+
+          '📊 Baseado no ritmo de <strong>'+fmt(ritmo)+'/dia</strong> (dia '+diaAtual+' do mês)'+
+        '</div>'+
+      '</div>';
+    }
+    
+    // Alertas de saúde
+    var alertasEl=document.getElementById('saude-alertas');
+    if(alertasEl){
+      var alertas=[];
+      if(saldo<despFixas)alertas.push({cor:'#ef4444',msg:'⚠️ Saldo em caixa menor que despesas fixas mensais',sub:'Risco de fluxo negativo'});
+      if(totalPag>saldo+totalRec)alertas.push({cor:'#ef4444',msg:'🚨 Contas a pagar excedem caixa + a receber',sub:'Situação crítica de liquidez'});
+      if(margem<15&&recMes>0)alertas.push({cor:'#f59e0b',msg:'📉 Margem abaixo de 15%',sub:'Revisar custos ou preços'});
+      if(recMes<pontoEq&&pontoEq>0)alertas.push({cor:'#f59e0b',msg:'⚖️ Abaixo do ponto de equilíbrio',sub:'Faltam '+fmt(pontoEq-recMes)+' para cobrir fixos'});
+      if(totalRec>recMes*0.5)alertas.push({cor:'#f59e0b',msg:'📋 Alto valor em aberto a receber',sub:fmt(totalRec)+' pendentes'});
+      if(!alertas.length)alertas.push({cor:'#10b981',msg:'✅ Saúde financeira OK',sub:'Nenhum alerta crítico este mês'});
+      
+      alertasEl.innerHTML='<div style="display:flex;flex-direction:column;gap:8px">'+
+        alertas.map(function(a){
+          return '<div style="background:'+a.cor+'15;border:1px solid '+a.cor+'40;border-left:4px solid '+a.cor+';border-radius:8px;padding:12px 16px">'+
+            '<div style="font-weight:700;font-size:13px;color:'+a.cor+'">'+a.msg+'</div>'+
+            '<div style="font-size:12px;color:var(--text2);margin-top:2px">'+a.sub+'</div>'+
+          '</div>';
+        }).join('')+
+      '</div>';
+    }
   }
 
   function renderDRE(){

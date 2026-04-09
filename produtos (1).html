@@ -2083,7 +2083,6 @@ main { padding: 24px 28px; }
 <body>
 <script>(function(){var s=localStorage.getItem("allhair_sessao");if(!s){window.location.href="login.html";}})();</script>
 <script src="acesso.js"></script>
-<script src="firebase-sync.js"></script>
 
 
 <div class="sidebar">
@@ -2143,11 +2142,10 @@ main { padding: 24px 28px; }
   <div class="tab active" onclick="switchTab('produtos')">🧶 Produtos <span class="tab-count" id="tc-prod">0</span></div>
   <div class="tab" onclick="switchTab('cores')">🎨 Cores <span class="tab-count" id="tc-cores">0</span></div>
   <div class="tab" onclick="switchTab('embalagens')">📦 Embalagens <span class="tab-count" id="tc-emb">0</span></div>
+  <div class="tab" onclick="switchTab('margens')">💰 Margens
+  </div>
   <div class="tab" onclick="switchTab('etiquetas')">🏷️ Etiquetas <span class="tab-count" id="tc-etq">0</span></div>
   <div class="tab" onclick="switchTab('caixas')">📫 Caixas <span class="tab-count" id="tc-caixas">0</span></div>
-  <div class="tab" onclick="switchTab('cores')">🎨 Cores <span class="tab-count" id="tc-cores">0</span></div>
-  <div class="tab" onclick="switchTab('embalagens')">📦 Embalagens <span class="tab-count" id="tc-emb">0</span></div>
-  <div class="tab" onclick="switchTab('etiquetas')">🏷️ Etiquetas <span class="tab-count" id="tc-etq">0</span></div>
 </div>
 
 <!-- TAB PRODUTOS -->
@@ -2204,6 +2202,16 @@ main { padding: 24px 28px; }
 </main>
 </div>
 
+
+<div class="tab-content" id="tab-margens">
+<main>
+  <div style="margin-bottom:20px">
+    <h1 class="page-title">💰 Margem Real por Produto</h1>
+    <div style="font-size:13px;color:var(--text2);margin-top:4px">Baseado no preço de venda e custo estimado cadastrado em cada produto.</div>
+  </div>
+  <div id="margens-wrap"></div>
+</main>
+</div>
 <div class="tab-content" id="tab-etiquetas">
 <main>
   <div class="topbar-actions" style="margin-bottom:16px">
@@ -2466,6 +2474,86 @@ main { padding: 24px 28px; }
   let coresSel=[];
 
 
+
+
+  function renderMargens(){
+    var wrap=document.getElementById('margens-wrap');
+    if(!wrap)return;
+    
+    var ativos=produtos.filter(function(p){return p.status==='ativo'&&p.preco>0;});
+    ativos.sort(function(a,b){
+      var mA=a.preco&&a.custo?(a.preco-a.custo)/a.preco*100:0;
+      var mB=b.preco&&b.custo?(b.preco-b.custo)/b.preco*100:0;
+      return mB-mA;
+    });
+    
+    if(!ativos.length){
+      wrap.innerHTML='<div style="text-align:center;padding:40px;color:var(--text2)">Cadastre preço e custo nos produtos para ver a margem.</div>';
+      return;
+    }
+    
+    // Summary stats
+    var comCusto=ativos.filter(function(p){return p.custo>0;});
+    var margemMedia=comCusto.length?comCusto.reduce(function(s,p){return s+(p.preco-p.custo)/p.preco*100;},0)/comCusto.length:0;
+    var melhores=comCusto.filter(function(p){return (p.preco-p.custo)/p.preco*100>=30;}).length;
+    
+    wrap.innerHTML=
+      '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px">'+
+      [
+        {icon:'📊',label:'Margem média',val:margemMedia.toFixed(1)+'%',sub:comCusto.length+' produtos com custo',cor:margemMedia>=30?'#10b981':margemMedia>=15?'#f59e0b':'#ef4444'},
+        {icon:'🏆',label:'Margem ≥30%',val:melhores+' produtos',sub:'Alta rentabilidade',cor:'#10b981'},
+        {icon:'⚠️',label:'Sem custo',val:(ativos.length-comCusto.length)+' produtos',sub:'Cadastre o custo',cor:'#94a3b8'},
+      ].map(function(k){
+        return '<div style="background:var(--white);border:1px solid var(--border);border-radius:14px;padding:16px">'+
+          '<div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;margin-bottom:8px">'+k.icon+' '+k.label+'</div>'+
+          '<div style="font-size:22px;font-weight:900;color:'+k.cor+'">'+k.val+'</div>'+
+          '<div style="font-size:12px;color:var(--text2);margin-top:4px">'+k.sub+'</div>'+
+        '</div>';
+      }).join('')+
+      '</div>'+
+      '<div style="background:var(--white);border:1px solid var(--border);border-radius:14px;overflow:hidden">'+
+        '<table style="width:100%;border-collapse:collapse">'+
+          '<thead><tr style="background:var(--bg)">'+
+            '<th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:700;color:var(--text2)">PRODUTO</th>'+
+            '<th style="padding:10px 14px;text-align:right;font-size:11px;font-weight:700;color:var(--text2)">PREÇO</th>'+
+            '<th style="padding:10px 14px;text-align:right;font-size:11px;font-weight:700;color:var(--text2)">CUSTO</th>'+
+            '<th style="padding:10px 14px;text-align:right;font-size:11px;font-weight:700;color:var(--text2)">LUCRO/PCT</th>'+
+            '<th style="padding:10px 14px;text-align:center;font-size:11px;font-weight:700;color:var(--text2)">MARGEM</th>'+
+            '<th style="padding:10px 14px;font-size:11px;font-weight:700;color:var(--text2)">BARRA</th>'+
+          '</tr></thead><tbody>'+
+          ativos.map(function(p){
+            var margem=p.custo>0?(p.preco-p.custo)/p.preco*100:null;
+            var cor=margem===null?'#94a3b8':margem>=30?'#10b981':margem>=15?'#f59e0b':'#ef4444';
+            var lucro=p.custo>0?p.preco-p.custo:null;
+            return '<tr style="border-bottom:1px solid var(--border)">'+
+              '<td style="padding:12px 14px"><div style="font-weight:700">'+p.nome+'</div><div style="font-size:11px;color:var(--text2)">'+(p.tecidoTipo||'').toUpperCase()+'</div></td>'+
+              '<td style="padding:12px 14px;text-align:right;font-weight:700">'+fmt(p.preco)+'</td>'+
+              '<td style="padding:12px 14px;text-align:right;color:var(--text2)">'+(p.custo>0?fmt(p.custo):'—')+'</td>'+
+              '<td style="padding:12px 14px;text-align:right;font-weight:700;color:'+cor+'">'+(lucro!==null?fmt(lucro):'—')+'</td>'+
+              '<td style="padding:12px 14px;text-align:center">'+
+                (margem!==null?'<span style="background:'+cor+'20;color:'+cor+';padding:3px 12px;border-radius:20px;font-weight:800;font-size:13px">'+margem.toFixed(1)+'%</span>':'<span style="color:#94a3b8;font-size:12px">Sem custo</span>')+
+              '</td>'+
+              '<td style="padding:12px 14px">'+
+                (margem!==null?'<div style="background:var(--bg);border-radius:20px;height:7px;overflow:hidden;width:100px"><div style="height:100%;border-radius:20px;background:'+cor+';width:'+Math.min(100,margem)+'%"></div></div>':'—')+
+              '</td>'+
+            '</tr>';
+          }).join('')+
+          '</tbody></table>'+
+      '</div>';
+  }
+
+  function calcMargemProd(){
+    var preco=parseFloat(document.getElementById('p-preco').value||0);
+    var custo=parseFloat(document.getElementById('p-custo').value||0);
+    var el=document.getElementById('p-margem-calc');
+    if(!el)return;
+    if(preco>0&&custo>0){
+      var margem=((preco-custo)/preco*100).toFixed(1);
+      el.value=margem+'% (R$ '+(preco-custo).toFixed(2)+')';
+      el.style.color=margem>=30?'var(--green)':margem>=15?'var(--orange)':'var(--red)';
+    } else { el.value='—'; }
+  }
+
   function onProdTipo(){ /* deprecated - replaced by tecido-tipo */ }
   function populatePaiSelect(id){ /* deprecated */ }
   function getFilhosDoPai(paiId){
@@ -2505,6 +2593,7 @@ main { padding: 24px 28px; }
   function fmt(v){ return 'R$ '+Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
 
   function switchTab(tab){
+    if(tab==='margens')renderMargens();
     document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
     document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
     document.querySelector('.tab[onclick="switchTab(\''+tab+'\')"]').classList.add('active');
@@ -2626,14 +2715,21 @@ main { padding: 24px 28px; }
   }
 
   function updateCounts(){
-    document.getElementById('tc-prod').textContent=produtos.length;
-    document.getElementById('tc-cores').textContent=cores.length;
-    document.getElementById('tc-emb').textContent=embalagens.length;
-    document.getElementById('tc-etq').textContent=etiquetas.length;
-    document.getElementById('st-prod').textContent=produtos.length;
-    document.getElementById('st-prod-ativos').textContent=produtos.filter(p=>p.status==='ativo').length;
-    document.getElementById('st-prod-cores').textContent=cores.length;
-    document.getElementById('st-prod-emb').textContent=embalagens.length;
+    produtos=JSON.parse(localStorage.getItem('allhair_produtos')||'[]');
+    cores=JSON.parse(localStorage.getItem('allhair_cores')||'[]');
+    embalagens=JSON.parse(localStorage.getItem('allhair_embalagens')||'[]');
+    etiquetas=JSON.parse(localStorage.getItem('allhair_etiquetas')||'[]');
+    caixas=JSON.parse(localStorage.getItem('allhair_caixas')||'[]');
+    var el;
+    el=document.getElementById('tc-prod'); if(el)el.textContent=produtos.length;
+    el=document.getElementById('tc-cores'); if(el)el.textContent=cores.length;
+    el=document.getElementById('tc-emb'); if(el)el.textContent=embalagens.length;
+    el=document.getElementById('tc-etq'); if(el)el.textContent=etiquetas.length;
+    el=document.getElementById('tc-caixas'); if(el)el.textContent=caixas.length;
+    el=document.getElementById('st-prod'); if(el)el.textContent=produtos.length;
+    el=document.getElementById('st-prod-ativos'); if(el)el.textContent=produtos.filter(function(p){return p.status==='ativo';}).length;
+    el=document.getElementById('st-prod-cores'); if(el)el.textContent=cores.length;
+    el=document.getElementById('st-prod-emb'); if(el)el.textContent=embalagens.length;
   }
 
   /* ===== CORES ===== */
@@ -2871,7 +2967,7 @@ main { padding: 24px 28px; }
       nome,
       ref:document.getElementById('p-ref')?.value||'',
       tecidoTipo:document.getElementById('p-tecido-tipo')?.value||'liso',
-      codigo:document.getElementById('p-codigo').value,
+      codigo:document.getElementById('p-codigo')?.value||'',
       status:document.getElementById('p-status').value,tecido,
       rendimento:parseFloat(rendimento),
       poliester:parseFloat(document.getElementById('p-poliester').value||80),
@@ -2884,6 +2980,9 @@ main { padding: 24px 28px; }
       'qtd-caixa':parseInt(document.getElementById('p-qtd-caixa').value||0),
       'estoque-min':parseInt(document.getElementById('p-estoque-min')?.value||0),
       preco:parseFloat(document.getElementById('p-preco').value||0),
+      custo:parseFloat(document.getElementById('p-custo')?.value||0),
+      estoqueMax:parseInt(document.getElementById('p-estoque-max')?.value||0),
+      diasCobertura:parseInt(document.getElementById('p-dias-cobertura')?.value||15),
       ean13:document.getElementById('p-ean13').value,
       ean14:document.getElementById('p-ean14').value,
       ncm:document.getElementById('p-ncm').value,
@@ -2905,6 +3004,8 @@ main { padding: 24px 28px; }
   function deleteProduto(id){if(!confirm('Excluir este produto?'))return;produtos=produtos.filter(x=>x.id!==id);save();renderProdutos();updateCounts();}
 
   function renderProdutos(){
+    // Reload from localStorage in case Firebase updated it
+    produtos=JSON.parse(localStorage.getItem('allhair_produtos')||'[]');
     const q=(document.getElementById('search-prod').value||'').toLowerCase();
     const f=produtos.filter(p=>((p.ref?'['+p.ref+'] ':'')+p.nome).toLowerCase().includes(q)||(p.codigo||'').toLowerCase().includes(q)||(p.ncm||'').includes(q)||(p.ean13||'').includes(q));
     updateCounts();
@@ -2965,7 +3066,22 @@ main { padding: 24px 28px; }
     }).join('');
   }
 
+  // Expose render for firebase-sync auto-reload
+  window.render = function(){
+    produtos  = JSON.parse(localStorage.getItem('allhair_produtos')||'[]');
+    cores     = JSON.parse(localStorage.getItem('allhair_cores')||'[]');
+    embalagens= JSON.parse(localStorage.getItem('allhair_embalagens')||'[]');
+    etiquetas = JSON.parse(localStorage.getItem('allhair_etiquetas')||'[]');
+    caixas    = JSON.parse(localStorage.getItem('allhair_caixas')||'[]');
+    renderProdutos();renderCores();renderEmbalagens();renderEtiquetas();renderCaixas();updateCounts();
+  };
   renderProdutos();renderCores();updateCounts();
+  // Force re-render after 2s to catch Firebase sync
+  setTimeout(function(){
+    produtos=JSON.parse(localStorage.getItem('allhair_produtos')||'[]');
+    cores=JSON.parse(localStorage.getItem('allhair_cores')||'[]');
+    renderProdutos();renderCores();updateCounts();
+  }, 2000);
 </script>
 </div>
 </div>
@@ -3085,5 +3201,6 @@ main { padding: 24px 28px; }
   window.toggleStatus=toggleStatus;
 })();
 </script>
+<script src="firebase-sync.js"></script>
 </body>
 </html>
