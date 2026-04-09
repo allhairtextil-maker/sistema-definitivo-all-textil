@@ -2227,9 +2227,18 @@ main { padding: 24px 28px; }
   </div>
   <div class="card card-body" style="max-width:600px">
     <div class="form-grid">
-      <div class="field"><label>Produto *</label><select id="m-prod" onchange="onMProd()"><option value="">— Selecionar —</option></select></div>
+      <div class="field"><label>Tipo de Tecido *</label>
+        <select id="m-tecido" onchange="onMTecido()">
+          <option value="">— Selecionar —</option>
+          <option value="liso">Liso</option>
+          <option value="mini">Mini</option>
+          <option value="meia">Meia</option>
+          <option value="outro">Outro</option>
+        </select>
+      </div>
       <div class="field"><label>Cor *</label><select id="m-cor" onchange="calcMaquina()"><option value="">— Selecionar —</option></select></div>
-      <div class="field"><label>Kg processados *</label><input type="number" id="m-kg" step="0.001" placeholder="0.000" oninput="calcMaquina()"></div>
+      <div class="field"><label>Kg produzidos *</label><input type="number" id="m-kg" step="0.001" placeholder="0.000" oninput="calcMaquina()"></div>
+      <input type="hidden" id="m-prod" value="">
       <div class="field"><label>Refugo (kg)</label><input type="number" id="m-refugo" step="0.001" placeholder="0" oninput="calcMaquina()" value="0"></div>
       <div class="field"><label>Data</label><input type="date" id="m-data"></div>
       <div class="field"><label>Responsavel</label><input type="text" id="m-obs" placeholder="Opcional"></div>
@@ -2533,7 +2542,6 @@ main { padding: 24px 28px; }
     produtos.filter(p=>{
       if(p.status!=='ativo')return false;
       if(!inclCalcinha&&isCalcinha(p.id))return false;
-      if(somenteTipo&&(p.tipo||'pai')!==somenteTipo)return false;
       return true;
     }).forEach(p=>{
       const o=document.createElement('option');
@@ -2767,13 +2775,31 @@ function renderDashboard(){
 
   /* ===== MÁQUINA ===== */
   function setupMaquina(){
-    populateProdutos('m-prod',true);
-    document.getElementById('m-data').value=new Date().toISOString().split('T')[0];
-    document.getElementById('m-preview').style.display='none';
-    onMProd();
+    // Reset fields
+    document.getElementById('m-tecido').value='';
+    document.getElementById('m-cor').innerHTML='<option value="">— Selecionar cor —</option>';
+    document.getElementById('m-kg').value='';
+    if(document.getElementById('m-data'))document.getElementById('m-data').value=new Date().toISOString().split('T')[0];
+    if(document.getElementById('m-refugo'))document.getElementById('m-refugo').value='';
+    if(document.getElementById('m-obs'))document.getElementById('m-obs').value='';
+    if(document.getElementById('m-preview'))document.getElementById('m-preview').innerHTML='';
+  }
+
+  function onMTecido(){
+    // Populate cores based on all registered colors
+    const sel=document.getElementById('m-cor');
+    sel.innerHTML='<option value="">— Selecionar cor —</option>';
+    cores.forEach(function(cor){
+      var o=document.createElement('option');
+      o.value=cor.id;
+      o.textContent=cor.nome;
+      sel.appendChild(o);
+    });
+    calcMaquina();
   }
 
   function onMProd(){
+    // Legacy - kept for compatibility
     const prodId=document.getElementById('m-prod').value;
     populateCores('m-cor',prodId);
     const p=produtos.find(x=>x.id===prodId);
@@ -2827,77 +2853,73 @@ function renderDashboard(){
 
   function confirmarMaquina(){
     if(!confirm('Confirmar lançamento de produção na máquina?')) return;
-    const prodId=document.getElementById('m-prod').value;
+    const tecido=document.getElementById('m-tecido').value;
     const corId=document.getElementById('m-cor').value;
     const kg=parseFloat(document.getElementById('m-kg').value||0);
-    const data=document.getElementById('m-data').value;
-    if(!prodId){alert('Selecione o produto!');return;}
+    const data=document.getElementById('m-data')?.value||new Date().toISOString().split('T')[0];
+    if(!tecido){alert('Selecione o tipo de tecido!');return;}
     if(!corId){alert('Selecione a cor!');return;}
     if(!kg||kg<=0){alert('Informe os kg!');return;}
-    
-    const p=produtos.find(x=>x.id===prodId);
-    const c=cores.find(x=>x.id===corId);
-    const pecas=isCalcinha(prodId)?0:Math.floor(kgUtil*p.rendimento);
-    const pes=kg*(p.poliester||80)/100;
-    const ela=kg*(p.elastano||20)/100;
-    // Abate MP — desconta fio colorido, PES branco/preto e elastano
+
+    const cor=cores.find(x=>x.id===corId);
+    const refugo=parseFloat(document.getElementById('m-refugo')?.value||0);
+    const kgUtil=Math.max(0,kg-refugo);
+
+    // Percentuais padrão
+    const pctEla=20;
+    const pctFio=80;
+    const ela=kg*(pctEla/100);
+    const kgFio=kg*(pctFio/100);
+
+    // Desconta MP - Elastano
     estoque.mp.ELA=Math.max(0,(estoque.mp.ELA||0)-ela);
-    // Verifica se o produto usa fio colorido para esta cor
-    const insumos=p.insumos||{};
-    const coresProd=p.cores||[];
-    const numCores=coresProd.length||1;
-    const kgFioTotal=kg*(p.poliester||80)/100;
-    if(coresProd.includes(corId)&&corId){
-      // Fio colorido: desconta a fatia proporcional desta cor
-      const kgFioCor=kgFioTotal/numCores;
-      if(!estoque.mp.fios)estoque.mp.fios={};
-      const fioKey='FIO_'+corId;
-      estoque.mp.fios[fioKey]=Math.max(0,(parseFloat(estoque.mp.fios[fioKey]||0))-kgFioCor);
-      logMov('consumo_mp','Fio '+((c&&c.nome)||corId),kgFioCor,'kg','Estoque MP','Máquina','Produção '+p.nome);
-    } else {
-      // Fio base: desconta PES Branco (padrão) ou PES Preto
-      const usaPreto=p.tecido&&p.tecido.toLowerCase().includes('preto');
-      if(usaPreto){
-        estoque.mp.PES_PRETO=Math.max(0,(parseFloat(estoque.mp.PES_PRETO||0))-kgFioTotal);
-        logMov('consumo_mp','Fio PES Preto',kgFioTotal,'kg','Estoque MP','Máquina','Produção '+p.nome);
-      } else {
-        estoque.mp.PES_BRANCO=Math.max(0,(parseFloat(estoque.mp.PES_BRANCO||0))-kgFioTotal);
-        estoque.mp.PES=Math.max(0,(estoque.mp.PES||0)-kgFioTotal); // legacy key
-        logMov('consumo_mp','Fio PES Branco',kgFioTotal,'kg','Estoque MP','Máquina','Produção '+p.nome);
-      }
-    }
-    logMov('consumo_mp','Elastano',ela,'kg','Estoque MP','Máquina','Produção '+p.nome);
-    // Refugo vai pro registro mas não pro estoque
-    if(refugo>0){
-      if(!estoque.refugo) estoque.refugo={};
-      const rKey=prodId+'_'+corId;
-      if(!estoque.refugo[rKey]) estoque.refugo[rKey]={kg:0,prodNome:p.nome,corNome:c?c.nome:''};
-      estoque.refugo[rKey].kg+=refugo;
-      logMov('refugo',`${p.nome} — ${c?c.nome:''}`,refugo,'kg','Máquina','Refugo',`Refugo em ${new Date().toLocaleDateString('pt-BR')}`);
-    }
-    // Adiciona ao cru apenas o útil
-    const cruKey=prodId+'_'+corId;
-    if(!estoque.cru[cruKey]) estoque.cru[cruKey]={kg:0,prodNome:p.nome,corNome:c?c.nome:'',prodId,corId};
+
+    // Desconta fio colorido da cor selecionada
+    if(!estoque.mp.fios)estoque.mp.fios={};
+    const fioKey='FIO_'+corId;
+    estoque.mp.fios[fioKey]=Math.max(0,(parseFloat(estoque.mp.fios[fioKey]||0))-kgFio);
+    logMov('consumo_mp','Fio '+(cor?cor.nome:corId),kgFio,'kg','Estoque MP','Máquina','Produção '+tecido+' '+( cor?cor.nome:''));
+    logMov('consumo_mp','Elastano',ela,'kg','Estoque MP','Máquina','Produção '+tecido+' '+(cor?cor.nome:''));
+
+    // Adiciona ao estoque cru por tecido_cor
+    const cruKey=tecido+'_'+corId;
+    if(!estoque.cru[cruKey])estoque.cru[cruKey]={kg:0,tecido:tecido,corNome:cor?cor.nome:'',corId:corId};
     estoque.cru[cruKey].kg+=kgUtil;
-    // Atualiza status do pedido se necessário
-    const fila=pedidos.filter(x=>['recebido','producao','pronto'].includes(x.status)).sort((a,b)=>new Date(a.data)-new Date(b.data));
-    for(const ped of fila){
-      const item=(ped.itens||[]).find(i=>i.prodId===prodId);
-      if(item&&ped.status==='recebido') ped.status='producao';
+
+    // Se tem refugo
+    if(refugo>0){
+      if(!estoque.refugo)estoque.refugo={};
+      const rKey=tecido+'_'+corId;
+      if(!estoque.refugo[rKey])estoque.refugo[rKey]={kg:0,tecido:tecido,corNome:cor?cor.nome:''};
+      estoque.refugo[rKey].kg+=refugo;
+      logMov('refugo',tecido+' — '+(cor?cor.nome:''),refugo,'kg','Máquina','Refugo','');
     }
-    // Log
-    logMov('maquina',`${p.nome} — ${c?c.nome:''}`,kgUtil,'kg','Máquina','Estoque Cru',`${pes.toFixed(3)}kg PES + ${ela.toFixed(3)}kg ELA${refugo>0?' · '+fmtKg(refugo)+' refugo':''}`);
-    producoes.push({id:'p_'+Date.now(),etapa:'maquina',prodId,corId,prodNome:p.nome,corNome:c?c.nome:'',kg,kgUtil,refugo,pecas,pesConsumido:pes,elaConsumido:ela,data,obs:document.getElementById('m-obs').value,criadoEm:new Date().toLocaleString('pt-BR')});
-    // Histórico
-    producoes.push({id:'p_'+Date.now(),etapa:'maquina',prodId,corId,prodNome:p.nome,corNome:c?c.nome:'',kg,pecas,pesConsumido:pes,elaConsumido:ela,data,obs:document.getElementById('m-obs').value,criadoEm:new Date().toLocaleString('pt-BR')});
+
+    // Log e histórico
+    logMov('maquina',tecido+' — '+(cor?cor.nome:''),kgUtil,'kg','Máquina','Estoque Cru',
+      kgFio.toFixed(3)+'kg Fio '+(cor?cor.nome:'')+' + '+ela.toFixed(3)+'kg Elastano');
+
+    producoes.push({
+      id:'p_'+Date.now(),etapa:'maquina',
+      tecido:tecido,corId:corId,corNome:cor?cor.nome:'',
+      kg:kg,kgUtil:kgUtil,refugo:refugo,
+      elaConsumido:ela,fioConsumido:kgFio,
+      data:data,obs:document.getElementById('m-obs')?.value||'',
+      criadoEm:new Date().toLocaleString('pt-BR')
+    });
+
+    // Atualiza pedidos em produção
+    pedidos.filter(x=>['recebido','producao'].includes(x.status)).forEach(function(ped){
+      if(ped.status==='recebido')ped.status='producao';
+    });
+
     save();
-    const kgFioCons=kg*(p.poliester||80)/100;
-    const coresProdAlert=p.cores||[];
-    const nomeFio=coresProdAlert.includes(corId)&&corId?('Fio '+(c?c.nome:corId)+' (1/'+(coresProdAlert.length||1)+' paleta)'):'PES Branco';
-    alert('✅ Lançado!\n'+fmtKg(kg)+' de '+p.nome+' — '+(c?c.nome:'')+' → Estoque Cru\nMP descontada:\n• '+nomeFio+': '+fmtKg(kgFioCons/Math.max(1,coresProdAlert.includes(corId)?coresProdAlert.length:1))+'\n• Elastano: '+fmtKg(ela));
+    alert('✅ Lançado!\n'+kg.toFixed(3)+'kg de '+tecido+' — '+(cor?cor.nome:'')+'\n→ Estoque Cru\n\nMP descontada:\n• Fio '+(cor?cor.nome:'')+': '+kgFio.toFixed(3)+'kg\n• Elastano: '+ela.toFixed(3)+'kg');
+    setupMaquina();
     switchTab('fila');
   }
 
+  
   /* ===== VIRAR ===== */
   function renderVirar(){
     // Lotes fora
