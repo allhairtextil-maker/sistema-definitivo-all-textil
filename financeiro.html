@@ -2145,6 +2145,7 @@ main { padding: 24px 28px; }
   <div class="tab" onclick="switchTab('receber')">💚 A Receber</div>
   <div class="tab" onclick="switchTab('pagar')">🔴 A Pagar</div>
   <div class="tab" onclick="switchTab('despesas')">📋 Despesas Fixas</div>
+  <div class="tab" onclick="switchTab('saude')">💚 Saúde</div>
   <div class="tab" onclick="switchTab('dre')">📈 DRE</div>
   <div class="tab" onclick="switchTab('fluxo')">💧 Fluxo de Caixa</div>
 </div>
@@ -2572,7 +2573,7 @@ main { padding: 24px 28px; }
   function switchTab(tab){
     document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active');});
     document.querySelectorAll('.tab-content').forEach(function(t){t.classList.remove('active');});
-    const tabs=['resumo','caixa','receber','pagar','despesas','dre','fluxo','categorias'];
+    const tabs=['resumo','caixa','receber','pagar','despesas','saude','dre','fluxo','categorias'];
     var idx=tabs.indexOf(tab);
     if(idx>=0)document.querySelectorAll('.tab')[idx].classList.add('active');
     var tabEl=document.getElementById('tab-'+tab);
