@@ -2144,9 +2144,6 @@ main { padding: 24px 28px; }
   <div class="tab" onclick="switchTab('embalagens')">📦 Embalagens <span class="tab-count" id="tc-emb">0</span></div>
   <div class="tab" onclick="switchTab('etiquetas')">🏷️ Etiquetas <span class="tab-count" id="tc-etq">0</span></div>
   <div class="tab" onclick="switchTab('caixas')">📫 Caixas <span class="tab-count" id="tc-caixas">0</span></div>
-  <div class="tab" onclick="switchTab('cores')">🎨 Cores <span class="tab-count" id="tc-cores">0</span></div>
-  <div class="tab" onclick="switchTab('embalagens')">📦 Embalagens <span class="tab-count" id="tc-emb">0</span></div>
-  <div class="tab" onclick="switchTab('etiquetas')">🏷️ Etiquetas <span class="tab-count" id="tc-etq">0</span></div>
 </div>
 
 <!-- TAB PRODUTOS -->
@@ -2627,14 +2624,19 @@ main { padding: 24px 28px; }
   function updateCounts(){
     produtos=JSON.parse(localStorage.getItem('allhair_produtos')||'[]');
     cores=JSON.parse(localStorage.getItem('allhair_cores')||'[]');
-    document.getElementById('tc-prod').textContent=produtos.length;
-    document.getElementById('tc-cores').textContent=cores.length;
-    document.getElementById('tc-emb').textContent=embalagens.length;
-    document.getElementById('tc-etq').textContent=etiquetas.length;
-    document.getElementById('st-prod').textContent=produtos.length;
-    document.getElementById('st-prod-ativos').textContent=produtos.filter(p=>p.status==='ativo').length;
-    document.getElementById('st-prod-cores').textContent=cores.length;
-    document.getElementById('st-prod-emb').textContent=embalagens.length;
+    embalagens=JSON.parse(localStorage.getItem('allhair_embalagens')||'[]');
+    etiquetas=JSON.parse(localStorage.getItem('allhair_etiquetas')||'[]');
+    caixas=JSON.parse(localStorage.getItem('allhair_caixas')||'[]');
+    var el;
+    el=document.getElementById('tc-prod'); if(el)el.textContent=produtos.length;
+    el=document.getElementById('tc-cores'); if(el)el.textContent=cores.length;
+    el=document.getElementById('tc-emb'); if(el)el.textContent=embalagens.length;
+    el=document.getElementById('tc-etq'); if(el)el.textContent=etiquetas.length;
+    el=document.getElementById('tc-caixas'); if(el)el.textContent=caixas.length;
+    el=document.getElementById('st-prod'); if(el)el.textContent=produtos.length;
+    el=document.getElementById('st-prod-ativos'); if(el)el.textContent=produtos.filter(function(p){return p.status==='ativo';}).length;
+    el=document.getElementById('st-prod-cores'); if(el)el.textContent=cores.length;
+    el=document.getElementById('st-prod-emb'); if(el)el.textContent=embalagens.length;
   }
 
   /* ===== CORES ===== */
