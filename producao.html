@@ -3419,11 +3419,25 @@ function renderDashboard(){
     try{
       renderDashboard();
     }catch(e){
-      var el=document.getElementById('dash-kpis');
-      if(el)el.innerHTML='<div style="color:red;padding:20px;font-size:12px;grid-column:1/-1">Erro: '+e.message+'<br>'+e.stack+'</div>';
-      console.error('renderDashboard error:',e);
+      var el=document.getElementById('dash-ped-count');
+      if(el)el.textContent='ERRO: '+e.message;
+      console.error('renderDashboard error:',e.message, e.stack);
     }
   }
+  // Also expose window.render for firebase-sync
+  window.render = function(){
+    producoes = JSON.parse(localStorage.getItem('allhair_producoes2')||'[]');
+    envios    = JSON.parse(localStorage.getItem('allhair_envios_v2')||'[]');
+    cores     = JSON.parse(localStorage.getItem('allhair_cores')||'[]');
+    pedidos   = JSON.parse(localStorage.getItem('allhair_pedidos')||'[]');
+    estoque   = JSON.parse(localStorage.getItem('allhair_estoque_v2')||'{}');
+    if(!estoque.mp) estoque.mp={};
+    if(!estoque.cru) estoque.cru={};
+    if(!estoque.virado) estoque.virado={};
+    if(!estoque.virando) estoque.virando={};
+    if(!estoque.embalado) estoque.embalado={};
+    try{renderDashboard();}catch(e){console.error(e);}
+  };
   if(document.readyState==='loading'){
     document.addEventListener('DOMContentLoaded',_initDash);
   } else {
