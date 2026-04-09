@@ -2284,9 +2284,7 @@ main { padding: 24px 28px; }
 
       <div class="section-label">🧵 Composição e Produção</div>
       <div class="form-grid">
-        <div class="field"><label>Tecido *</label>
-          <select id="p-tecido"><option value="">— Selecionar —</option><option value="Liso">Liso</option><option value="Meia">Meia</option><option value="Mini">Mini</option></select>
-        </div>
+
         <div class="field"><label>Rendimento (peças/kg) *</label>
           <input type="number" id="p-rendimento" placeholder="Ex: 150" min="1" oninput="calcInsumosPreview()">
           <div class="field-hint">Quantas peças saem de 1 kg</div>
@@ -2812,7 +2810,7 @@ main { padding: 24px 28px; }
   function openModalProd(id=null){
     editingProdId=id;coresSel=[];
     ['nome','codigo','rendimento','unid-pacote','qtd-caixa','preco','ean13','ean14','ncm','cest','ipi','icms','obs'].forEach(k=>{const el=document.getElementById('p-'+k);if(el)el.value='';});
-    document.getElementById('p-tecido').value='';
+    document.getElementById('p-tecido-tipo').value='';
     document.getElementById('p-status').value='ativo';
     if(document.getElementById('p-tipo'))document.getElementById('p-tipo').value='pai';
     if(document.getElementById('p-ref'))document.getElementById('p-ref').value='';
@@ -2836,7 +2834,7 @@ main { padding: 24px 28px; }
         if(document.getElementById('p-ref'))document.getElementById('p-ref').value=p.ref||'';
         populatePaiSelect(p.produtoPai||'');
         onProdTipo();
-        document.getElementById('p-tecido').value=p.tecido||'';
+        document.getElementById('p-tecido-tipo').value=p.tecido||'';
         document.getElementById('p-poliester').value=p.poliester||80;
         document.getElementById('p-elastano').value=p.elastano||20;
         document.getElementById('p-unid-trib').value=p.unidTrib||'UN';
@@ -2852,9 +2850,19 @@ main { padding: 24px 28px; }
   }
   function closeModalProd(){document.getElementById('overlay-prod').classList.remove('open');editingProdId=null;coresSel=[];}
 
+
+  function limparProdutosTeste(){
+    if(!confirm('Apagar TODOS os '+produtos.length+' produtos cadastrados?'))return;
+    produtos=[];
+    save();
+    renderProdutos();
+    updateCounts();
+    alert('✅ Produtos limpos!');
+  }
+
   function saveProduto(){
     const nome=document.getElementById('p-nome').value.trim();
-    const tecido=document.getElementById('p-tecido').value;
+    const tecido=document.getElementById('p-tecido-tipo').value;
     const rendimento=document.getElementById('p-rendimento').value;
     if(!nome){alert('Nome obrigatório!');return;}
     if(!tecido){alert('Selecione o tecido!');return;}
