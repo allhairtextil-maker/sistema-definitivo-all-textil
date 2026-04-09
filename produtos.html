@@ -2265,20 +2265,14 @@ main { padding: 24px 28px; }
       <div class="section-label">📋 Identificação</div>
       <div class="form-grid">
         <div class="field form-full"><label>Nome do produto *</label><input type="text" id="p-nome" placeholder="Ex: Xuxinha Infantil Liso"></div>
-        <div class="field"><label>Tipo *</label>
-          <select id="p-tipo" onchange="onProdTipo()">
-            <option value="pai">🏭 Produto Pai (sai da máquina)</option>
-            <option value="filho">📦 Produto Filho (vendido / embalado)</option>
-          </select>
-          <div class="field-hint">Pai = base da produção. Filho = variação de embalagem/paleta para venda.</div>
-        </div>
-        <div class="field" id="campo-produto-pai" style="display:none">
-          <label>Produto Pai *</label>
-          <select id="p-produto-pai">
-            <option value="">— Selecionar pai —</option>
+        <div class="field"><label>Tipo de Tecido *</label>
+          <select id="p-tecido-tipo">
+            <option value="liso">Liso</option>
+            <option value="mini">Mini</option>
+            <option value="meia">Meia</option>
+            <option value="outro">Outro</option>
           </select>
         </div>
-        <div class="field"><label>Código interno</label><input type="text" id="p-codigo" placeholder="Ex: XIL-01"></div>
         <div class="field"><label>Código de referência</label>
           <input type="text" id="p-ref" placeholder="Ex: EX-12, 0011, XP-P">
           <div class="field-hint">Código que você usa no dia a dia</div>
@@ -2474,32 +2468,8 @@ main { padding: 24px 28px; }
   let coresSel=[];
 
 
-  function onProdTipo(){
-    var tipo=document.getElementById('p-tipo').value;
-    var campoPai=document.getElementById('campo-produto-pai');
-    var campoComp=document.getElementById('comp-simples')?.parentElement;
-    if(campoPai)campoPai.style.display=(tipo==='filho'?'block':'none');
-    if(tipo==='filho'){
-      populatePaiSelect('');
-      // Hide composição (filho herda do pai)
-      var secComp=document.querySelector('[data-section="composicao"]');
-    }
-  }
-
-  function populatePaiSelect(selectedId){
-    var sel=document.getElementById('p-produto-pai');
-    if(!sel)return;
-    var pais=produtos.filter(function(p){return (p.tipo||'pai')==='pai'&&p.status==='ativo';});
-    sel.innerHTML='<option value="">— Selecionar pai —</option>';
-    pais.forEach(function(p){
-      var o=document.createElement('option');
-      o.value=p.id;
-      o.textContent=p.nome+(p.tecido?' ('+p.tecido+')':'');
-      if(p.id===selectedId)o.selected=true;
-      sel.appendChild(o);
-    });
-  }
-
+  function onProdTipo(){ /* deprecated - replaced by tecido-tipo */ }
+  function populatePaiSelect(id){ /* deprecated */ }
   function getFilhosDoPai(paiId){
     return produtos.filter(function(p){return p.produtoPai===paiId;});
   }
@@ -2892,8 +2862,7 @@ main { padding: 24px 28px; }
     const data={
       nome,
       ref:document.getElementById('p-ref')?.value||'',
-      tipo:document.getElementById('p-tipo').value||'pai',
-      produtoPai:document.getElementById('p-produto-pai')?.value||'',
+      tecidoTipo:document.getElementById('p-tecido-tipo')?.value||'liso',
       codigo:document.getElementById('p-codigo').value,
       status:document.getElementById('p-status').value,tecido,
       rendimento:parseFloat(rendimento),
@@ -2929,7 +2898,7 @@ main { padding: 24px 28px; }
 
   function renderProdutos(){
     const q=(document.getElementById('search-prod').value||'').toLowerCase();
-    const f=produtos.filter(p=>(p.ref?'['+p.ref+'] ':'')+p.nome+(p.tipo==='filho'?' <span style="font-size:10px;background:var(--blue-light);color:var(--blue);padding:2px 6px;border-radius:10px;font-weight:700">FILHO</span>':(p.tipo==='pai'?' <span style="font-size:10px;background:var(--purple-light);color:var(--purple);padding:2px 6px;border-radius:10px;font-weight:700">PAI</span>':'')).toLowerCase().includes(q)||(p.codigo||'').toLowerCase().includes(q)||(p.ncm||'').includes(q)||(p.ean13||'').includes(q));
+    const f=produtos.filter(p=>((p.ref?'['+p.ref+'] ':'')+p.nome).toLowerCase().includes(q)||(p.codigo||'').toLowerCase().includes(q)||(p.ncm||'').includes(q)||(p.ean13||'').includes(q));
     updateCounts();
     const grid=document.getElementById('grid-prod');
     const empty=document.getElementById('empty-prod');
