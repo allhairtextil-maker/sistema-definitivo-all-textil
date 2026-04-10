@@ -2745,39 +2745,40 @@ main { padding: 24px 28px; }
       var hex=cor.hex||'#8b5cf6';
       var div=document.createElement('div');
       div.id='cp-'+cor.id;
+      div.dataset.corId=cor.id;
+      div.dataset.selecionada=sel?'1':'0';
       div.style.cssText='cursor:pointer;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:700;border:2px solid '+(sel?hex:'var(--border2)')+';background:'+(sel?hex+'22':'transparent')+';color:'+(sel?hex:'var(--text2)');
       div.textContent=cor.nome;
-      div.onclick=function(){toggleCoreProd(cor.id);};
+      div.onclick=function(){toggleCoreProd(cor.id,hex);};
       wrap.appendChild(div);
     });
   }
 
-  function toggleCoreProd(corId){
-    var coresAll=JSON.parse(localStorage.getItem('allhair_cores')||'[]');
-    var cor=coresAll.find(function(c){return c.id===corId;});
+  function toggleCoreProd(corId,hex){
     var el=document.getElementById('cp-'+corId);
     if(!el)return;
-    var isSelected=el.style.background.includes('22');
-    if(isSelected){
+    var h=hex||'#8b5cf6';
+    var isSel=el.dataset.selecionada==='1';
+    el.dataset.selecionada=isSel?'0':'1';
+    if(isSel){
       el.style.border='2px solid var(--border2)';
       el.style.background='transparent';
       el.style.color='var(--text2)';
     } else {
-      var hex=cor?cor.hex||'#8b5cf6':'#8b5cf6';
-      el.style.border='2px solid '+hex;
-      el.style.background=hex+'22';
-      el.style.color=hex;
+      el.style.border='2px solid '+h;
+      el.style.background=h+'22';
+      el.style.color=h;
     }
   }
 
   function getSelectedCores(){
     var wrap=document.getElementById('p-cores-wrap');
     if(!wrap)return[];
-    var coresAll=JSON.parse(localStorage.getItem('allhair_cores')||'[]');
-    return coresAll.filter(function(cor){
-      var el=document.getElementById('cp-'+cor.id);
-      return el&&!el.style.background.includes('transparent')&&el.style.background!=='';
-    }).map(function(cor){return cor.id;});
+    var selecionadas=[];
+    wrap.querySelectorAll('[data-cor-id]').forEach(function(el){
+      if(el.dataset.selecionada==='1')selecionadas.push(el.dataset.corId);
+    });
+    return selecionadas;
   }
 
   function calcMargemProd(){
@@ -3223,7 +3224,6 @@ main { padding: 24px 28px; }
       custo:parseFloat(document.getElementById('p-custo')?.value||0),
       estoqueMax:parseInt(document.getElementById('p-estoque-max')?.value||0),
       diasCobertura:parseInt(document.getElementById('p-dias-cobertura')?.value||15),
-      cores:getSelectedCores(),
       ean13:document.getElementById('p-ean13').value,
       ean14:document.getElementById('p-ean14').value,
       ncm:document.getElementById('p-ncm').value,
@@ -3235,11 +3235,12 @@ main { padding: 24px 28px; }
       embalagem:document.getElementById('p-embalagem').value,
       etiqueta:document.getElementById('p-etiqueta').value,
       obs:document.getElementById('p-obs').value,
-      cores:[...coresSel]
+      cores:getSelectedCores()
     };
     if(editingProdId){const idx=produtos.findIndex(x=>x.id===editingProdId);data.id=editingProdId;data.criadoEm=produtos[idx].criadoEm;produtos[idx]=data;}
     else{data.id='prod_'+Date.now();data.criadoEm=new Date().toLocaleDateString('pt-BR');produtos.push(data);}
-    save();renderProdutos();updateCounts();closeModalProd();
+    try{save();}catch(e){alert('Erro ao salvar: '+e.message);return;}
+    renderProdutos();updateCounts();closeModalProd();
   }
 
   function deleteProduto(id){if(!confirm('Excluir este produto?'))return;produtos=produtos.filter(x=>x.id!==id);save();renderProdutos();updateCounts();}
