@@ -2562,102 +2562,162 @@ main { padding: 24px 28px; }
     var produtos=JSON.parse(localStorage.getItem('allhair_produtos')||'[]');
     var producoes=JSON.parse(localStorage.getItem('allhair_producoes2')||'[]');
     var cores=JSON.parse(localStorage.getItem('allhair_cores')||'[]');
+    var embalagens=JSON.parse(localStorage.getItem('allhair_embalagens')||'[]');
+    var insumos=JSON.parse(localStorage.getItem('allhair_insumos')||'{}');
+    // insumos = {emb:{id:qtd}, caixas:{id:qtd}, etiquetas:{id:qtd}}
 
-    // Pedidos abertos (em produção ou recebidos)
-    var pedAbertos=pedidos.filter(function(p){return ['recebido','producao','pronto'].includes(p.status);});
-    // Pedidos próximos 15 dias
+    var pedAbertos=pedidos.filter(function(p){return['recebido','producao','pronto','expedido'].includes(p.status);});
     var hoje=new Date();
-    var em15=new Date(hoje); em15.setDate(hoje.getDate()+15);
 
-    // Calcular necessidade de fio por pedido
+    // ===== MP: PES + ELA + Fios =====
     var necessidade={PES_BRANCO:0,PES_PRETO:0,ELA:0,fios:{}};
+    // Embalagem necessidade por tipo
+    var necEmb={};  // embId -> {nome, qtd}
+    var necCaixa=0, necEtiqueta=0;
 
     pedAbertos.forEach(function(ped){
       (ped.itens||[]).forEach(function(item){
         var prod=produtos.find(function(p){return p.id===item.prodId;});
         if(!prod)return;
-        var unid=prod['unid-pacote']||1;
-        var pecas=Number(item.qtd||0)*unid;
-        var rend=prod.rendimento||150;
+        var unid=Number(prod['unid-pacote']||12);
+        var qtdPct=Number(item.qtd||0);
+        var pecas=qtdPct*unid;
+        var rend=Number(prod.rendimento||1000);
         var kgTotal=pecas/rend;
-        // 80% fio, 20% elastano
         var kgFio=kgTotal*0.80;
         var kgEla=kgTotal*0.20;
         necessidade.ELA+=kgEla;
-        // Distribute fio among cores of this product
-        var coresProd=(prod.cores||[]);
+
+        // Fios por cor
+        var coresProd=prod.cores||[];
         if(coresProd.length>0){
-          var kgCorPeca=kgFio/coresProd.length;
+          var kgPorCor=kgFio/coresProd.length;
           coresProd.forEach(function(corId){
             var cor=cores.find(function(x){return x.id===corId;});
-            var key=corId;
-            if(!necessidade.fios[key])necessidade.fios[key]={nome:cor?cor.nome:corId,kg:0};
-            necessidade.fios[key].kg+=kgCorPeca;
+            if(!necessidade.fios[corId])necessidade.fios[corId]={nome:cor?cor.nome:corId,kg:0};
+            necessidade.fios[corId].kg+=kgPorCor;
           });
         } else {
-          // Default: PES branco
           necessidade.PES_BRANCO+=kgFio;
         }
+
+        // Embalagem por produto
+        var embId=prod.embalagemId||prod.embalagem;
+        if(embId){
+          var emb=embalagens.find(function(e){return e.id===embId;});
+          if(!necEmb[embId])necEmb[embId]={nome:emb?emb.nome:embId,qtd:0};
+          necEmb[embId].qtd+=qtdPct;
+        } else {
+          // Generic embalagem count
+          if(!necEmb['_gen'])necEmb['_gen']={nome:'Embalagem (geral)',qtd:0};
+          necEmb['_gen'].qtd+=qtdPct;
+        }
+
+        // Caixas (1 caixa por X pacotes — padrão 12)
+        var pctPorCaixa=prod.pctPorCaixa||24;
+        necCaixa+=Math.ceil(qtdPct/pctPorCaixa);
+
+        // Etiquetas (1 por pacote)
+        necEtiqueta+=qtdPct;
       });
     });
 
-    // Projeção 15 dias (baseado em produção recente)
+    // Projeção 15 dias
     var prod15=producoes.filter(function(p){
       if(!p.data||p.etapa!=='maquina')return false;
-      var d=new Date(p.data+'T00:00');
-      return d>new Date(hoje.getTime()-15*24*60*60*1000);
+      return new Date(p.data+'T00:00')>new Date(hoje.getTime()-15*864e5);
     }).reduce(function(s,p){return s+Number(p.kg||0);},0);
     var projDia=prod15>0?prod15/15:0;
     var projFio15=projDia*15*0.80;
     var projEla15=projDia*15*0.20;
 
-    // Estoque atual
-    var estPESB=parseFloat(est.mp&&est.mp.PES_BRANCO||0);
-    var estPESP=parseFloat(est.mp&&est.mp.PES_PRETO||0);
-    var estELA=parseFloat(est.mp&&est.mp.ELA||0);
+    // Estoque atual MP
+    var estPESB=parseFloat((est.mp&&est.mp.PES_BRANCO)||0);
+    var estPESP=parseFloat((est.mp&&est.mp.PES_PRETO)||0);
+    var estELA=parseFloat((est.mp&&est.mp.ELA)||0);
 
-    function necRow(nome,estAtual,necessidadePed,projecao,unidade){
-      var totalNec=Math.max(0,necessidadePed+projecao-estAtual);
-      var status=totalNec<=0?'ok':estAtual>0&&totalNec<estAtual*0.5?'warn':'critico';
-      var statusColor=status==='ok'?'var(--green)':status==='warn'?'var(--orange)':'var(--red)';
-      var statusLabel=status==='ok'?'✅ Suficiente':status==='warn'?'⚠️ Atenção':'🚨 Comprar!';
-      return '<div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr 1fr;gap:0;border-bottom:1px solid var(--border);align-items:center">'+
-        '<div style="padding:12px 16px;font-weight:700;font-size:13px">'+nome+'</div>'+
-        '<div style="padding:12px;text-align:right;font-size:13px;color:#3b82f6;font-weight:700">'+estAtual.toFixed(2)+' '+unidade+'</div>'+
-        '<div style="padding:12px;text-align:right;font-size:13px;color:var(--orange)">'+necessidadePed.toFixed(2)+' '+unidade+'</div>'+
-        '<div style="padding:12px;text-align:right;font-size:13px;color:var(--purple)">'+projecao.toFixed(2)+' '+unidade+'</div>'+
-        '<div style="padding:12px;text-align:right;font-size:13px;font-weight:800;color:'+statusColor+'">'+
-          (totalNec>0?totalNec.toFixed(2)+' '+unidade:'—')+'</div>'+
-        '<div style="padding:12px;text-align:center"><span style="padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;background:'+statusColor+'22;color:'+statusColor+'">'+statusLabel+'</span></div>'+
-      '</div>';
+    // Estoque insumos
+    var estEmb=insumos.emb||{};
+    var estCaixa=Number(insumos.caixas||0);
+    var estEtiq=Number(insumos.etiquetas||0);
+
+    function necRow(nome,estAtual,necPed,proj,unidade,isQtd){
+      var total=necPed+(proj||0);
+      var comprar=Math.max(0,total-estAtual);
+      var status=comprar<=0?'ok':estAtual>0&&comprar<total*0.3?'warn':'critico';
+      var cor=status==='ok'?'#10b981':status==='warn'?'#f59e0b':'#ef4444';
+      var label=status==='ok'?'✅ OK':status==='warn'?'⚠️ Atenção':'🚨 Comprar!';
+      var fmt2=function(v){return isQtd?Math.ceil(v).toLocaleString():Number(v).toFixed(2);};
+      return '<tr style="border-bottom:1px solid var(--border)">'+
+        '<td style="padding:11px 14px;font-weight:700;font-size:13px">'+nome+'</td>'+
+        '<td style="padding:11px 10px;text-align:right;font-size:13px;color:#3b82f6;font-weight:700">'+fmt2(estAtual)+' '+unidade+'</td>'+
+        '<td style="padding:11px 10px;text-align:right;font-size:13px;color:#f59e0b">'+fmt2(necPed)+' '+unidade+'</td>'+
+        '<td style="padding:11px 10px;text-align:right;font-size:13px;color:#8b5cf6">'+(proj?fmt2(proj)+' '+unidade:'—')+'</td>'+
+        '<td style="padding:11px 10px;text-align:right;font-size:14px;font-weight:900;color:'+cor+'">'+
+          (comprar>0?fmt2(comprar)+' '+unidade:'—')+'</td>'+
+        '<td style="padding:11px 10px;text-align:center"><span style="background:'+cor+'20;color:'+cor+';padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700">'+label+'</span></td>'+
+      '</tr>';
     }
 
-    var fioRows=Object.entries(necessidade.fios).map(function(entry){
-      var corId=entry[0],data=entry[1];
-      var estFio=parseFloat(est.mp&&est.mp.fios&&est.mp.fios[corId]||0);
-      return necRow('🎨 Fio '+data.nome,estFio,data.kg,projFio15/Math.max(1,Object.keys(necessidade.fios).length),'kg');
+    var fioRows=Object.entries(necessidade.fios).map(function(e){
+      var corId=e[0],d=e[1];
+      var estFio=parseFloat((est.mp&&est.mp['fio_'+corId])||0);
+      return necRow('🎨 Fio — '+d.nome,estFio,d.kg,projFio15/Math.max(1,Object.keys(necessidade.fios).length),'kg',false);
     }).join('');
 
+    var embRows=Object.entries(necEmb).map(function(e){
+      var eId=e[0],d=e[1];
+      var estE=Number((estEmb[eId])||0);
+      return necRow('📦 '+d.nome,estE,d.qtd,0,'pct',true);
+    }).join('');
+
+    var headerStyle='padding:9px 10px;font-size:11px;font-weight:700;color:var(--text2);text-align:right;background:var(--bg)';
     wrap.innerHTML=
-      '<div style="font-size:13px;color:var(--text2);background:var(--blue-light);border-radius:10px;padding:12px 16px;margin-bottom:20px">'+
-        '📊 Cálculo baseado em <strong>'+pedAbertos.length+' pedido(s) aberto(s)</strong> + projeção de produção de <strong>'+projDia.toFixed(2)+'kg/dia</strong> nos próximos 15 dias.'+
+      '<div style="font-size:13px;color:var(--text2);background:#dbeafe;border-radius:10px;padding:12px 16px;margin-bottom:16px">'+
+        '📊 Baseado em <strong>'+pedAbertos.length+' pedido(s) aberto(s)</strong> + projeção de <strong>'+projDia.toFixed(2)+'kg/dia</strong> nos próximos 15 dias.'+
       '</div>'+
-      '<div class="card">'+
-        '<div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr 1fr;background:var(--bg);border-bottom:2px solid var(--border)">'+
-          '<div style="padding:10px 16px;font-size:11px;font-weight:700;color:var(--text2)">MATERIAL</div>'+
-          '<div style="padding:10px;text-align:right;font-size:11px;font-weight:700;color:#3b82f6">ESTOQUE</div>'+
-          '<div style="padding:10px;text-align:right;font-size:11px;font-weight:700;color:var(--orange)">PEDIDOS</div>'+
-          '<div style="padding:10px;text-align:right;font-size:11px;font-weight:700;color:var(--purple)">PROJ 15d</div>'+
-          '<div style="padding:10px;text-align:right;font-size:11px;font-weight:700;color:var(--red)">COMPRAR</div>'+
-          '<div style="padding:10px;text-align:center;font-size:11px;font-weight:700;color:var(--text2)">STATUS</div>'+
-        '</div>'+
-        necRow('🤍 PES Branco',estPESB,necessidade.PES_BRANCO,projFio15*0.5,'kg')+
-        necRow('🖤 PES Preto',estPESP,0,projFio15*0.3,'kg')+
-        necRow('⚪ Elastano',estELA,necessidade.ELA,projEla15,'kg')+
+
+      // Section: MP
+      '<div style="font-weight:800;font-size:13px;margin-bottom:8px;color:var(--purple)">🧶 Matéria-Prima</div>'+
+      '<div style="background:var(--white);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:16px">'+
+        '<table style="width:100%;border-collapse:collapse">'+
+        '<thead><tr>'+
+          '<th style="padding:9px 14px;font-size:11px;font-weight:700;color:var(--text2);text-align:left;background:var(--bg)">MATERIAL</th>'+
+          '<th style="'+headerStyle+';color:#3b82f6">ESTOQUE</th>'+
+          '<th style="'+headerStyle+';color:#f59e0b">PEDIDOS</th>'+
+          '<th style="'+headerStyle+';color:#8b5cf6">PROJ 15d</th>'+
+          '<th style="'+headerStyle+';color:#ef4444">COMPRAR</th>'+
+          '<th style="'+headerStyle+'">STATUS</th>'+
+        '</tr></thead><tbody>'+
+        necRow('🤍 PES Branco',estPESB,necessidade.PES_BRANCO,projFio15*0.5,'kg',false)+
+        necRow('🖤 PES Preto',estPESP,0,projFio15*0.3,'kg',false)+
+        necRow('⚪ Elastano',estELA,necessidade.ELA,projEla15,'kg',false)+
         fioRows+
+        '</tbody></table></div>'+
+
+      // Section: Insumos
+      '<div style="font-weight:800;font-size:13px;margin-bottom:8px;color:var(--purple)">📦 Insumos de Embalagem</div>'+
+      '<div style="background:var(--white);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:16px">'+
+        '<table style="width:100%;border-collapse:collapse">'+
+        '<thead><tr>'+
+          '<th style="padding:9px 14px;font-size:11px;font-weight:700;color:var(--text2);text-align:left;background:var(--bg)">INSUMO</th>'+
+          '<th style="'+headerStyle+';color:#3b82f6">ESTOQUE</th>'+
+          '<th style="'+headerStyle+';color:#f59e0b">PEDIDOS</th>'+
+          '<th style="'+headerStyle+';color:#8b5cf6">PROJ 15d</th>'+
+          '<th style="'+headerStyle+';color:#ef4444">COMPRAR</th>'+
+          '<th style="'+headerStyle+'">STATUS</th>'+
+        '</tr></thead><tbody>'+
+        embRows+
+        necRow('📫 Caixas de Envio',estCaixa,necCaixa,0,'cx',true)+
+        necRow('🏷️ Etiquetas',estEtiq,necEtiqueta,0,'pct',true)+
+        '</tbody></table>'+
+        '<div style="padding:10px 14px;background:var(--bg);font-size:11px;color:var(--text2)">'+
+          '💡 Para atualizar estoque de insumos: Estoque → Insumos · Embalagem vinculada ao cadastro do produto'+
+        '</div>'+
       '</div>';
   }
 
+  
   // FORNECEDORES
   var editingFornId=null;
   function openModalForn(id){
