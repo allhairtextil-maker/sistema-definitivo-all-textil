@@ -333,7 +333,7 @@ main { padding: 24px 28px; }
 <script>
 (function(){
   const sess=JSON.parse(localStorage.getItem('allhair_sessao')||'{}');
-  if(!sess.userId&&!location.pathname.includes('login')){location.href='login.html';return;}
+  // acesso livre
   const u=document.getElementById('sb-user');
   if(u&&sess.nome)u.innerHTML=`<div class="sb-avatar">${sess.nome[0]}</div><div class="sb-user-info"><div class="sb-user-name">${sess.nome}</div><div class="sb-user-status">Online</div></div>`;
   function tick(){

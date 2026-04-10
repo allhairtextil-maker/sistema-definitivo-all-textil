@@ -2421,7 +2421,7 @@ main { padding: 24px 28px; }
 <script>
 (function(){
   const sess=JSON.parse(localStorage.getItem('allhair_sessao')||'{}');
-  if(!sess.userId&&!location.pathname.includes('login')){location.href='login.html';return;}
+  // acesso livre
   const u=document.getElementById('sb-user');
   if(u&&sess.nome)u.innerHTML=`<div class="sb-avatar">${sess.nome[0]}</div><div class="sb-user-info"><div class="sb-user-name">${sess.nome}</div><div class="sb-user-status">Online</div></div>`;
   function tick(){
@@ -3070,7 +3070,12 @@ main { padding: 24px 28px; }
     var body=document.getElementById('avaliacao-body');
     if(!overlay||!body)return;
     overlay.classList.add('open');
-    gerarAvaliacaoMes(body);
+    try{
+      gerarAvaliacaoMes(body);
+    }catch(e){
+      body.innerHTML='<div style="padding:24px;color:#ef4444;font-size:13px"><strong>Erro:</strong> '+e.message+'<br><br><code style="font-size:11px;color:#64748b">'+e.stack+'</code></div>';
+      console.error('Avaliacao error:',e);
+    }
   }
 
   function gerarAvaliacaoMes(body){
@@ -3098,21 +3103,20 @@ main { padding: 24px 28px; }
     // Custos variáveis
     var custMP=compras.filter(function(c){return noMes(c.data);}).reduce(function(s,c){return s+Number(c.total||c.valor||0);},0);
 
-    // Comissão real — calcula da soma de comissões pagas nos pedidos do mês
-    var comissoesAll=JSON.parse(localStorage.getItem('allhair_comissoes')||'[]');
-    var repsAll=JSON.parse(localStorage.getItem('allhair_representantes')||'[]');
-    // Real comissao paid this month
-    var comissaoVal=comissoesAll.filter(function(c){return noMes(c.data||c.criadoEm);}).reduce(function(s,c){return s+Number(c.valor||0);},0);
-    // If no comissoes registered yet, estimate from pedidos with rep
-    if(comissaoVal===0){
-      pedsMes.forEach(function(ped){
-        var rep=repsAll.find(function(r){return r.id===ped.repId;});
-        var pct=rep?Number(rep.comissao||5)/100:0;
-        var total=(ped.itens||[]).reduce(function(s,i){return s+Number(i.total||0);},0);
-        comissaoVal+=total*pct;
-      });
-    }
-    var comissaoPct=fatBruto>0?comissaoVal/fatBruto*100:5;
+    var comissaoVal=0;
+    try{
+      var comissoesAll=JSON.parse(localStorage.getItem('allhair_comissoes')||'[]');
+      var repsAll=JSON.parse(localStorage.getItem('allhair_representantes')||'[]');
+      comissaoVal=comissoesAll.filter(function(cm){return noMes(cm.data||cm.criadoEm);}).reduce(function(s,cm){return s+Number(cm.valor||0);},0);
+      if(comissaoVal===0){
+        pedsMes.forEach(function(ped){
+          var rep=repsAll.find(function(r){return r.id===ped.repId;});
+          var pct=rep?Number(rep.comissao||0)/100:0;
+          comissaoVal+=(ped.itens||[]).reduce(function(s,i){return s+Number(i.total||0);},0)*pct;
+        });
+      }
+    }catch(e2){comissaoVal=0;}
+    var comissaoPct=fatBruto>0?comissaoVal/fatBruto*100:0;
 
     var impostosPct=(cfg.aliquota||6)/100;
     var impostosVal=fatBruto*impostosPct;
