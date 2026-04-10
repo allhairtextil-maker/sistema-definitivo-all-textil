@@ -2444,14 +2444,15 @@ main { padding: 24px 28px; }
   <div class="topbar">
     <div class="topbar-title" id="topbar-saud"></div>
     <div class="topbar-right">
+      <button onclick="abrirAvaliacaoMes()" style="background:linear-gradient(135deg,#8b5cf6,#ec4899);color:#fff;border:none;padding:7px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">📊 Avaliar Mês</button>
       <div class="mes-badge" id="mes-badge"></div>
       <button class="refresh-btn" onclick="init()">Atualizar</button>
     </div>
   </div>
   <div class="content">
-    <div id="relatorio-exec-wrap" style="margin-bottom:12px"></div>
-    <div class="alertas" id="alertas"></div>
     <div id="meta-hero-wrap"></div>
+    <div class="alertas" id="alertas"></div>
+    <div id="relatorio-exec-wrap" style="margin-bottom:12px"></div>
     <div id="semana-wrap"></div>
     <div class="kpi-grid" id="kpi-grid"></div>
     <div class="bottom-grid" id="bottom-grid"></div>
@@ -3059,6 +3060,219 @@ main { padding: 24px 28px; }
       '</div>';
   }
 
+
+  function fecharAvaliacao(){
+    var el=document.getElementById('overlay-avaliacao');
+    if(el)el.classList.remove('open');
+  }
+
+  function abrirAvaliacaoMes(){
+    var overlay=document.getElementById('overlay-avaliacao');
+    var body=document.getElementById('avaliacao-body');
+    if(!overlay||!body)return;
+    overlay.classList.add('open');
+    body.innerHTML='<div style="padding:24px;text-align:center;color:var(--text2)">⏳ Calculando...</div>';
+    setTimeout(function(){gerarAvaliacaoMes(body);},300);
+  }
+
+  function gerarAvaliacaoMes(body){
+    var hoje=new Date();
+    var mes=hoje.getMonth(), ano=hoje.getFullYear();
+    var mesPrev=mes===0?11:mes-1, anoPrev=mes===0?ano-1:ano;
+    var nomeMes=hoje.toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
+
+    var noMes=function(d,m,a){if(!d)return false;var dt=new Date(d+'T00:00');return dt.getMonth()===m&&dt.getFullYear()===a;};
+
+    // Load all data
+    var pedidosAll=JSON.parse(localStorage.getItem('allhair_pedidos')||'[]');
+    var producoes=JSON.parse(localStorage.getItem('allhair_producoes2')||'[]');
+    var recebimentos=JSON.parse(localStorage.getItem('allhair_recebimentos')||'[]');
+    var despesas=JSON.parse(localStorage.getItem('allhair_despesas')||'[]');
+    var compras=JSON.parse(localStorage.getItem('allhair_compras')||'[]');
+    var clientes=JSON.parse(localStorage.getItem('allhair_clientes')||'[]');
+    var produtos=JSON.parse(localStorage.getItem('allhair_produtos')||'[]');
+    var estoque=JSON.parse(localStorage.getItem('allhair_estoque_v2')||'{}');
+    var aReceber=JSON.parse(localStorage.getItem('allhair_a_receber')||'[]');
+    var cfg=JSON.parse(localStorage.getItem('allhair_config')||'{}');
+    var socios=JSON.parse(localStorage.getItem('allhair_socios')||'[]');
+    var metas=cfg.metas||{};
+
+    // ===== FINANCEIRO =====
+    var fatMes=recebimentos.filter(function(r){return noMes(r.data,mes,ano);}).reduce(function(s,r){return s+Number(r.valor||0);},0);
+    var fatPrev=recebimentos.filter(function(r){return noMes(r.data,mesPrev,anoPrev);}).reduce(function(s,r){return s+Number(r.valor||0);},0);
+    var despFixas=despesas.filter(function(d){return d.tipo==='fixo'&&d.ativo;}).reduce(function(s,d){return s+Number(d.valor||0);},0);
+    var custMP=compras.filter(function(c){return noMes(c.data,mes,ano);}).reduce(function(s,c){return s+Number(c.total||c.valor||0);},0);
+    var despTotal=despFixas+custMP;
+    var lucro=fatMes-despTotal;
+    var margem=fatMes>0?lucro/fatMes*100:0;
+    var margemPrev=fatPrev>0?(fatPrev-despFixas-compras.filter(function(c){return noMes(c.data,mesPrev,anoPrev);}).reduce(function(s,c){return s+Number(c.total||c.valor||0);},0))/fatPrev*100:0;
+    var crescFat=fatPrev>0?(fatMes-fatPrev)/fatPrev*100:0;
+    var metaFat=Number(metas.fat||0);
+    var pctMeta=metaFat>0?fatMes/metaFat*100:null;
+
+    // ===== PRODUCAO =====
+    var kgMes=producoes.filter(function(p){return p.etapa==='maquina'&&noMes(p.data,mes,ano);}).reduce(function(s,p){return s+Number(p.kg||0);},0);
+    var kgPrev=producoes.filter(function(p){return p.etapa==='maquina'&&noMes(p.data,mesPrev,anoPrev);}).reduce(function(s,p){return s+Number(p.kg||0);},0);
+    var pcsMes=producoes.filter(function(p){return p.etapa==='embalagem'&&noMes(p.data,mes,ano);}).reduce(function(s,p){return s+Number(p.pacotes||0);},0);
+    var cfgProd=cfg.producao||{};
+    var capMensal=((cfgProd.maqMeia||2)*(cfgProd.prodMeia||2)+(cfgProd.maqLiso||4)*(cfgProd.prodLiso||2.5)+(cfgProd.maqMini||4)*(cfgProd.prodMini||1.2))*22;
+    var eficiencia=capMensal>0?kgMes/capMensal*100:0;
+
+    // ===== CLIENTES =====
+    var pedsMes=pedidosAll.filter(function(p){return noMes(p.data,mes,ano);});
+    var pedsPrev=pedidosAll.filter(function(p){return noMes(p.data,mesPrev,anoPrev);});
+    var clientesMes=new Set(pedsMes.map(function(p){return p.clienteId||p.clienteNome;})).size;
+    var clientesPrev=new Set(pedsPrev.map(function(p){return p.clienteId||p.clienteNome;})).size;
+    var ticketMedio=pedsMes.length?pedsMes.reduce(function(s,p){return s+(p.itens||[]).reduce(function(s2,i){return s2+Number(i.total||0);},0);},0)/pedsMes.length:0;
+    var inadimplentes=aReceber.filter(function(r){return r.status!=='pago'&&r.vencimento&&new Date(r.vencimento+' 00:00')<hoje;});
+    var totalInad=inadimplentes.reduce(function(s,r){return s+Number(r.valor||0);},0);
+    var pctInad=fatMes>0?totalInad/fatMes*100:0;
+
+    // ===== SCORING =====
+    var scores=[];
+    var acoes=[];
+    var pontos_positivos=[];
+    var pontos_negativos=[];
+
+    // 1. Margem (peso 25)
+    var scoreMargem=margem>=40?100:margem>=30?80:margem>=20?60:margem>=10?40:20;
+    scores.push({label:'Margem',score:scoreMargem,peso:25,val:margem.toFixed(1)+'%'});
+    if(margem>=30)pontos_positivos.push('Margem saudável de '+margem.toFixed(1)+'%');
+    else{pontos_negativos.push('Margem baixa ('+margem.toFixed(1)+'%) — revisar preços e custos');acoes.push({prio:'alta',txt:'Revisar precificação — margem de '+margem.toFixed(1)+'% está abaixo do ideal (30%)'});}
+    if(margem>margemPrev&&margemPrev>0)pontos_positivos.push('Margem melhorou vs mês anterior (+'+( margem-margemPrev).toFixed(1)+'pp)');
+
+    // 2. Meta de faturamento (peso 20)
+    var scoreMeta=pctMeta===null?50:pctMeta>=100?100:pctMeta>=80?75:pctMeta>=60?50:25;
+    scores.push({label:'Meta Fat.',score:scoreMeta,peso:20,val:pctMeta!==null?Math.round(pctMeta)+'%':'Sem meta'});
+    if(pctMeta!==null&&pctMeta>=100)pontos_positivos.push('Meta de faturamento batida! ('+Math.round(pctMeta)+'%)');
+    else if(pctMeta!==null&&pctMeta<80){pontos_negativos.push('Meta de faturamento em '+Math.round(pctMeta)+'%');acoes.push({prio:'alta',txt:'Prospectar novos clientes — faltaram '+fmt(metaFat-fatMes)+' para bater a meta'});}
+
+    // 3. Crescimento (peso 15)
+    var scoreCresc=crescFat>=20?100:crescFat>=10?85:crescFat>=0?70:crescFat>=-10?40:20;
+    scores.push({label:'Crescimento',score:scoreCresc,peso:15,val:(crescFat>=0?'+':'')+crescFat.toFixed(1)+'%'});
+    if(crescFat>=10)pontos_positivos.push('Crescimento forte de +'+crescFat.toFixed(1)+'% vs mês anterior');
+    else if(crescFat<0){pontos_negativos.push('Queda de '+crescFat.toFixed(1)+'% vs mês anterior');acoes.push({prio:'media',txt:'Investigar causa da queda de faturamento — contatar clientes inativos'});}
+
+    // 4. Eficiência produtiva (peso 20)
+    var scoreEfic=eficiencia>=90?100:eficiencia>=70?80:eficiencia>=50?60:eficiencia>=30?40:20;
+    scores.push({label:'Produção',score:scoreEfic,peso:20,val:eficiencia.toFixed(0)+'% cap.'});
+    if(eficiencia>=70)pontos_positivos.push('Produção em '+eficiencia.toFixed(0)+'% da capacidade');
+    else if(eficiencia<50){pontos_negativos.push('Produção em apenas '+eficiencia.toFixed(0)+'% da capacidade');acoes.push({prio:'media',txt:'Aumentar volume de pedidos ou reduzir máquinas ativas para cortar custos fixos'});}
+
+    // 5. Inadimplência (peso 10)
+    var scoreInad=pctInad===0?100:pctInad<2?85:pctInad<5?65:pctInad<10?40:20;
+    scores.push({label:'Inadimplência',score:scoreInad,peso:10,val:pctInad.toFixed(1)+'%'});
+    if(pctInad===0)pontos_positivos.push('Zero inadimplência no mês!');
+    else if(pctInad>5){pontos_negativos.push('Inadimplência alta: '+pctInad.toFixed(1)+'% ('+fmt(totalInad)+')');acoes.push({prio:'alta',txt:'Cobrar '+inadimplentes.length+' cliente(s) com '+fmt(totalInad)+' em atraso'});}
+
+    // 6. Clientes ativos (peso 10)
+    var scoreClientes=clientesMes>=clientesPrev?100:clientesMes>=clientesPrev*0.8?75:50;
+    scores.push({label:'Clientes',score:scoreClientes,peso:10,val:clientesMes+' ativos'});
+    if(clientesMes>clientesPrev)pontos_positivos.push(clientesMes-clientesPrev+' cliente(s) novos comprando');
+    else if(clientesMes<clientesPrev)acoes.push({prio:'media',txt:(clientesPrev-clientesMes)+' cliente(s) não compraram este mês — verificar frequência de compra'});
+
+    // Calculate weighted score
+    var totalPeso=scores.reduce(function(s,x){return s+x.peso;},0);
+    var notaFinal=scores.reduce(function(s,x){return s+x.score*x.peso;},0)/totalPeso/10;
+
+    var notaCor=notaFinal>=8?'#10b981':notaFinal>=6?'#f59e0b':notaFinal>=4?'#f97316':'#ef4444';
+    var notaLabel=notaFinal>=8?'Excelente':notaFinal>=6?'Bom':notaFinal>=4?'Regular':'Crítico';
+
+    // Sort acoes by priority
+    var prioOrder={alta:0,media:1,baixa:2};
+    acoes.sort(function(a,b){return prioOrder[a.prio]-prioOrder[b.prio];});
+
+    // ===== RENDER =====
+    body.innerHTML=
+      // Header score
+      '<div style="background:linear-gradient(135deg,#1e3a5f,#0f172a);padding:24px">'+
+        '<div style="display:flex;align-items:center;justify-content:space-between">'+
+          '<div>'+
+            '<div style="font-size:12px;font-weight:700;color:rgba(255,255,255,0.4);text-transform:uppercase;margin-bottom:4px">Avaliação de '+nomeMes+'</div>'+
+            '<div style="font-size:36px;font-weight:900;color:'+notaCor+'">'+notaFinal.toFixed(1)+'<span style="font-size:18px;color:rgba(255,255,255,0.4)">/10</span></div>'+
+            '<div style="font-size:16px;font-weight:700;color:'+notaCor+'">'+notaLabel+'</div>'+
+          '</div>'+
+          '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">'+
+          scores.map(function(s){
+            var cor=s.score>=80?'#4ade80':s.score>=60?'#fbbf24':'#f87171';
+            return '<div style="background:rgba(255,255,255,0.08);border-radius:8px;padding:8px;text-align:center">'+
+              '<div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:2px">'+s.label+'</div>'+
+              '<div style="font-size:14px;font-weight:800;color:'+cor+'">'+s.val+'</div>'+
+            '</div>';
+          }).join('')+
+          '</div>'+
+        '</div>'+
+      '</div>'+
+
+      '<div style="padding:20px;display:flex;flex-direction:column;gap:16px">'+
+
+      // KPIs principais
+      '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">'+
+      [
+        {icon:'💰',label:'Faturamento',val:fmt(fatMes),sub:fatPrev>0?(crescFat>=0?'↑ +':' ↓')+Math.abs(crescFat).toFixed(1)+'% vs anterior':'Primeiro mês',cor:crescFat>=0?'#10b981':'#ef4444'},
+        {icon:'📈',label:'Lucro Líquido',val:fmt(lucro),sub:'Margem '+margem.toFixed(1)+'%',cor:lucro>=0?'#10b981':'#ef4444'},
+        {icon:'🏭',label:'Produção',val:kgMes.toFixed(1)+'kg',sub:pcsMes+' pacotes embalados',cor:'#8b5cf6'},
+        {icon:'👥',label:'Clientes Ativos',val:clientesMes,sub:'Ticket médio: '+fmt(ticketMedio),cor:'#3b82f6'},
+      ].map(function(k){
+        return '<div style="background:var(--bg);border-radius:10px;padding:12px">'+
+          '<div style="font-size:10px;font-weight:700;color:var(--text2);margin-bottom:4px">'+k.icon+' '+k.label+'</div>'+
+          '<div style="font-size:18px;font-weight:900;color:'+k.cor+'">'+k.val+'</div>'+
+          '<div style="font-size:11px;color:var(--text2);margin-top:2px">'+k.sub+'</div>'+
+        '</div>';
+      }).join('')+
+      '</div>'+
+
+      // Pontos positivos e negativos
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'+
+        '<div style="background:#f0fdf4;border-radius:10px;padding:14px">'+
+          '<div style="font-weight:800;color:#15803d;margin-bottom:8px">✅ Pontos Positivos</div>'+
+          (pontos_positivos.length?
+            pontos_positivos.map(function(p){return '<div style="font-size:12px;color:#166534;margin-bottom:5px">· '+p+'</div>';}).join(''):
+            '<div style="font-size:12px;color:#166534">Continue cadastrando dados para análise completa.</div>')+
+        '</div>'+
+        '<div style="background:#fef2f2;border-radius:10px;padding:14px">'+
+          '<div style="font-weight:800;color:#dc2626;margin-bottom:8px">⚠️ Pontos de Atenção</div>'+
+          (pontos_negativos.length?
+            pontos_negativos.map(function(p){return '<div style="font-size:12px;color:#991b1b;margin-bottom:5px">· '+p+'</div>';}).join(''):
+            '<div style="font-size:12px;color:#991b1b">Nenhum ponto crítico este mês!</div>')+
+        '</div>'+
+      '</div>'+
+
+      // Ações prioritárias
+      (acoes.length?
+        '<div>'+
+          '<div style="font-weight:800;font-size:14px;margin-bottom:10px">🎯 '+Math.min(3,acoes.length)+' Ações Prioritárias para o Próximo Mês</div>'+
+          acoes.slice(0,3).map(function(a,i){
+            var cor=a.prio==='alta'?'#ef4444':'#f59e0b';
+            return '<div style="background:'+cor+'10;border-left:4px solid '+cor+';border-radius:8px;padding:12px 16px;margin-bottom:8px">'+
+              '<div style="font-size:11px;font-weight:700;color:'+cor+';margin-bottom:3px">PRIORIDADE '+(a.prio==='alta'?'ALTA':'MÉDIA')+'</div>'+
+              '<div style="font-size:13px;font-weight:600;color:var(--text)">'+( i+1)+'. '+a.txt+'</div>'+
+            '</div>';
+          }).join('')+
+        '</div>':'')+ 
+
+      // Margem focus
+      '<div style="background:linear-gradient(135deg,#8b5cf620,#ec489920);border:1px solid #8b5cf640;border-radius:10px;padding:14px">'+
+        '<div style="font-weight:800;font-size:13px;margin-bottom:8px">💡 Como aumentar sua margem</div>'+
+        '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;font-size:12px">'+
+        [
+          {icon:'📉',titulo:'Reduzir MP',txt:custMP>0?'MP representa '+(custMP/fatMes*100).toFixed(0)+'% do fat. — negociar preço ou comprar em volume':'Cadastre compras para análise'},
+          {icon:'💲',titulo:'Aumentar Preço',txt:'Cada 5% de aumento no preço = +'+(margem*0.05+5).toFixed(1)+'pp de margem sem mudar custos'},
+          {icon:'⚙️',titulo:'Aumentar Volume',txt:'Mais kg na máquina dilui o custo fixo. Capac. atual: '+eficiencia.toFixed(0)+'% — potencial de crescimento'},
+        ].map(function(k){
+          return '<div style="background:rgba(255,255,255,0.5);border-radius:8px;padding:10px">'+
+            '<div style="font-weight:700;margin-bottom:4px">'+k.icon+' '+k.titulo+'</div>'+
+            '<div style="color:var(--text2)">'+k.txt+'</div>'+
+          '</div>';
+        }).join('')+
+        '</div>'+
+      '</div>'+
+
+      '</div>';
+
+    document.getElementById('avaliacao-titulo').textContent='📊 Avaliação — '+nomeMes.charAt(0).toUpperCase()+nomeMes.slice(1);
+  }
+
   function init(){
     const pedidos      = JSON.parse(localStorage.getItem('allhair_pedidos')        ||'[]');
     const clientes     = JSON.parse(localStorage.getItem('allhair_clientes')        ||'[]');
@@ -3131,9 +3345,7 @@ main { padding: 24px 28px; }
     if(pedAtraso.length) alertas.push({cls:'red',icon:'!',txt:`${pedAtraso.length} pedido(s) em atraso`,sub:pedAtraso.map(p=>p.clienteNome).join(', '),href:'pedidos.html'});
     const vencidosRec=pedidos.filter(p=>p.status!=='finalizado'&&getSaldo(p)>0&&p.vencimento&&new Date(p.vencimento+' 00:00')<now);
     if(vencidosRec.length) alertas.push({cls:'orange',icon:'!',txt:`${vencidosRec.length} boleto(s) vencido(s)`,sub:fmt(vencidosRec.reduce((s,p)=>s+getSaldo(p),0))+' a receber',href:'financeiro.html'});
-    if((estoque.mp?.PES||0)<5) alertas.push({cls:'yellow',icon:'!',txt:'Poliéster com estoque baixo',sub:`Apenas ${Number(estoque.mp?.PES||0).toFixed(2)}kg restando`,href:'estoque.html'});
-    if((estoque.mp?.ELA||0)<1) alertas.push({cls:'yellow',icon:'!',txt:'Elastano com estoque baixo',sub:`Apenas ${Number(estoque.mp?.ELA||0).toFixed(2)}kg restando`,href:'estoque.html'});
-    if(metaFat>0&&!noRitmo&&fatBruto<metaFat) alertas.push({cls:'yellow',icon:'!',txt:'Ritmo abaixo da meta',sub:`Precisa de ${fmt(necessarioPorDia)}/dia nos próximos ${diasRestantes} dias`,href:'financeiro.html'});
+        if(metaFat>0&&!noRitmo&&fatBruto<metaFat) alertas.push({cls:'yellow',icon:'!',txt:'Ritmo abaixo da meta',sub:`Precisa de ${fmt(necessarioPorDia)}/dia nos próximos ${diasRestantes} dias`,href:'financeiro.html'});
 
     renderRelatorioExecutivo();
     document.getElementById('alertas').innerHTML=alertas.map(a=>`
@@ -3537,5 +3749,17 @@ main { padding: 24px 28px; }
   setInterval(init,60000);
 </script>
 <script src="firebase-sync.js"></script>
+
+<!-- MODAL AVALIAÇÃO MENSAL -->
+<div class="overlay" id="overlay-avaliacao" onclick="if(event.target.id==='overlay-avaliacao')fecharAvaliacao()" style="z-index:9999">
+  <div class="modal" style="max-width:780px;max-height:90vh;overflow-y:auto">
+    <div class="modal-header">
+      <h2 id="avaliacao-titulo">📊 Avaliação Mensal</h2>
+      <button class="modal-close" onclick="fecharAvaliacao()">×</button>
+    </div>
+    <div class="modal-body" id="avaliacao-body" style="padding:0"></div>
+  </div>
+</div>
+
 </body>
 </html>
