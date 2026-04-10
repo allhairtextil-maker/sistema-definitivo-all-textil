@@ -3392,7 +3392,7 @@ main { padding: 24px 28px; }
 
     const h=now.getHours();
     const nome=sessao.nome||'';
-    document.getElementById('topbar-saud').textContent=(h<12?'Bom dia':h<18?'Boa tarde':'Boa noite')+(nome?' — '+nome:'');
+    document.getElementById('topbar-saud').textContent=(h<12?'Bom dia, meu patrão!':h<18?'Boa tarde, meu patrão!':'Boa noite, meu patrão!');
     document.getElementById('topbar-saud').textContent=(h<12?'Bom dia':h<18?'Boa tarde':'Boa noite')+(nome?' — '+nome:'');
     document.getElementById('mes-badge').textContent=now.toLocaleDateString('pt-BR',{month:'long',year:'numeric'}).replace(/^\w/,c=>c.toUpperCase());
 
