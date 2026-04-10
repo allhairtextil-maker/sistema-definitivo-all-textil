@@ -3099,9 +3099,24 @@ main { padding: 24px 28px; }
 
     // Custos variáveis
     var custMP=compras.filter(function(c){return noMes(c.data);}).reduce(function(s,c){return s+Number(c.total||c.valor||0);},0);
-    var comissaoPct=(cfg.comissaoPct||5)/100;
+
+    // Comissão real — calcula da soma de comissões pagas nos pedidos do mês
+    var comissoesAll=JSON.parse(localStorage.getItem('allhair_comissoes')||'[]');
+    var repsAll=JSON.parse(localStorage.getItem('allhair_representantes')||'[]');
+    // Real comissao paid this month
+    var comissaoVal=comissoesAll.filter(function(c){return noMes(c.data||c.criadoEm);}).reduce(function(s,c){return s+Number(c.valor||0);},0);
+    // If no comissoes registered yet, estimate from pedidos with rep
+    if(comissaoVal===0){
+      pedsMes.forEach(function(ped){
+        var rep=repsAll.find(function(r){return r.id===ped.repId;});
+        var pct=rep?Number(rep.comissao||5)/100:0;
+        var total=(ped.itens||[]).reduce(function(s,i){return s+Number(i.total||0);},0);
+        comissaoVal+=total*pct;
+      });
+    }
+    var comissaoPct=fatBruto>0?comissaoVal/fatBruto*100:5;
+
     var impostosPct=(cfg.aliquota||6)/100;
-    var comissaoVal=fatBruto*comissaoPct;
     var impostosVal=fatBruto*impostosPct;
     var custVar=custMP+comissaoVal+impostosVal;
 
@@ -3217,7 +3232,7 @@ main { padding: 24px 28px; }
           [
             {label:'(+) Faturamento Bruto',val:fatBruto,tipo:'fat',bold:true},
             {label:'(-) Custo de MP',val:-custMP,tipo:'custo'},
-            {label:'(-) Comissão Representantes ('+( comissaoPct*100).toFixed(0)+'%)',val:-comissaoVal,tipo:'custo'},
+            {label:'(-) Comissão Representantes ('+comissaoPct.toFixed(1)+'%)',val:-comissaoVal,tipo:'custo'},
             {label:'(-) Impostos/Taxas ('+(impostosPct*100).toFixed(0)+'%)',val:-impostosVal,tipo:'custo'},
             {label:'(=) MARGEM DE CONTRIBUIÇÃO',val:fatBruto-custVar,tipo:'mc',bold:true,bg:'#ede9fe'},
             {label:'    Margem Contrib. %',val:margemContrib,tipo:'pct',sub:true},

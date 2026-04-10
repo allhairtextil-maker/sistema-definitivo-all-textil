@@ -3733,7 +3733,18 @@ main { padding: 24px 28px; }
     var fatAtual=recebimentosAll.filter(function(r){return noMes(r.data);}).reduce(function(s,r){return s+Number(r.valor||0);},0);
     var mpAtual=comprasAll.filter(function(c){return noMes(c.data);}).reduce(function(s,c){return s+Number(c.total||c.valor||0);},0);
     var fixosAtual=despesasAll.filter(function(d){return d.tipo==='fixo'&&d.ativo;}).reduce(function(s,d){return s+Number(d.valor||0);},0);
-    var comissaoPct=(cfg.comissaoPct||5)/100;
+    // Comissão real média dos pedidos do mês
+    var repsAllFin=JSON.parse(localStorage.getItem('allhair_representantes')||'[]');
+    var comissoesAllFin=JSON.parse(localStorage.getItem('allhair_comissoes')||'[]');
+    var comissaoValFin=comissoesAllFin.filter(function(c){return noMes(c.data||c.criadoEm);}).reduce(function(s,c){return s+Number(c.valor||0);},0);
+    if(comissaoValFin===0){
+      pedidosAll.filter(function(p){return noMes(p.data);}).forEach(function(ped){
+        var rep=repsAllFin.find(function(r){return r.id===ped.repId;});
+        var pct=rep?Number(rep.comissao||5)/100:0;
+        comissaoValFin+=(ped.itens||[]).reduce(function(s,i){return s+Number(i.total||0);},0)*pct;
+      });
+    }
+    var comissaoPct=fatAtual>0?comissaoValFin/fatAtual:0.05;
     var impostosPct=(cfg.aliquota||6)/100;
     var despVarAtual=despesasAll.filter(function(d){return d.tipo==='variavel'&&d.ativo;}).reduce(function(s,d){return s+Number(d.valor||0);},0);
 
