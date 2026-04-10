@@ -1,6 +1,4 @@
 // ALL HAIR — Auto Sync Firebase
-// Insere este script em todas as páginas para sync automático
-
 (function() {
   const EMPRESA = 'allhair';
   const KEYS = [
@@ -11,10 +9,28 @@
     'allhair_recebimentos','allhair_pagamentos','allhair_apagar','allhair_a_receber',
     'allhair_cores','allhair_embalagens','allhair_etiquetas','allhair_caixas',
     'allhair_reservas','allhair_envios_v2','allhair_faccionistas','allhair_leads',
-    'allhair_melhorias','allhair_usuarios','allhair_sessao',
+    'allhair_melhorias',
   ];
 
-  // Firebase config
+  // Track local modifications — key: timestamp
+  // When save() is called locally, register the key as recently modified
+  window._localModified = window._localModified || {};
+  const PROTECT_MS = 60000; // 60 seconds protection after local save
+
+  // Patch localStorage.setItem to track modifications
+  const _origSet = localStorage.setItem.bind(localStorage);
+  localStorage.setItem = function(key, value) {
+    if (KEYS.includes(key)) {
+      window._localModified[key] = Date.now();
+    }
+    return _origSet(key, value);
+  };
+
+  function isRecentlyModified(key) {
+    var t = window._localModified[key];
+    return t && (Date.now() - t) < PROTECT_MS;
+  }
+
   const firebaseConfig = {
     apiKey: "AIzaSyAS9JeVtbfRekXIvKeEvnttTinJ4UT7zko",
     authDomain: "all-hair-sistema-ed955.firebaseapp.com",
@@ -24,7 +40,6 @@
     appId: "1:480465865239:web:6033e24988303beba92a52"
   };
 
-  // Load Firebase dynamically
   async function initFirebase() {
     const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js");
     const { getFirestore, doc, setDoc, getDoc } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
@@ -33,7 +48,6 @@
     return { db, doc, setDoc, getDoc };
   }
 
-  // Show sync indicator
   function showIndicator(msg, color) {
     let el = document.getElementById('firebase-indicator');
     if (!el) {
@@ -49,63 +63,70 @@
 
   function hideIndicator() {
     const el = document.getElementById('firebase-indicator');
-    if (el) {
-      el.style.opacity = '0';
-      setTimeout(() => el.remove(), 600);
+    if (el) { el.style.opacity = '0'; setTimeout(() => el.remove(), 600); }
+  }
+
+  // UPLOAD: localStorage → Firebase
+  async function syncUp() {
+    try {
+      showIndicator('⬆️ Enviando...', '#6d28d9');
+      const { db, doc, setDoc } = await initFirebase();
+      for (const key of KEYS) {
+        const val = localStorage.getItem(key);
+        if (val) {
+          try {
+            await setDoc(doc(db, EMPRESA, key), { value: JSON.parse(val) });
+          } catch(e) {}
+        }
+      }
+      showIndicator('✅ Salvo na nuvem!', '#10b981');
+      setTimeout(hideIndicator, 2000);
+    } catch(e) {
+      showIndicator('❌ Erro ao enviar', '#ef4444');
+      setTimeout(hideIndicator, 3000);
     }
   }
 
-  // DOWNLOAD: Firebase → localStorage (ao abrir a página)
+  // DOWNLOAD: Firebase → localStorage (skip recently modified keys)
   async function syncDown() {
     try {
       showIndicator('☁️ Sincronizando...', '#6d28d9');
       const { db, doc, getDoc } = await initFirebase();
       let loaded = 0;
       for (const key of KEYS) {
+        // SKIP if key was modified locally in last 60s
+        if (isRecentlyModified(key)) {
+          console.log('[Sync] Skipping', key, '— modified locally');
+          continue;
+        }
         try {
           const snap = await getDoc(doc(db, EMPRESA, key));
           if (snap.exists()) {
-            localStorage.setItem(key, JSON.stringify(snap.data().value));
+            _origSet(key, JSON.stringify(snap.data().value));
             loaded++;
           }
         } catch(e) {}
       }
-      showIndicator('✅ Sincronizado!', '#059669');
+      showIndicator('✅ Sincronizado!', '#10b981');
       setTimeout(hideIndicator, 2000);
-      // Reload page content after sync
       if (loaded > 0) {
         if (typeof window.render === 'function') window.render();
         else if (typeof window.init === 'function') window.init();
       }
-      console.log('Firebase sync down: ' + loaded + ' keys');
     } catch(e) {
-      console.warn('Firebase sync failed, using local data:', e);
-      hideIndicator();
+      showIndicator('⚠️ Sem conexão', '#f59e0b');
+      setTimeout(hideIndicator, 3000);
     }
-  }
-
-  // UPLOAD: localStorage → Firebase (ao salvar dados)
-  window.fbSave = async function(key, value) {
-    // Save to localStorage immediately
-    localStorage.setItem(key, JSON.stringify(value));
-    // Push to Firebase in background
-    try {
-      const { db, doc, setDoc } = await initFirebase();
-      await setDoc(doc(db, EMPRESA, key), { value: value, updatedAt: new Date().toISOString() });
-    } catch(e) {
-      console.warn('Firebase save failed, data kept locally:', key);
-    }
-  };
-
-  // Auto-sync on page load (after DOM ready)
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', syncDown);
-  } else {
-    // Small delay to let page JS initialize first
-    setTimeout(syncDown, 1000);
   }
 
   // Expose manual sync
-  window.fbSync = syncDown;
+  window.syncUp = syncUp;
+  window.syncDown = syncDown;
 
+  // Auto sync on page load (after 1s delay)
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => setTimeout(syncDown, 1000));
+  } else {
+    setTimeout(syncDown, 1000);
+  }
 })();
