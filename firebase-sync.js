@@ -12,25 +12,14 @@
     'allhair_melhorias',
   ];
 
-  // Track local modifications — key: timestamp
-  // When save() is called locally, register the key as recently modified
+  // Track locally modified keys and pending upload keys
   window._localModified = window._localModified || {};
-  const PROTECT_MS = 60000; // 60 seconds protection after local save
+  window._pendingUpload = window._pendingUpload || {};
+  const PROTECT_MS = 60000; // 60s protection from download overwrite
+  let uploadTimer = null;
+  let firebaseReady = null;
 
-  // Patch localStorage.setItem to track modifications
-  const _origSet = localStorage.setItem.bind(localStorage);
-  localStorage.setItem = function(key, value) {
-    if (KEYS.includes(key)) {
-      window._localModified[key] = Date.now();
-    }
-    return _origSet(key, value);
-  };
-
-  function isRecentlyModified(key) {
-    var t = window._localModified[key];
-    return t && (Date.now() - t) < PROTECT_MS;
-  }
-
+  // Firebase config
   const firebaseConfig = {
     apiKey: "AIzaSyAS9JeVtbfRekXIvKeEvnttTinJ4UT7zko",
     authDomain: "all-hair-sistema-ed955.firebaseapp.com",
@@ -40,12 +29,17 @@
     appId: "1:480465865239:web:6033e24988303beba92a52"
   };
 
-  async function initFirebase() {
-    const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js");
-    const { getFirestore, doc, setDoc, getDoc } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    return { db, doc, setDoc, getDoc };
+  async function getFirebase() {
+    if (!firebaseReady) {
+      firebaseReady = (async () => {
+        const { initializeApp, getApps } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js");
+        const { getFirestore, doc, setDoc, getDoc } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+        const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        return { db, doc, setDoc, getDoc };
+      })();
+    }
+    return firebaseReady;
   }
 
   function showIndicator(msg, color) {
@@ -66,23 +60,45 @@
     if (el) { el.style.opacity = '0'; setTimeout(() => el.remove(), 600); }
   }
 
-  // UPLOAD: localStorage → Firebase
-  async function syncUp() {
+  // Patch localStorage.setItem to auto-upload on save
+  const _origSet = localStorage.setItem.bind(localStorage);
+  localStorage.setItem = function(key, value) {
+    _origSet(key, value);
+    if (KEYS.includes(key)) {
+      window._localModified[key] = Date.now();
+      window._pendingUpload[key] = value;
+      scheduleUpload();
+    }
+  };
+
+  function isRecentlyModified(key) {
+    var t = window._localModified[key];
+    return t && (Date.now() - t) < PROTECT_MS;
+  }
+
+  // Debounced upload — waits 2s after last save then uploads all pending keys
+  function scheduleUpload() {
+    if (uploadTimer) clearTimeout(uploadTimer);
+    uploadTimer = setTimeout(flushUpload, 2000);
+  }
+
+  async function flushUpload() {
+    const pending = Object.keys(window._pendingUpload);
+    if (!pending.length) return;
     try {
-      showIndicator('⬆️ Enviando...', '#6d28d9');
-      const { db, doc, setDoc } = await initFirebase();
-      for (const key of KEYS) {
-        const val = localStorage.getItem(key);
-        if (val) {
-          try {
-            await setDoc(doc(db, EMPRESA, key), { value: JSON.parse(val) });
-          } catch(e) {}
-        }
+      showIndicator('☁️ Salvando na nuvem...', '#6d28d9');
+      const { db, doc, setDoc } = await getFirebase();
+      for (const key of pending) {
+        try {
+          const val = localStorage.getItem(key);
+          if (val) await setDoc(doc(db, EMPRESA, key), { value: JSON.parse(val) });
+          delete window._pendingUpload[key];
+        } catch(e) {}
       }
-      showIndicator('✅ Salvo na nuvem!', '#10b981');
-      setTimeout(hideIndicator, 2000);
+      showIndicator('✅ Salvo!', '#10b981');
+      setTimeout(hideIndicator, 1500);
     } catch(e) {
-      showIndicator('❌ Erro ao enviar', '#ef4444');
+      showIndicator('⚠️ Sem conexão — salvo localmente', '#f59e0b');
       setTimeout(hideIndicator, 3000);
     }
   }
@@ -91,14 +107,10 @@
   async function syncDown() {
     try {
       showIndicator('☁️ Sincronizando...', '#6d28d9');
-      const { db, doc, getDoc } = await initFirebase();
+      const { db, doc, getDoc } = await getFirebase();
       let loaded = 0;
       for (const key of KEYS) {
-        // SKIP if key was modified locally in last 60s
-        if (isRecentlyModified(key)) {
-          console.log('[Sync] Skipping', key, '— modified locally');
-          continue;
-        }
+        if (isRecentlyModified(key)) continue; // protect local changes
         try {
           const snap = await getDoc(doc(db, EMPRESA, key));
           if (snap.exists()) {
@@ -119,11 +131,30 @@
     }
   }
 
-  // Expose manual sync
+  // Manual full upload (botão Sincronizar)
+  async function syncUp() {
+    try {
+      showIndicator('⬆️ Enviando tudo...', '#6d28d9');
+      const { db, doc, setDoc } = await getFirebase();
+      for (const key of KEYS) {
+        const val = localStorage.getItem(key);
+        if (val) {
+          try { await setDoc(doc(db, EMPRESA, key), { value: JSON.parse(val) }); } catch(e) {}
+        }
+      }
+      window._pendingUpload = {};
+      showIndicator('✅ Tudo enviado!', '#10b981');
+      setTimeout(hideIndicator, 2000);
+    } catch(e) {
+      showIndicator('❌ Erro ao enviar', '#ef4444');
+      setTimeout(hideIndicator, 3000);
+    }
+  }
+
   window.syncUp = syncUp;
   window.syncDown = syncDown;
 
-  // Auto sync on page load (after 1s delay)
+  // Auto sync down on page load
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => setTimeout(syncDown, 1000));
   } else {
