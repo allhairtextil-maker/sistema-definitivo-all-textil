@@ -2992,6 +2992,7 @@ main { padding: 24px 28px; }
   function prazoClass(d){if(!d)return '';const diff=Math.ceil((new Date(d+' 00:00')-new Date())/(1000*60*60*24));if(diff<0)return 'bad';if(diff<=3)return 'warn';return 'ok';}
   function prazoLabel(d){if(!d)return '';const diff=Math.ceil((new Date(d+' 00:00')-new Date())/(1000*60*60*24));if(diff<0)return Math.abs(diff)+'d atraso';if(diff===0)return 'Hoje';if(diff===1)return 'Amanhã';return new Date(d+' 00:00').toLocaleDateString('pt-BR');}
 
+
   function init(){
     const pedidos      = JSON.parse(localStorage.getItem('allhair_pedidos')        ||'[]');
     const clientes     = JSON.parse(localStorage.getItem('allhair_clientes')        ||'[]');

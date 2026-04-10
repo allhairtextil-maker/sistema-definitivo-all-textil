@@ -2108,6 +2108,8 @@ main { padding: 24px 28px; }
 <div class="tabs-bar">
   <div class="tab active" onclick="switchTab('geral')">⚙️ Geral</div>
   <div class="tab" onclick="switchTab('metas')">🎯 Metas</div>
+  <div class="tab" onclick="switchTab('producao-cfg')">🏭 Produção
+  </div>
   <div class="tab" onclick="switchTab('acessos')">🔒 Acessos / PINs</div>
 </div>
 
@@ -2190,6 +2192,74 @@ main { padding: 24px 28px; }
 </div>
 
 <!-- TAB ACESSOS -->
+
+<div class="tab-content" id="tab-producao-cfg">
+<main>
+  <div class="topbar-actions" style="margin-bottom:20px">
+    <h1 class="page-title">🏭 Configurações de Produção</h1>
+    <div class="spacer"></div>
+    <button class="btn btn-primary" onclick="salvarProducaoCfg()">💾 Salvar</button>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+
+    <div class="card card-body">
+      <div style="font-size:14px;font-weight:800;margin-bottom:14px">🏭 Máquinas Ativas</div>
+      <div class="form-grid">
+        <div class="field"><label>Meia — máquinas ativas</label><input type="number" id="cfg-maq-meia" value="2" min="0" max="12"></div>
+        <div class="field"><label>Liso — máquinas ativas</label><input type="number" id="cfg-maq-liso" value="4" min="0" max="4"></div>
+        <div class="field"><label>Mini — máquinas ativas</label><input type="number" id="cfg-maq-mini" value="4" min="0" max="6"></div>
+      </div>
+    </div>
+
+    <div class="card card-body">
+      <div style="font-size:14px;font-weight:800;margin-bottom:14px">⚙️ Produção por Máquina (kg/dia)</div>
+      <div class="form-grid">
+        <div class="field"><label>Meia — kg/dia/máquina</label><input type="number" id="cfg-prod-meia" value="2" min="0.1" step="0.1"></div>
+        <div class="field"><label>Liso — kg/dia/máquina</label><input type="number" id="cfg-prod-liso" value="2.5" min="0.1" step="0.1"></div>
+        <div class="field"><label>Mini — kg/dia/máquina</label><input type="number" id="cfg-prod-mini" value="1.2" min="0.1" step="0.1"></div>
+      </div>
+    </div>
+
+    <div class="card card-body">
+      <div style="font-size:14px;font-weight:800;margin-bottom:14px">🤝 Faccionista</div>
+      <div class="form-grid">
+        <div class="field"><label>Nº de faccionistas</label><input type="number" id="cfg-facc-pessoas" value="3" min="1"></div>
+        <div class="field"><label>Dias no faccionista</label><input type="number" id="cfg-facc-dias" value="7" min="1"></div>
+        <div class="field"><label>Meia — kg/dia/pessoa</label><input type="number" id="cfg-facc-meia" value="10" min="0.1" step="0.1"></div>
+        <div class="field"><label>Liso — kg/dia/pessoa</label><input type="number" id="cfg-facc-liso" value="10" min="0.1" step="0.1"></div>
+        <div class="field"><label>Mini — kg/dia/pessoa</label><input type="number" id="cfg-facc-mini" value="3" min="0.1" step="0.1"></div>
+        <div class="field"><label>Dia de envio</label>
+          <select id="cfg-facc-dia-envio">
+            <option value="1">Segunda-feira</option>
+            <option value="2">Terça-feira</option>
+            <option value="3">Quarta-feira</option>
+            <option value="4">Quinta-feira</option>
+            <option value="5">Sexta-feira</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="card card-body">
+      <div style="font-size:14px;font-weight:800;margin-bottom:14px">📦 Embalagem & Envio</div>
+      <div class="form-grid">
+        <div class="field"><label>Pessoas na embalagem</label><input type="number" id="cfg-emb-pessoas" value="1" min="1"></div>
+        <div class="field"><label>Pacotes/hora/pessoa</label><input type="number" id="cfg-emb-pct-hora" value="100" min="1"></div>
+        <div class="field"><label>Horas de trabalho/dia</label><input type="number" id="cfg-emb-horas" value="8" min="1" max="24"></div>
+        <div class="field"><label>Prazo de envio (dias)</label><input type="number" id="cfg-envio-dias" value="1" min="0"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Capacidade calculada -->
+  <div class="card card-body" style="margin-top:16px">
+    <div style="font-size:14px;font-weight:800;margin-bottom:14px">📊 Capacidade Atual Calculada</div>
+    <div id="cap-calculada" style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px"></div>
+  </div>
+
+</main>
+</div>
 <div class="tab-content" id="tab-acessos">
 <main>
   <div style="margin-bottom:20px"><h1 class="page-title">Acessos & PINs</h1></div>
@@ -2206,13 +2276,86 @@ main { padding: 24px 28px; }
   var config = JSON.parse(localStorage.getItem('allhair_config')||'{}');
 
   function switchTab(tab){
+    if(tab==='producao-cfg'){loadProducaoCfg();}
     document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active');});
     document.querySelectorAll('.tab-content').forEach(function(t){t.classList.remove('active');});
-    var tabs=['geral','metas','acessos'];
+    var tabs=['geral','metas','producao-cfg','acessos'];
     var idx=tabs.indexOf(tab);
     if(idx>=0)document.querySelectorAll('.tab')[idx].classList.add('active');
     var el=document.getElementById('tab-'+tab);if(el)el.classList.add('active');
     if(tab==='acessos')initAcessos();
+  }
+
+
+  function salvarProducaoCfg(){
+    var cfg=JSON.parse(localStorage.getItem('allhair_config')||'{}');
+    cfg.producao={
+      maqMeia:parseInt(document.getElementById('cfg-maq-meia').value||2),
+      maqLiso:parseInt(document.getElementById('cfg-maq-liso').value||4),
+      maqMini:parseInt(document.getElementById('cfg-maq-mini').value||4),
+      prodMeia:parseFloat(document.getElementById('cfg-prod-meia').value||2),
+      prodLiso:parseFloat(document.getElementById('cfg-prod-liso').value||2.5),
+      prodMini:parseFloat(document.getElementById('cfg-prod-mini').value||1.2),
+      faccPessoas:parseInt(document.getElementById('cfg-facc-pessoas').value||3),
+      faccDias:parseInt(document.getElementById('cfg-facc-dias').value||7),
+      faccMeia:parseFloat(document.getElementById('cfg-facc-meia').value||10),
+      faccLiso:parseFloat(document.getElementById('cfg-facc-liso').value||10),
+      faccMini:parseFloat(document.getElementById('cfg-facc-mini').value||3),
+      faccDiaEnvio:parseInt(document.getElementById('cfg-facc-dia-envio').value||1),
+      embPessoas:parseInt(document.getElementById('cfg-emb-pessoas').value||1),
+      embPctHora:parseInt(document.getElementById('cfg-emb-pct-hora').value||100),
+      embHoras:parseInt(document.getElementById('cfg-emb-horas').value||8),
+      envioDias:parseInt(document.getElementById('cfg-envio-dias').value||1),
+    };
+    localStorage.setItem('allhair_config',JSON.stringify(cfg));
+    renderCapacidade();
+    showToast('✅ Configurações de produção salvas!');
+  }
+
+  function loadProducaoCfg(){
+    var cfg=JSON.parse(localStorage.getItem('allhair_config')||'{}');
+    var p=cfg.producao||{};
+    var campos={
+      'cfg-maq-meia':p.maqMeia||2,'cfg-maq-liso':p.maqLiso||4,'cfg-maq-mini':p.maqMini||4,
+      'cfg-prod-meia':p.prodMeia||2,'cfg-prod-liso':p.prodLiso||2.5,'cfg-prod-mini':p.prodMini||1.2,
+      'cfg-facc-pessoas':p.faccPessoas||3,'cfg-facc-dias':p.faccDias||7,
+      'cfg-facc-meia':p.faccMeia||10,'cfg-facc-liso':p.faccLiso||10,'cfg-facc-mini':p.faccMini||3,
+      'cfg-facc-dia-envio':p.faccDiaEnvio||1,
+      'cfg-emb-pessoas':p.embPessoas||1,'cfg-emb-pct-hora':p.embPctHora||100,
+      'cfg-emb-horas':p.embHoras||8,'cfg-envio-dias':p.envioDias||1,
+    };
+    Object.entries(campos).forEach(function(e){var el=document.getElementById(e[0]);if(el)el.value=e[1];});
+    renderCapacidade();
+  }
+
+  function renderCapacidade(){
+    var el=document.getElementById('cap-calculada');
+    if(!el)return;
+    var cfg=JSON.parse(localStorage.getItem('allhair_config')||'{}');
+    var p=cfg.producao||{};
+    var maqMeia=p.maqMeia||2, maqLiso=p.maqLiso||4, maqMini=p.maqMini||4;
+    var prodMeia=p.prodMeia||2, prodLiso=p.prodLiso||2.5, prodMini=p.prodMini||1.2;
+    var faccP=p.faccPessoas||3;
+    var embP=p.embPessoas||1, embH=p.embPctHora||100, embHoras=p.embHoras||8;
+    var rendMeia=1000, rendLiso=1000, rendMini=3000;
+
+    var kgDiaMeia=maqMeia*prodMeia, kgDiaLiso=maqLiso*prodLiso, kgDiaMini=maqMini*prodMini;
+    var pcsDiaMeia=kgDiaMeia*rendMeia, pcsDiaLiso=kgDiaLiso*rendLiso, pcsDiaMini=kgDiaMini*rendMini;
+    var embDia=embP*embH*embHoras;
+
+    el.innerHTML=[
+      {icon:'🧶',label:'Meia/dia',val:kgDiaMeia.toFixed(1)+'kg',sub:(pcsDiaMeia/1000).toFixed(1)+'k pçs · '+maqMeia+' máq.'},
+      {icon:'📏',label:'Liso/dia',val:kgDiaLiso.toFixed(1)+'kg',sub:(pcsDiaLiso/1000).toFixed(1)+'k pçs · '+maqLiso+' máq.'},
+      {icon:'🔹',label:'Mini/dia',val:kgDiaMini.toFixed(1)+'kg',sub:(pcsDiaMini/1000).toFixed(1)+'k pçs · '+maqMini+' máq.'},
+      {icon:'📦',label:'Embalagem/dia',val:embDia+' pct',sub:embP+' pessoa(s) · '+embH+' pct/h'},
+    ].map(function(k){
+      return '<div style="background:var(--bg);border-radius:10px;padding:14px;text-align:center">'+
+        '<div style="font-size:22px;margin-bottom:4px">'+k.icon+'</div>'+
+        '<div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:4px">'+k.label+'</div>'+
+        '<div style="font-size:20px;font-weight:900;color:var(--purple)">'+k.val+'</div>'+
+        '<div style="font-size:11px;color:var(--text2);margin-top:4px">'+k.sub+'</div>'+
+      '</div>';
+    }).join('');
   }
 
   function salvarGeral(){
@@ -2330,6 +2473,7 @@ main { padding: 24px 28px; }
 
   loadGeral();
   loadMetas();
+  loadProducaoCfg();
 </script>
 <script src="firebase-sync.js"></script>
 </body>

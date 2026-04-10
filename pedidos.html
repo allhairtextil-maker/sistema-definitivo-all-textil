@@ -2519,6 +2519,215 @@ main { padding: 24px 28px; }
     }
   }
 
+
+  // ============================================================
+  // CALCULADORA DE PRAZO CENTRAL
+  // ============================================================
+  function getCfgProducao(){
+    var cfg=JSON.parse(localStorage.getItem('allhair_config')||'{}');
+    var p=cfg.producao||{};
+    return {
+      maqMeia:p.maqMeia||2, maqLiso:p.maqLiso||4, maqMini:p.maqMini||4,
+      prodMeia:p.prodMeia||2, prodLiso:p.prodLiso||2.5, prodMini:p.prodMini||1.2,
+      faccPessoas:p.faccPessoas||3, faccDias:p.faccDias||7,
+      faccMeia:p.faccMeia||10, faccLiso:p.faccLiso||10, faccMini:p.faccMini||3,
+      embPessoas:p.embPessoas||1, embPctHora:p.embPctHora||100, embHoras:p.embHoras||8,
+      envioDias:p.envioDias||1,
+    };
+  }
+
+  function getCapDiaria(cfg){
+    return {
+      meia: cfg.maqMeia*cfg.prodMeia,
+      liso: cfg.maqLiso*cfg.prodLiso,
+      mini: cfg.maqMini*cfg.prodMini,
+      embDia: cfg.embPessoas*cfg.embPctHora*cfg.embHoras,
+    };
+  }
+
+  function calcPrazoEntrega(pedido, posicaoFila){
+    // posicaoFila = kg de pedidos na frente deste na fila
+    var cfg=getCfgProducao();
+    var cap=getCapDiaria(cfg);
+    
+    // Determine tipo de tecido from products
+    var prods=JSON.parse(localStorage.getItem('allhair_produtos')||'[]');
+    var itens=pedido.itens||[];
+    var kgTotal=0; var tipo='liso';
+    itens.forEach(function(it){
+      var prod=prods.find(function(p){return p.id===it.prodId;});
+      if(prod){
+        var rend=prod.rendimento||1000;
+        var kg=Number(it.qtd||0)*Number(it['unid-pacote']||prod['unid-pacote']||12)/rend;
+        kgTotal+=kg;
+        tipo=prod.tecidoTipo||'liso';
+      }
+    });
+    if(kgTotal===0)kgTotal=1; // fallback
+
+    // Days to produce this pedido (at current capacity)
+    var capTipo=tipo==='meia'?cap.meia:tipo==='mini'?cap.mini:cap.liso;
+    if(capTipo<=0)capTipo=1;
+
+    // Days to clear queue before this pedido
+    var diasFila=posicaoFila>0?Math.ceil(posicaoFila/capTipo):0;
+    // Days to produce this pedido
+    var diasProd=Math.ceil(kgTotal/capTipo);
+    // Faccionista
+    var diasFacc=cfg.faccDias;
+    // Embalagem
+    var qtdPacotes=itens.reduce(function(s,it){return s+Number(it.qtd||0);},0);
+    var diasEmb=Math.ceil(qtdPacotes/cap.embDia);
+    if(diasEmb<1)diasEmb=1;
+    // Envio
+    var diasEnvio=cfg.envioDias;
+
+    var totalDias=diasFila+diasProd+diasFacc+diasEmb+diasEnvio;
+
+    var dataEntrega=new Date();
+    dataEntrega.setDate(dataEntrega.getDate()+totalDias);
+    // Skip weekends
+    while(dataEntrega.getDay()===0||dataEntrega.getDay()===6){
+      dataEntrega.setDate(dataEntrega.getDate()+1);
+    }
+
+    return {
+      dataEntrega:dataEntrega,
+      diasFila:diasFila, diasProd:diasProd, diasFacc:diasFacc,
+      diasEmb:diasEmb, diasEnvio:diasEnvio, totalDias:totalDias,
+      kgTotal:kgTotal, tipo:tipo,
+    };
+  }
+
+  function calcStatusPrazo(pedido, prazoCalc){
+    if(!pedido.entrega)return{status:'sem-data',label:'Sem data',cor:'#94a3b8'};
+    var dataEntregaInformada=new Date(pedido.entrega+' 00:00');
+    var dataCalculada=prazoCalc.dataEntrega;
+    var diff=Math.ceil((dataEntregaInformada-dataCalculada)/(1000*60*60*24));
+    if(diff>=2)return{status:'ok',label:'✅ No prazo',cor:'#10b981'};
+    if(diff>=-1)return{status:'risco',label:'⚠️ Em risco',cor:'#f59e0b'};
+    return{status:'atraso',label:'🔴 Atrasado',cor:'#ef4444'};
+  }
+
+  function getSugestaoDia(){
+    var cfg=getCfgProducao();
+    var cap=getCapDiaria(cfg);
+    var pedidos=JSON.parse(localStorage.getItem('allhair_pedidos')||'[]');
+    var producoes=JSON.parse(localStorage.getItem('allhair_producoes2')||'[]');
+    var envios=JSON.parse(localStorage.getItem('allhair_envios_v2')||'[]');
+    var prods=JSON.parse(localStorage.getItem('allhair_produtos')||'[]');
+    var hoje=new Date();
+    
+    var abertos=pedidos.filter(function(p){return ['recebido','producao'].includes(p.status);});
+    abertos.sort(function(a,b){return new Date(a.entrega||'9999-12-31')-new Date(b.entrega||'9999-12-31');});
+
+    var sugestoes={maquina:[],faccionista:[],embalar:[],alertas:[]};
+
+    // What to run today in maquina
+    var kgMeiaHoje=cap.meia, kgLisoHoje=cap.liso, kgMiniHoje=cap.mini;
+    abertos.forEach(function(ped){
+      var itens=ped.itens||[];
+      itens.forEach(function(it){
+        var prod=prods.find(function(p){return p.id===it.prodId;});
+        if(!prod)return;
+        var tipo=prod.tecidoTipo||'liso';
+        var rend=prod.rendimento||1000;
+        var qtdPct=Number(it.qtd||0);
+        var kgNecessario=qtdPct*(prod['unid-pacote']||12)/rend;
+        // Already produced?
+        var jaProduziu=producoes.filter(function(p){
+          return p.pedidoId===ped.id&&p.prodId===it.prodId&&p.etapa==='maquina';
+        }).reduce(function(s,p){return s+Number(p.kg||0);},0);
+        var kgFaltando=Math.max(0,kgNecessario-jaProduziu);
+        if(kgFaltando<=0)return;
+        
+        var capTipo=tipo==='meia'?kgMeiaHoje:tipo==='mini'?kgMiniHoje:kgLisoHoje;
+        if(capTipo<=0)return;
+        var kgHoje=Math.min(kgFaltando,capTipo);
+        if(tipo==='meia')kgMeiaHoje-=kgHoje;
+        else if(tipo==='mini')kgMiniHoje-=kgHoje;
+        else kgLisoHoje-=kgHoje;
+        
+        sugestoes.maquina.push({
+          cliente:ped.clienteNome, produto:prod.nome, tipo:tipo,
+          kg:kgHoje.toFixed(2), urgente:ped.entrega&&new Date(ped.entrega+' 00:00')<new Date(hoje.getTime()+3*864e5)
+        });
+      });
+    });
+
+    // What to send to faccionista (items in cru stock)
+    var estoque=JSON.parse(localStorage.getItem('allhair_estoque_v2')||'{}');
+    var cru=estoque.cru||{};
+    Object.entries(cru).forEach(function(e){
+      if(Number(e[1].kg||0)>0){
+        sugestoes.faccionista.push({
+          desc:e[1].tecido+' — '+(e[1].corNome||e[1].corId),
+          kg:Number(e[1].kg).toFixed(2)
+        });
+      }
+    });
+
+    // What to pack (virado stock)
+    var virado=estoque.virado||{};
+    var pctRestEmb=cap.embDia;
+    Object.entries(virado).forEach(function(e){
+      if(Number(e[1].kg||0)>0&&pctRestEmb>0){
+        var rend=1000; // default
+        var pcts=Math.floor(Number(e[1].kg)*rend/12);
+        var embHoje=Math.min(pcts,pctRestEmb);
+        pctRestEmb-=embHoje;
+        sugestoes.embalar.push({
+          desc:e[1].tecido+' — '+(e[1].corNome||e[1].corId),
+          pcts:embHoje
+        });
+      }
+    });
+
+    // Capacity alerts + suggestions
+    var totalKgPendente={meia:0,liso:0,mini:0};
+    abertos.forEach(function(ped){
+      (ped.itens||[]).forEach(function(it){
+        var prod=prods.find(function(p){return p.id===it.prodId;});
+        if(!prod)return;
+        var tipo=prod.tecidoTipo||'liso';
+        var rend=prod.rendimento||1000;
+        totalKgPendente[tipo]=(totalKgPendente[tipo]||0)+Number(it.qtd||0)*(prod['unid-pacote']||12)/rend;
+      });
+    });
+    
+    // Days to clear all queue
+    ['meia','liso','mini'].forEach(function(tipo){
+      var kg=totalKgPendente[tipo]||0;
+      var cap2=tipo==='meia'?cap.meia:tipo==='mini'?cap.mini:cap.liso;
+      var diasNec=cap2>0?Math.ceil(kg/cap2):999;
+      if(diasNec>14){
+        var maqAtual=tipo==='meia'?cfg.maqMeia:tipo==='mini'?cfg.maqMini:cfg.maqLiso;
+        var maqNec=Math.ceil(kg/14/(tipo==='meia'?cfg.prodMeia:tipo==='mini'?cfg.prodMini:cfg.prodLiso));
+        var maqExtra=maqNec-maqAtual;
+        if(maqExtra>0){
+          sugestoes.alertas.push({
+            tipo:'maquina', msg:'Fila de '+tipo+' tem '+diasNec+' dias',
+            sugestao:'Ligar mais '+maqExtra+' máquina(s) de '+tipo+' para entregar em 14 dias'
+          });
+        }
+      }
+    });
+
+    // Embalagem overload
+    var totalPctPendente=abertos.reduce(function(s,ped){
+      return s+(ped.itens||[]).reduce(function(s2,it){return s2+Number(it.qtd||0);},0);
+    },0);
+    var diasEmbNec=cap.embDia>0?Math.ceil(totalPctPendente/cap.embDia):999;
+    if(diasEmbNec>7){
+      sugestoes.alertas.push({
+        tipo:'embalagem',msg:'Embalagem tem '+diasEmbNec+' dias de trabalho pendente',
+        sugestao:'Contratar mais '+(Math.ceil(diasEmbNec/7)-cfg.embPessoas)+' pessoa(s) para embalagem'
+      });
+    }
+
+    return sugestoes;
+  }
+
   function saveReservas(){ localStorage.setItem('allhair_reservas', JSON.stringify(reservas)); }
 
   // Retorna estoque embalado disponível (total - reservado por outros pedidos)
