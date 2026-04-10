@@ -2109,7 +2109,9 @@ main { padding: 24px 28px; }
 <div class="tabs-bar">
   <div class="tab active" onclick="switchTab('clientes')">👥 Clientes</div>
   <div class="tab" onclick="switchTab('abc')">📊 Curva ABC</div>
-  <div class="tab" onclick="switchTab('inativos')">⚠️ Inativos <span class="tab-count" id="tc-cli">0</span></div>
+  <div class="tab" onclick="switchTab('inativos')">⚠️ Inativos</div>
+  <div class="tab" onclick="switchTab('inadimplencia')">🔴 Inadimplência</div>
+  <div class="tab" onclick="switchTab('frequencia')">🔄 Frequência <span class="tab-count" id="tc-cli">0</span></div>
   <div class="tab" onclick="switchTab('transportadoras')">🚚 Transportadoras <span class="tab-count" id="tc-transp">0</span></div>
 </div>
 
@@ -2306,6 +2308,122 @@ main { padding: 24px 28px; }
   let transportadoras = JSON.parse(localStorage.getItem('allhair_transportadoras') || '[]');
   let editingCliId = null, editingTranspId = null;
 
+
+
+  function renderInadimplencia(){
+    var kpisEl=document.getElementById('inadimplencia-kpis');
+    var listaEl=document.getElementById('inadimplencia-lista');
+    if(!kpisEl)return;
+
+    var pedidosAll=JSON.parse(localStorage.getItem('allhair_pedidos')||'[]');
+    var aReceber=JSON.parse(localStorage.getItem('allhair_a_receber')||'[]');
+    var hoje=new Date(); hoje.setHours(0,0,0,0);
+
+    // Find overdue receivables
+    var vencidos=aReceber.filter(function(r){
+      return r.status!=='pago'&&r.vencimento&&new Date(r.vencimento+' 00:00')<hoje;
+    });
+
+    // Group by client
+    var porCliente={};
+    vencidos.forEach(function(r){
+      var cid=r.clienteId||r.clienteNome;
+      if(!porCliente[cid])porCliente[cid]={nome:r.clienteNome,total:0,itens:[],maiorAtraso:0};
+      porCliente[cid].total+=Number(r.valor||0);
+      porCliente[cid].itens.push(r);
+      var dias=Math.ceil((hoje-new Date(r.vencimento+' 00:00'))/(864e5));
+      if(dias>porCliente[cid].maiorAtraso)porCliente[cid].maiorAtraso=dias;
+    });
+
+    var lista=Object.values(porCliente).sort(function(a,b){return b.total-a.total;});
+    var totalInad=lista.reduce(function(s,x){return s+x.total;},0);
+    var totalFat=pedidosAll.filter(function(p){return p.status==='finalizado';})
+      .reduce(function(s,p){return s+(p.itens||[]).reduce(function(s2,i){return s2+Number(i.total||0);},0);},0);
+
+    kpisEl.innerHTML=[
+      {icon:'🔴',label:'Total em atraso',val:fmt(totalInad),sub:lista.length+' cliente(s)',cor:'#ef4444'},
+      {icon:'📊',label:'% do faturamento',val:(totalFat>0?totalInad/totalFat*100:0).toFixed(1)+'%',sub:'em inadimplência',cor:'#f59e0b'},
+      {icon:'⏰',label:'Maior atraso',val:(lista.length?Math.max.apply(null,lista.map(function(x){return x.maiorAtraso;})):0)+' dias',sub:'em aberto',cor:'#ef4444'},
+    ].map(function(k){
+      return '<div style="background:var(--white);border:1px solid var(--border);border-radius:14px;padding:16px">'+
+        '<div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;margin-bottom:8px">'+k.icon+' '+k.label+'</div>'+
+        '<div style="font-size:22px;font-weight:900;color:'+k.cor+'">'+k.val+'</div>'+
+        '<div style="font-size:12px;color:var(--text2);margin-top:4px">'+k.sub+'</div>'+
+      '</div>';
+    }).join('');
+
+    if(listaEl){
+      listaEl.innerHTML=lista.length?
+        '<div style="background:var(--white);border:1px solid var(--border);border-radius:14px;overflow:hidden">'+
+        lista.map(function(cl){
+          var cor=cl.maiorAtraso>30?'#ef4444':cl.maiorAtraso>15?'#f59e0b':'#94a3b8';
+          return '<div style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px">'+
+            '<div style="width:10px;height:10px;border-radius:50%;background:'+cor+';flex-shrink:0"></div>'+
+            '<div style="flex:1">'+
+              '<div style="font-weight:700">'+cl.nome+'</div>'+
+              '<div style="font-size:12px;color:var(--text2)">'+cl.itens.length+' parcela(s) em atraso · Maior: '+cl.maiorAtraso+' dias</div>'+
+            '</div>'+
+            '<div style="text-align:right">'+
+              '<div style="font-weight:900;color:'+cor+';font-size:16px">'+fmt(cl.total)+'</div>'+
+              '<div style="font-size:11px;color:var(--text2)">em atraso</div>'+
+            '</div>'+
+          '</div>';
+        }).join('')+'</div>':
+        '<div style="text-align:center;padding:40px;color:var(--green);font-weight:700">✅ Nenhuma inadimplência! Todos os pagamentos em dia.</div>';
+    }
+  }
+
+  function renderFrequencia(){
+    var wrap=document.getElementById('frequencia-wrap');if(!wrap)return;
+    var pedidosAll=JSON.parse(localStorage.getItem('allhair_pedidos')||'[]');
+    var hoje=new Date();
+
+    // Calculate purchase frequency per client
+    var porCliente={};
+    pedidosAll.filter(function(p){return p.data&&p.clienteNome;}).forEach(function(p){
+      var cid=p.clienteId||p.clienteNome;
+      if(!porCliente[cid])porCliente[cid]={nome:p.clienteNome,datas:[],total:0};
+      porCliente[cid].datas.push(new Date(p.data+' 00:00'));
+      porCliente[cid].total+=(p.itens||[]).reduce(function(s,i){return s+Number(i.total||0);},0);
+    });
+
+    var lista=Object.values(porCliente).filter(function(c){return c.datas.length>=2;}).map(function(cl){
+      cl.datas.sort(function(a,b){return a-b;});
+      var intervalos=[];
+      for(var i=1;i<cl.datas.length;i++){
+        intervalos.push(Math.ceil((cl.datas[i]-cl.datas[i-1])/(864e5)));
+      }
+      var cicloMedio=intervalos.reduce(function(s,d){return s+d;},0)/intervalos.length;
+      var ultimaCompra=cl.datas[cl.datas.length-1];
+      var diasSemComprar=Math.ceil((hoje-ultimaCompra)/(864e5));
+      var proximaEsperada=new Date(ultimaCompra); proximaEsperada.setDate(proximaEsperada.getDate()+cicloMedio);
+      var statusCompra=diasSemComprar>cicloMedio*1.2?'atrasado':diasSemComprar>cicloMedio*0.8?'no-prazo':'cedo';
+      return Object.assign(cl,{cicloMedio:cicloMedio,diasSemComprar:diasSemComprar,proximaEsperada:proximaEsperada,statusCompra:statusCompra,qtdPedidos:cl.datas.length});
+    }).sort(function(a,b){return b.total-a.total;});
+
+    wrap.innerHTML=lista.length?
+      '<div style="background:var(--white);border:1px solid var(--border);border-radius:14px;overflow:hidden">'+
+      '<table style="width:100%;border-collapse:collapse">'+
+      '<thead><tr style="background:var(--bg)">'+
+        '<th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:700;color:var(--text2)">CLIENTE</th>'+
+        '<th style="padding:10px 14px;text-align:center;font-size:11px;font-weight:700;color:var(--text2)">CICLO MÉDIO</th>'+
+        '<th style="padding:10px 14px;text-align:center;font-size:11px;font-weight:700;color:var(--text2)">ÚLTIMA COMPRA</th>'+
+        '<th style="padding:10px 14px;text-align:center;font-size:11px;font-weight:700;color:var(--text2)">PRÓXIMA ESPERADA</th>'+
+        '<th style="padding:10px 14px;text-align:center;font-size:11px;font-weight:700;color:var(--text2)">STATUS</th>'+
+      '</tr></thead><tbody>'+
+      lista.map(function(cl){
+        var cor=cl.statusCompra==='atrasado'?'#ef4444':cl.statusCompra==='no-prazo'?'#f59e0b':'#10b981';
+        var label=cl.statusCompra==='atrasado'?'⚠️ Ligar agora':cl.statusCompra==='no-prazo'?'🔔 Hora de contatar':'✅ Recente';
+        return '<tr style="border-bottom:1px solid var(--border)">'+
+          '<td style="padding:12px 14px"><div style="font-weight:700">'+cl.nome+'</div><div style="font-size:11px;color:var(--text2)">'+cl.qtdPedidos+' pedidos · '+fmt(cl.total)+'</div></td>'+
+          '<td style="padding:12px 14px;text-align:center;font-weight:700">'+Math.round(cl.cicloMedio)+'d</td>'+
+          '<td style="padding:12px 14px;text-align:center;font-size:12px;color:var(--text2)">'+cl.datas[cl.datas.length-1].toLocaleDateString('pt-BR')+'</td>'+
+          '<td style="padding:12px 14px;text-align:center;font-size:12px;font-weight:700">'+cl.proximaEsperada.toLocaleDateString('pt-BR')+'</td>'+
+          '<td style="padding:12px 14px;text-align:center"><span style="background:'+cor+'20;color:'+cor+';padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700">'+label+'</span></td>'+
+        '</tr>';
+      }).join('')+'</tbody></table></div>':
+      '<div style="text-align:center;padding:40px;color:var(--text2)">Precisa de pelo menos 2 pedidos por cliente para calcular frequência.</div>';
+  }
 
   function renderABC(){
     var wrap=document.getElementById('abc-wrap');

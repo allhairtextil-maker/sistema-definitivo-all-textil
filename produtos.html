@@ -2142,6 +2142,10 @@ main { padding: 24px 28px; }
   <div class="tab active" onclick="switchTab('produtos')">🧶 Produtos <span class="tab-count" id="tc-prod">0</span></div>
   <div class="tab" onclick="switchTab('cores')">🎨 Cores <span class="tab-count" id="tc-cores">0</span></div>
   <div class="tab" onclick="switchTab('embalagens')">📦 Embalagens <span class="tab-count" id="tc-emb">0</span></div>
+  <div class="tab" onclick="switchTab('margens')">💰 Margens</div>
+  <div class="tab" onclick="switchTab('precificacao')">🧮 Precificação</div>
+  <div class="tab" onclick="switchTab('rendimento')">📊 Rendimento
+  </div>
   <div class="tab" onclick="switchTab('etiquetas')">🏷️ Etiquetas <span class="tab-count" id="tc-etq">0</span></div>
   <div class="tab" onclick="switchTab('caixas')">📫 Caixas <span class="tab-count" id="tc-caixas">0</span></div>
 </div>
@@ -2200,6 +2204,57 @@ main { padding: 24px 28px; }
 </main>
 </div>
 
+
+<div class="tab-content" id="tab-margens">
+<main>
+  <div style="margin-bottom:20px">
+    <h1 class="page-title">💰 Margem Real por Produto</h1>
+    <div style="font-size:13px;color:var(--text2);margin-top:4px">Baseado no preço de venda e custo estimado cadastrado em cada produto.</div>
+  </div>
+  <div id="margens-wrap"></div>
+</main>
+</div>
+
+<div class="tab-content" id="tab-precificacao">
+<main>
+  <div style="margin-bottom:20px"><h1 class="page-title">🧮 Calculadora de Precificação</h1></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+    <div class="card card-body">
+      <div style="font-size:14px;font-weight:800;margin-bottom:14px">📥 Custos do Produto</div>
+      <div class="form-grid">
+        <div class="field"><label>Produto</label>
+          <select id="prec-prod" onchange="calcPrecificacao()">
+            <option value="">— Selecionar —</option>
+          </select>
+        </div>
+        <div class="field"><label>Custo MP (R$/pacote)</label><input type="number" id="prec-custo-mp" step="0.001" placeholder="0.000" oninput="calcPrecificacao()"></div>
+        <div class="field"><label>Custo embalagem (R$/pacote)</label><input type="number" id="prec-custo-emb" step="0.001" placeholder="0.000" oninput="calcPrecificacao()"></div>
+        <div class="field"><label>Custo faccionista (R$/pacote)</label><input type="number" id="prec-custo-facc" step="0.001" placeholder="0.000" oninput="calcPrecificacao()"></div>
+        <div class="field"><label>Rateio custo fixo (R$/pacote)</label><input type="number" id="prec-custo-fixo" step="0.001" placeholder="0.000" oninput="calcPrecificacao()"></div>
+        <div class="field"><label>Comissão representante (%)</label><input type="number" id="prec-comissao" step="0.1" placeholder="5" value="5" oninput="calcPrecificacao()"></div>
+        <div class="field"><label>Margem desejada (%)</label><input type="number" id="prec-margem-desejada" step="0.5" placeholder="40" value="40" oninput="calcPrecificacao()"></div>
+        <div class="field"><label>Impostos/taxas (%)</label><input type="number" id="prec-impostos" step="0.1" placeholder="6" value="6" oninput="calcPrecificacao()"></div>
+      </div>
+    </div>
+    <div class="card card-body">
+      <div style="font-size:14px;font-weight:800;margin-bottom:14px">📊 Resultado</div>
+      <div id="prec-resultado"></div>
+    </div>
+  </div>
+  <div class="card card-body" style="margin-top:16px">
+    <div style="font-size:14px;font-weight:800;margin-bottom:14px">📈 Simulador de Margem</div>
+    <div style="font-size:13px;color:var(--text2);margin-bottom:12px">O que acontece com sua margem se mudar variáveis?</div>
+    <div id="prec-simulador"></div>
+  </div>
+</main>
+</div>
+
+<div class="tab-content" id="tab-rendimento">
+<main>
+  <div style="margin-bottom:20px"><h1 class="page-title">📊 Rendimento Real vs Teórico</h1></div>
+  <div id="rendimento-wrap"></div>
+</main>
+</div>
 <div class="tab-content" id="tab-etiquetas">
 <main>
   <div class="topbar-actions" style="margin-bottom:16px">
@@ -2462,6 +2517,235 @@ main { padding: 24px 28px; }
   let coresSel=[];
 
 
+
+
+
+  function populatePrecProd(){
+    var sel=document.getElementById('prec-prod');if(!sel)return;
+    var cur=sel.value;
+    sel.innerHTML='<option value="">— Selecionar —</option>';
+    produtos.filter(function(p){return p.status==='ativo';}).forEach(function(p){
+      var o=document.createElement('option');
+      o.value=p.id;o.textContent=p.nome;
+      if(p.id===cur)o.selected=true;
+      sel.appendChild(o);
+    });
+    // Auto-fill if product selected
+    sel.onchange=function(){
+      var prod=produtos.find(function(p){return p.id===sel.value;});
+      if(!prod)return;
+      if(prod.custo&&document.getElementById('prec-custo-mp'))
+        document.getElementById('prec-custo-mp').value=prod.custo||'';
+      calcPrecificacao();
+    };
+  }
+
+  function calcPrecificacao(){
+    var el=document.getElementById('prec-resultado');
+    if(!el)return;
+    var mp=parseFloat(document.getElementById('prec-custo-mp')?.value||0);
+    var emb=parseFloat(document.getElementById('prec-custo-emb')?.value||0);
+    var facc=parseFloat(document.getElementById('prec-custo-facc')?.value||0);
+    var fixo=parseFloat(document.getElementById('prec-custo-fixo')?.value||0);
+    var comissao=parseFloat(document.getElementById('prec-comissao')?.value||5)/100;
+    var margemDesej=parseFloat(document.getElementById('prec-margem-desejada')?.value||40)/100;
+    var impostos=parseFloat(document.getElementById('prec-impostos')?.value||6)/100;
+
+    var custoTotal=mp+emb+facc+fixo;
+    if(custoTotal<=0){el.innerHTML='<div style="color:var(--text2);text-align:center;padding:20px">Preencha os custos para calcular</div>';return;}
+
+    // Price formula: Preço = CustoTotal / (1 - margem - comissao - impostos)
+    var divisor=1-margemDesej-comissao-impostos;
+    if(divisor<=0){el.innerHTML='<div style="color:var(--red)">Margem+comissão+impostos > 100%</div>';return;}
+    var precoMinimo=custoTotal/divisor;
+    var lucroUnit=precoMinimo*margemDesej;
+    var margemReal=(precoMinimo-custoTotal)/precoMinimo*100;
+
+    // Histórico de preço do produto selecionado
+    var prodId=document.getElementById('prec-prod')?.value;
+    var prod=produtos.find(function(p){return p.id===prodId;});
+    var precoAtual=prod?prod.preco:0;
+    var difPreco=precoAtual>0?((precoAtual-precoMinimo)/precoMinimo*100):null;
+
+    el.innerHTML=
+      '<div style="display:flex;flex-direction:column;gap:10px">'+
+      // Breakdown
+      '<div style="background:var(--bg);border-radius:10px;padding:14px">'+
+        '<div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">COMPOSIÇÃO DO CUSTO</div>'+
+        [['MP',mp],['Embalagem',emb],['Faccionista',facc],['Custo Fixo Rateado',fixo]].filter(function(x){return x[1]>0;}).map(function(x){
+          return '<div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">'+
+            '<span>'+x[0]+'</span><span style="font-weight:700">R$ '+x[1].toFixed(3)+'</span></div>';
+        }).join('')+
+        '<div style="border-top:1px solid var(--border);margin-top:6px;padding-top:6px;display:flex;justify-content:space-between;font-weight:800">'+
+          '<span>Custo Total</span><span>R$ '+custoTotal.toFixed(3)+'</span></div>'+
+      '</div>'+
+      // Result
+      '<div style="background:var(--purple-light);border-radius:10px;padding:14px">'+
+        '<div style="font-size:12px;font-weight:700;color:var(--purple);margin-bottom:8px">PREÇO SUGERIDO</div>'+
+        '<div style="font-size:28px;font-weight:900;color:var(--purple)">R$ '+precoMinimo.toFixed(2)+'</div>'+
+        '<div style="font-size:13px;color:var(--purple);margin-top:4px">Lucro: R$ '+lucroUnit.toFixed(3)+'/pct · Margem: '+margemReal.toFixed(1)+'%</div>'+
+      '</div>'+
+      (precoAtual>0?
+        '<div style="background:'+(precoAtual>=precoMinimo?'#d1fae5':'#fee2e2')+';border-radius:10px;padding:12px">'+
+          '<div style="font-size:13px;font-weight:700;color:'+(precoAtual>=precoMinimo?'var(--green)':'var(--red)')+'">'+
+            'Preço atual: R$ '+precoAtual.toFixed(2)+
+            (difPreco!==null?' ('+(difPreco>0?'+':'')+difPreco.toFixed(1)+'% '+(precoAtual>=precoMinimo?'acima':'abaixo')+' do mínimo)':'')+
+          '</div>'+
+        '</div>':'')+'</div>';
+
+    // Simulador
+    var simEl=document.getElementById('prec-simulador');
+    if(simEl&&custoTotal>0){
+      var cenarios=[
+        {label:'MP -10%',custoNovo:custoTotal-mp*0.1},
+        {label:'MP +10%',custoNovo:custoTotal+mp*0.1},
+        {label:'Preço +5%',precoNovo:precoMinimo*1.05},
+        {label:'Preço +10%',precoNovo:precoMinimo*1.10},
+        {label:'Volume 2x (fixo cai)',custoNovo:mp+emb+facc+fixo*0.6},
+      ];
+      simEl.innerHTML='<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px">'+
+        cenarios.map(function(s){
+          var pNovo=s.precoNovo||s.custoNovo/divisor;
+          var mNova=(pNovo-s.custoNovo||s.custoNovo?((pNovo-(s.custoNovo||custoTotal))/pNovo*100):(pNovo-custoTotal)/pNovo*100);
+          var impacto=mNova-margemReal;
+          return '<div style="background:var(--bg);border-radius:10px;padding:12px;text-align:center">'+
+            '<div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:6px">'+s.label+'</div>'+
+            '<div style="font-size:16px;font-weight:900;color:'+(impacto>=0?'var(--green)':'var(--red)')+'">'+
+              (impacto>=0?'+':'')+impacto.toFixed(1)+'%</div>'+
+            '<div style="font-size:11px;color:var(--text2)">margem</div>'+
+          '</div>';
+        }).join('')+'</div>';
+    }
+  }
+
+  function renderRendimento(){
+    var wrap=document.getElementById('rendimento-wrap');
+    if(!wrap)return;
+    var producoes=JSON.parse(localStorage.getItem('allhair_producoes2')||'[]');
+    var prodsAtivos=produtos.filter(function(p){return p.status==='ativo'&&p.rendimento>0;});
+
+    if(!prodsAtivos.length){wrap.innerHTML='<div style="text-align:center;padding:40px;color:var(--text2)">Cadastre produtos com rendimento para comparar.</div>';return;}
+
+    // For each product, compare theoretical yield vs actual (from producoes)
+    var rows=prodsAtivos.map(function(prod){
+      var rendTeorico=prod.rendimento||0;
+      var lancsMaq=producoes.filter(function(p){return p.etapa==='maquina'&&p.prodId===prod.id;});
+      var lancsPct=producoes.filter(function(p){return p.etapa==='embalagem'&&p.prodId===prod.id;});
+      var kgTotal=lancsMaq.reduce(function(s,p){return s+Number(p.kg||0);},0);
+      var pctTotal=lancsPct.reduce(function(s,p){return s+Number(p.pacotes||0);},0);
+      var pcsTotal=pctTotal*(prod['unid-pacote']||12);
+      var rendReal=kgTotal>0?pcsTotal/kgTotal:0;
+      var difPct=rendTeorico>0?(rendReal-rendTeorico)/rendTeorico*100:0;
+      var cor=Math.abs(difPct)<5?'#10b981':difPct>0?'#3b82f6':'#ef4444';
+
+      return '<tr style="border-bottom:1px solid var(--border)">'+
+        '<td style="padding:12px 14px;font-weight:700">'+prod.nome+'</td>'+
+        '<td style="padding:12px 14px;text-align:center">'+rendTeorico.toLocaleString()+'</td>'+
+        '<td style="padding:12px 14px;text-align:center;font-weight:700;color:'+cor+'">'+
+          (rendReal>0?rendReal.toFixed(0):'—')+'</td>'+
+        '<td style="padding:12px 14px;text-align:center">'+
+          (rendReal>0?'<span style="background:'+cor+'20;color:'+cor+';padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700">'+
+            (difPct>0?'+':'')+difPct.toFixed(1)+'%</span>':'—')+
+        '</td>'+
+        '<td style="padding:12px 14px;text-align:center;color:var(--text2)">'+kgTotal.toFixed(1)+'kg / '+pctTotal+' pct</td>'+
+      '</tr>';
+    });
+
+    wrap.innerHTML='<div style="background:var(--white);border:1px solid var(--border);border-radius:14px;overflow:hidden">'+
+      '<table style="width:100%;border-collapse:collapse">'+
+        '<thead><tr style="background:var(--bg)">'+
+          '<th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:700;color:var(--text2)">PRODUTO</th>'+
+          '<th style="padding:10px 14px;text-align:center;font-size:11px;font-weight:700;color:var(--text2)">TEÓRICO (pçs/kg)</th>'+
+          '<th style="padding:10px 14px;text-align:center;font-size:11px;font-weight:700;color:var(--text2)">REAL (pçs/kg)</th>'+
+          '<th style="padding:10px 14px;text-align:center;font-size:11px;font-weight:700;color:var(--text2)">DIFERENÇA</th>'+
+          '<th style="padding:10px 14px;text-align:center;font-size:11px;font-weight:700;color:var(--text2)">VOLUME ANALISADO</th>'+
+        '</tr></thead>'+
+        '<tbody>'+rows.join('')+'</tbody>'+
+      '</table>'+
+      '<div style="padding:12px 16px;background:var(--bg);font-size:12px;color:var(--text2)">'+
+        '🟢 Dentro do esperado (±5%) &nbsp; 🔵 Acima do teórico &nbsp; 🔴 Abaixo do teórico — revisar processo'+
+      '</div>'+
+    '</div>';
+  }
+
+  function renderMargens(){
+    var wrap=document.getElementById('margens-wrap');
+    if(!wrap)return;
+    
+    var ativos=produtos.filter(function(p){return p.status==='ativo'&&p.preco>0;});
+    ativos.sort(function(a,b){
+      var mA=a.preco&&a.custo?(a.preco-a.custo)/a.preco*100:0;
+      var mB=b.preco&&b.custo?(b.preco-b.custo)/b.preco*100:0;
+      return mB-mA;
+    });
+    
+    if(!ativos.length){
+      wrap.innerHTML='<div style="text-align:center;padding:40px;color:var(--text2)">Cadastre preço e custo nos produtos para ver a margem.</div>';
+      return;
+    }
+    
+    // Summary stats
+    var comCusto=ativos.filter(function(p){return p.custo>0;});
+    var margemMedia=comCusto.length?comCusto.reduce(function(s,p){return s+(p.preco-p.custo)/p.preco*100;},0)/comCusto.length:0;
+    var melhores=comCusto.filter(function(p){return (p.preco-p.custo)/p.preco*100>=30;}).length;
+    
+    wrap.innerHTML=
+      '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px">'+
+      [
+        {icon:'📊',label:'Margem média',val:margemMedia.toFixed(1)+'%',sub:comCusto.length+' produtos com custo',cor:margemMedia>=30?'#10b981':margemMedia>=15?'#f59e0b':'#ef4444'},
+        {icon:'🏆',label:'Margem ≥30%',val:melhores+' produtos',sub:'Alta rentabilidade',cor:'#10b981'},
+        {icon:'⚠️',label:'Sem custo',val:(ativos.length-comCusto.length)+' produtos',sub:'Cadastre o custo',cor:'#94a3b8'},
+      ].map(function(k){
+        return '<div style="background:var(--white);border:1px solid var(--border);border-radius:14px;padding:16px">'+
+          '<div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;margin-bottom:8px">'+k.icon+' '+k.label+'</div>'+
+          '<div style="font-size:22px;font-weight:900;color:'+k.cor+'">'+k.val+'</div>'+
+          '<div style="font-size:12px;color:var(--text2);margin-top:4px">'+k.sub+'</div>'+
+        '</div>';
+      }).join('')+
+      '</div>'+
+      '<div style="background:var(--white);border:1px solid var(--border);border-radius:14px;overflow:hidden">'+
+        '<table style="width:100%;border-collapse:collapse">'+
+          '<thead><tr style="background:var(--bg)">'+
+            '<th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:700;color:var(--text2)">PRODUTO</th>'+
+            '<th style="padding:10px 14px;text-align:right;font-size:11px;font-weight:700;color:var(--text2)">PREÇO</th>'+
+            '<th style="padding:10px 14px;text-align:right;font-size:11px;font-weight:700;color:var(--text2)">CUSTO</th>'+
+            '<th style="padding:10px 14px;text-align:right;font-size:11px;font-weight:700;color:var(--text2)">LUCRO/PCT</th>'+
+            '<th style="padding:10px 14px;text-align:center;font-size:11px;font-weight:700;color:var(--text2)">MARGEM</th>'+
+            '<th style="padding:10px 14px;font-size:11px;font-weight:700;color:var(--text2)">BARRA</th>'+
+          '</tr></thead><tbody>'+
+          ativos.map(function(p){
+            var margem=p.custo>0?(p.preco-p.custo)/p.preco*100:null;
+            var cor=margem===null?'#94a3b8':margem>=30?'#10b981':margem>=15?'#f59e0b':'#ef4444';
+            var lucro=p.custo>0?p.preco-p.custo:null;
+            return '<tr style="border-bottom:1px solid var(--border)">'+
+              '<td style="padding:12px 14px"><div style="font-weight:700">'+p.nome+'</div><div style="font-size:11px;color:var(--text2)">'+(p.tecidoTipo||'').toUpperCase()+'</div></td>'+
+              '<td style="padding:12px 14px;text-align:right;font-weight:700">'+fmt(p.preco)+'</td>'+
+              '<td style="padding:12px 14px;text-align:right;color:var(--text2)">'+(p.custo>0?fmt(p.custo):'—')+'</td>'+
+              '<td style="padding:12px 14px;text-align:right;font-weight:700;color:'+cor+'">'+(lucro!==null?fmt(lucro):'—')+'</td>'+
+              '<td style="padding:12px 14px;text-align:center">'+
+                (margem!==null?'<span style="background:'+cor+'20;color:'+cor+';padding:3px 12px;border-radius:20px;font-weight:800;font-size:13px">'+margem.toFixed(1)+'%</span>':'<span style="color:#94a3b8;font-size:12px">Sem custo</span>')+
+              '</td>'+
+              '<td style="padding:12px 14px">'+
+                (margem!==null?'<div style="background:var(--bg);border-radius:20px;height:7px;overflow:hidden;width:100px"><div style="height:100%;border-radius:20px;background:'+cor+';width:'+Math.min(100,margem)+'%"></div></div>':'—')+
+              '</td>'+
+            '</tr>';
+          }).join('')+
+          '</tbody></table>'+
+      '</div>';
+  }
+
+  function calcMargemProd(){
+    var preco=parseFloat(document.getElementById('p-preco').value||0);
+    var custo=parseFloat(document.getElementById('p-custo').value||0);
+    var el=document.getElementById('p-margem-calc');
+    if(!el)return;
+    if(preco>0&&custo>0){
+      var margem=((preco-custo)/preco*100).toFixed(1);
+      el.value=margem+'% (R$ '+(preco-custo).toFixed(2)+')';
+      el.style.color=margem>=30?'var(--green)':margem>=15?'var(--orange)':'var(--red)';
+    } else { el.value='—'; }
+  }
+
   function onProdTipo(){ /* deprecated - replaced by tecido-tipo */ }
   function populatePaiSelect(id){ /* deprecated */ }
   function getFilhosDoPai(paiId){
@@ -2501,6 +2785,9 @@ main { padding: 24px 28px; }
   function fmt(v){ return 'R$ '+Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
 
   function switchTab(tab){
+    if(tab==='precificacao'){populatePrecProd();calcPrecificacao();}
+    if(tab==='rendimento')renderRendimento();
+    if(tab==='margens')renderMargens();
     document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
     document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
     document.querySelector('.tab[onclick="switchTab(\''+tab+'\')"]').classList.add('active');
@@ -2887,6 +3174,9 @@ main { padding: 24px 28px; }
       'qtd-caixa':parseInt(document.getElementById('p-qtd-caixa').value||0),
       'estoque-min':parseInt(document.getElementById('p-estoque-min')?.value||0),
       preco:parseFloat(document.getElementById('p-preco').value||0),
+      custo:parseFloat(document.getElementById('p-custo')?.value||0),
+      estoqueMax:parseInt(document.getElementById('p-estoque-max')?.value||0),
+      diasCobertura:parseInt(document.getElementById('p-dias-cobertura')?.value||15),
       ean13:document.getElementById('p-ean13').value,
       ean14:document.getElementById('p-ean14').value,
       ncm:document.getElementById('p-ncm').value,

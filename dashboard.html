@@ -2449,6 +2449,7 @@ main { padding: 24px 28px; }
     </div>
   </div>
   <div class="content">
+    <div id="relatorio-exec-wrap" style="margin-bottom:12px"></div>
     <div class="alertas" id="alertas"></div>
     <div id="meta-hero-wrap"></div>
     <div id="semana-wrap"></div>
@@ -2993,6 +2994,71 @@ main { padding: 24px 28px; }
   function prazoLabel(d){if(!d)return '';const diff=Math.ceil((new Date(d+' 00:00')-new Date())/(1000*60*60*24));if(diff<0)return Math.abs(diff)+'d atraso';if(diff===0)return 'Hoje';if(diff===1)return 'Amanhã';return new Date(d+' 00:00').toLocaleDateString('pt-BR');}
 
 
+
+  function renderRelatorioExecutivo(){
+    var wrap=document.getElementById('relatorio-exec-wrap');if(!wrap)return;
+    var pedidosAll=JSON.parse(localStorage.getItem('allhair_pedidos')||'[]');
+    var producoes=JSON.parse(localStorage.getItem('allhair_producoes2')||'[]');
+    var recebimentos=JSON.parse(localStorage.getItem('allhair_recebimentos')||'[]');
+    var despesas=JSON.parse(localStorage.getItem('allhair_despesas')||'[]');
+    var estoque=JSON.parse(localStorage.getItem('allhair_estoque_v2')||'{}');
+    var hoje=new Date();
+    var mes=hoje.getMonth(), ano=hoje.getFullYear();
+    var noMes=function(d){if(!d)return false;var dt=new Date(d+'T00:00');return dt.getMonth()===mes&&dt.getFullYear()===ano;};
+    var semanaAgo=new Date(hoje); semanaAgo.setDate(semanaAgo.getDate()-7);
+
+    // Metrics
+    var fatMes=recebimentos.filter(function(r){return noMes(r.data);}).reduce(function(s,r){return s+Number(r.valor||0);},0);
+    var despMes=despesas.filter(function(d){return d.ativo;}).reduce(function(s,d){return s+Number(d.valor||0);},0);
+    var lucroMes=fatMes-despMes;
+    var margem=fatMes>0?lucroMes/fatMes*100:0;
+    var pedAbertos=pedidosAll.filter(function(p){return['recebido','producao','pronto'].includes(p.status);}).length;
+    var pedSemana=pedidosAll.filter(function(p){return p.data&&new Date(p.data+'T00:00')>=semanaAgo;}).length;
+    var kgSemana=producoes.filter(function(p){return p.etapa==='maquina'&&p.data&&new Date(p.data+'T00:00')>=semanaAgo;}).reduce(function(s,p){return s+Number(p.kg||0);},0);
+    var atrasados=pedidosAll.filter(function(p){return['recebido','producao','pronto'].includes(p.status)&&p.entrega&&new Date(p.entrega+' 00:00')<hoje;}).length;
+    var cruKg=Object.values(estoque.cru||{}).reduce(function(s,x){return s+Number(x.kg||0);},0);
+    var viradoKg=Object.values(estoque.virado||{}).reduce(function(s,x){return s+Number(x.kg||0);},0);
+
+    wrap.innerHTML='<div style="background:linear-gradient(135deg,#1e3a5f,#0f172a);border-radius:14px;padding:20px;margin-bottom:16px">'+
+      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">'+
+        '<div>'+
+          '<div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1px">📊 Relatório Executivo</div>'+
+          '<div style="font-size:16px;font-weight:800;color:#fff;margin-top:2px">Semana de '+semanaAgo.toLocaleDateString('pt-BR',{day:'numeric',month:'short'})+' a '+hoje.toLocaleDateString('pt-BR',{day:'numeric',month:'short'})+'</div>'+
+        '</div>'+
+        '<div style="text-align:right">'+
+          '<div style="font-size:24px;font-weight:900;color:'+(margem>=30?'#4ade80':margem>=15?'#fbbf24':'#f87171')+'">'+margem.toFixed(1)+'%</div>'+
+          '<div style="font-size:11px;color:rgba(255,255,255,0.4)">margem do mês</div>'+
+        '</div>'+
+      '</div>'+
+      '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px">'+
+      [
+        {label:'Faturamento Mês',val:fmt(fatMes),sub:'Lucro: '+fmt(lucroMes),cor:fatMes>0?'#4ade80':'#f87171'},
+        {label:'Pedidos Abertos',val:pedAbertos,sub:atrasados>0?atrasados+' atrasado(s)!':'Em dia',cor:atrasados>0?'#f87171':'#4ade80'},
+        {label:'Kg Esta Semana',val:kgSemana.toFixed(1)+'kg',sub:pedSemana+' pedido(s) novos',cor:'#a5f3fc'},
+        {label:'Em Pipeline',val:(cruKg+viradoKg).toFixed(1)+'kg',sub:'Cru: '+cruKg.toFixed(1)+' · Virado: '+viradoKg.toFixed(1),cor:'#c4b5fd'},
+      ].map(function(k){
+        return '<div style="background:rgba(255,255,255,0.08);border-radius:10px;padding:12px">'+
+          '<div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.4);margin-bottom:4px">'+k.label+'</div>'+
+          '<div style="font-size:18px;font-weight:900;color:'+k.cor+'">'+k.val+'</div>'+
+          '<div style="font-size:10px;color:rgba(255,255,255,0.4);margin-top:2px">'+k.sub+'</div>'+
+        '</div>';
+      }).join('')+
+      '</div>'+
+      // Action items
+      '<div style="background:rgba(255,255,255,0.05);border-radius:10px;padding:12px">'+
+        '<div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.4);margin-bottom:8px;text-transform:uppercase">⚡ Ações desta semana</div>'+
+        [
+          atrasados>0?{cor:'#f87171',txt:atrasados+' pedido(s) em atraso — resolver urgente'}:null,
+          margem<20&&fatMes>0?{cor:'#fbbf24',txt:'Margem baixa ('+margem.toFixed(1)+'%) — revisar preços ou custos'}:null,
+          cruKg>10?{cor:'#a5f3fc',txt:cruKg.toFixed(1)+'kg no estoque cru — agendar envio para faccionista'}:null,
+          viradoKg>5?{cor:'#4ade80',txt:viradoKg.toFixed(1)+'kg virado pronto para embalar'}:null,
+          pedAbertos===0?{cor:'#4ade80',txt:'Sem pedidos em aberto — hora de prospectar novos clientes'}:null,
+        ].filter(Boolean).slice(0,4).map(function(a){
+          return '<div style="font-size:12px;color:'+a.cor+';margin-bottom:4px;font-weight:600">· '+a.txt+'</div>';
+        }).join('')||'<div style="font-size:12px;color:rgba(255,255,255,0.4)">Tudo em ordem esta semana!</div>'+
+      '</div>';
+  }
+
   function init(){
     const pedidos      = JSON.parse(localStorage.getItem('allhair_pedidos')        ||'[]');
     const clientes     = JSON.parse(localStorage.getItem('allhair_clientes')        ||'[]');
@@ -3069,6 +3135,7 @@ main { padding: 24px 28px; }
     if((estoque.mp?.ELA||0)<1) alertas.push({cls:'yellow',icon:'!',txt:'Elastano com estoque baixo',sub:`Apenas ${Number(estoque.mp?.ELA||0).toFixed(2)}kg restando`,href:'estoque.html'});
     if(metaFat>0&&!noRitmo&&fatBruto<metaFat) alertas.push({cls:'yellow',icon:'!',txt:'Ritmo abaixo da meta',sub:`Precisa de ${fmt(necessarioPorDia)}/dia nos próximos ${diasRestantes} dias`,href:'financeiro.html'});
 
+    renderRelatorioExecutivo();
     document.getElementById('alertas').innerHTML=alertas.map(a=>`
       <a class="alerta ${a.cls}" href="${a.href}">
         <span style="font-size:14px;font-weight:900">${a.icon}</span>

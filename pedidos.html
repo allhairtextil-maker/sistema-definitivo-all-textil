@@ -2093,6 +2093,11 @@ main { padding: 24px 28px; }
   .topbar { padding: 0 16px; }
 }
 
+
+    .expedido{background:#eff6ff;border-color:#93c5fd;}
+    .nf_enviada{background:#fef3c7;border-color:#fcd34d;}
+    .boleto_enviado{background:#f0fdfa;border-color:#5eead4;}
+    .finalizado{background:#f0fdf4;border-color:#86efac;}
 </style>
 </head>
 <body>
@@ -2368,7 +2373,7 @@ main { padding: 24px 28px; }
     if(!semanasEl)return;
     
     var hoje=new Date(); hoje.setHours(0,0,0,0);
-    var abertos=pedidos.filter(function(p){return ['recebido','producao','pronto'].includes(p.status)&&p.entrega;});
+    var abertos=pedidos.filter(function(p){return ['recebido','producao','pronto','expedido','nf_enviada','boleto_enviado'].includes(p.status)&&p.entrega;});
     abertos.sort(function(a,b){return new Date(a.entrega)-new Date(b.entrega);});
     
     // Alertas críticos
@@ -2779,7 +2784,7 @@ main { padding: 24px 28px; }
     }
 
     // Calcula fila antes deste pedido
-    const filaAntes = pedidos.filter(p=>['recebido','producao','pronto'].includes(p.status) && p.id!==editingId)
+    const filaAntes = pedidos.filter(p=>['recebido','producao','pronto','expedido','nf_enviada','boleto_enviado'].includes(p.status) && p.id!==editingId)
       .sort((a,b)=>new Date(a.data)-new Date(b.data));
 
     let diasFilaExtra = 0;
@@ -3774,7 +3779,7 @@ main { padding: 24px 28px; }
   function renderPedDash(){
     const hoje=new Date();
     const hojeStr=hoje.toISOString().split('T')[0];
-    const abertos=pedidos.filter(p=>['recebido','producao','pronto'].includes(p.status));
+    const abertos=pedidos.filter(p=>['recebido','producao','pronto','expedido','nf_enviada','boleto_enviado'].includes(p.status));
     const atrasados=abertos.filter(p=>p.entrega&&new Date(p.entrega+' 00:00')<hoje);
     const prontos=abertos.filter(p=>p.status==='pronto');
     const emProd=abertos.filter(p=>p.status==='producao');
@@ -3892,7 +3897,7 @@ main { padding: 24px 28px; }
     document.getElementById('st-total').textContent=pedidos.length;
     document.getElementById('st-recebido').textContent=pedidos.filter(p=>p.status==='recebido').length;
     document.getElementById('st-producao').textContent=pedidos.filter(p=>p.status==='producao').length;
-    document.getElementById('st-pronto').textContent=pedidos.filter(p=>p.status==='pronto').length;
+    document.getElementById('st-pronto')&&(document.getElementById('st-pronto').textContent=pedidos.filter(p=>p.status==='pronto').length);
     const aReceber=pedidos.filter(p=>p.status!=='finalizado').reduce((s,p)=>s+getSaldo(p),0);
     document.getElementById('st-receber').textContent=fmt(aReceber);
 
@@ -3902,15 +3907,23 @@ main { padding: 24px 28px; }
         const itensResume=(p.itens||[]).slice(0,2).map(i=>{const pr=produtos.find(x=>x.id===i.prodId);return `${i.qtd}× ${pr?pr.nome:i.prodId}`;}).join('<br>')+((p.itens||[]).length>2?`<br>+${(p.itens||[]).length-2} mais`:'');
         const canal={WhatsApp:'💬',Email:'📧',Representante:'🤝',Telefone:'📞',Presencial:'🏠'}[p.canal]||'';
         return `
-          <div class="pedido-card" onclick="openDetalhe('${p.id}')">
-            <div class="pc-num">${p.numero||'—'} ${canal}</div>
-            <div class="pc-cliente">${p.clienteNome||'—'}</div>
-            <div class="pc-items">${itensResume}</div>
-            <div class="pc-footer-card">
-              <span class="pc-valor">${fmt(getTotal(p))}</span>
-              ${p.entrega?`<span class="pc-prazo ${prazoClass(p.entrega)}">${prazoLabel(p.entrega)}</span>`:''}
+          <div class="pedido-card">
+            <div onclick="openDetalhe('${p.id}')" style="cursor:pointer">
+              <div class="pc-num">${p.numero||'—'} ${canal}</div>
+              <div class="pc-cliente">${p.clienteNome||'—'}</div>
+              <div class="pc-items">${itensResume}</div>
+              <div class="pc-footer-card">
+                <span class="pc-valor">${fmt(getTotal(p))}</span>
+                ${p.entrega?`<span class="pc-prazo ${prazoClass(p.entrega)}">${prazoLabel(p.entrega)}</span>`:''}
+              </div>
+              ${getSaldo(p)>0?`<div style="font-size:10px;color:var(--orange);font-weight:600;margin-top:4px">💰 A receber: ${fmt(getSaldo(p))}</div>`:'<div style="font-size:10px;color:var(--green);font-weight:600;margin-top:4px">✓ Quitado</div>'}
             </div>
-            ${getSaldo(p)>0?`<div style="font-size:10px;color:var(--orange);font-weight:600;margin-top:4px">💰 A receber: ${fmt(getSaldo(p))}</div>`:'<div style="font-size:10px;color:var(--green);font-weight:600;margin-top:4px">✓ Quitado</div>'}
+            ${p.status!=='finalizado'?`
+            <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
+              <button onclick="event.stopPropagation();avancarStatus('${p.id}')" style="width:100%;background:var(--purple);color:#fff;border:none;padding:6px 10px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">
+                ${STATUS_EMOJI[STATUS_ORDER[STATUS_ORDER.indexOf(p.status)+1]]||'🏁'} Avançar para ${STATUS_LABEL[STATUS_ORDER[STATUS_ORDER.indexOf(p.status)+1]]||'Concluído'}
+              </button>
+            </div>`:''}
           </div>`;
       }).join('');
       return `
