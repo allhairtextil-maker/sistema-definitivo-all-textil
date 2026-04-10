@@ -2146,6 +2146,7 @@ main { padding: 24px 28px; }
   <div class="tab" onclick="switchTab('pagar')">🔴 A Pagar</div>
   <div class="tab" onclick="switchTab('despesas')">📋 Despesas Fixas</div>
   <div class="tab" onclick="switchTab('saude')">💚 Saúde</div>
+  <div class="tab" onclick="switchTab('precificacao')">🧮 Precificação</div>
   <div class="tab" onclick="switchTab('simulador')">🔮 Simulador</div>
   <div class="tab" onclick="switchTab('crescimento')">📈 Crescimento</div>
   <div class="tab" onclick="switchTab('dre')">📊 DRE</div>
@@ -2332,31 +2333,110 @@ main { padding: 24px 28px; }
 </div>
 
 
-<div class="tab-content" id="tab-simulador">
+<div class="tab-content" id="tab-precificacao">
 <main>
-  <div style="margin-bottom:20px"><h1 class="page-title">🔮 Simulador de Cenários</h1></div>
+  <div style="margin-bottom:20px"><h1 class="page-title">🧮 Calculadora de Precificação</h1></div>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
     <div class="card card-body">
-      <div style="font-size:14px;font-weight:800;margin-bottom:14px">📥 Parâmetros</div>
+      <div style="font-size:14px;font-weight:800;margin-bottom:14px">📥 Custos por Pacote</div>
       <div class="form-grid">
-        <div class="field form-full"><label>Faturamento base (R$)</label><input type="number" id="sim-fat" placeholder="Auto (mês atual)" step="100" oninput="calcSimulador()"></div>
-        <div class="field"><label>Variação de faturamento (%)</label><input type="number" id="sim-fat-var" value="0" step="1" oninput="calcSimulador()"></div>
-        <div class="field"><label>Variação de custo MP (%)</label><input type="number" id="sim-mp-var" value="0" step="1" oninput="calcSimulador()"></div>
-        <div class="field"><label>Variação de despesas fixas (%)</label><input type="number" id="sim-fixo-var" value="0" step="1" oninput="calcSimulador()"></div>
-        <div class="field"><label>Comissão representante (%)</label><input type="number" id="sim-comissao" value="5" step="0.5" oninput="calcSimulador()"></div>
-        <div class="field"><label>Impostos (%)</label><input type="number" id="sim-impostos" value="6" step="0.5" oninput="calcSimulador()"></div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:12px">
-        <button class="btn-cancel" onclick="simCenario(-20,-10,0)">📉 Crise</button>
-        <button class="btn-cancel" onclick="simCenario(0,0,0)">📊 Atual</button>
-        <button class="btn-cancel" onclick="simCenario(20,-5,-10)">🚀 Crescimento</button>
+        <div class="field"><label>Custo MP (R$/pacote)</label><input type="number" id="prec-mp" step="0.001" placeholder="0.000" oninput="calcPrec()"></div>
+        <div class="field"><label>Custo embalagem (R$/pacote)</label><input type="number" id="prec-emb" step="0.001" placeholder="0.000" oninput="calcPrec()"></div>
+        <div class="field"><label>Custo faccionista (R$/pacote)</label><input type="number" id="prec-facc" step="0.001" placeholder="0.000" oninput="calcPrec()"></div>
+        <div class="field"><label>Rateio custo fixo (R$/pacote)</label><input type="number" id="prec-fixo" step="0.001" placeholder="0.000" oninput="calcPrec()"></div>
+        <div class="field"><label>Comissão representante (%)</label><input type="number" id="prec-com" step="0.1" value="5" oninput="calcPrec()"></div>
+        <div class="field"><label>Impostos/taxas (%)</label><input type="number" id="prec-imp" step="0.1" value="6" oninput="calcPrec()"></div>
+        <div class="field form-full"><label>Margem desejada (%)</label><input type="number" id="prec-marg" step="0.5" value="35" oninput="calcPrec()"></div>
       </div>
     </div>
     <div class="card card-body">
-      <div style="font-size:14px;font-weight:800;margin-bottom:14px">📊 Resultado Projetado</div>
-      <div id="sim-resultado"></div>
+      <div style="font-size:14px;font-weight:800;margin-bottom:14px">📊 Resultado</div>
+      <div id="prec-resultado-fin"></div>
     </div>
   </div>
+  <div class="card card-body" style="margin-top:16px">
+    <div style="font-size:14px;font-weight:800;margin-bottom:12px">📈 Se eu mudar...</div>
+    <div id="prec-sim-fin"></div>
+  </div>
+</main>
+</div>
+
+<div class="tab-content" id="tab-simulador">
+<main>
+  <div style="margin-bottom:20px">
+    <h1 class="page-title">🔮 Simulador de Cenários</h1>
+    <div style="font-size:13px;color:var(--text2);margin-top:4px">Baseado nos dados reais do mês atual</div>
+  </div>
+
+  <!-- Dados reais atuais -->
+  <div class="card card-body" style="margin-bottom:16px">
+    <div style="font-size:13px;font-weight:800;margin-bottom:12px">📊 Base Real do Mês Atual</div>
+    <div id="sim-base-real" style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px"></div>
+  </div>
+
+  <!-- Controles -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+    <div class="card card-body">
+      <div style="font-size:13px;font-weight:800;margin-bottom:14px">🎛️ Ajustar Variáveis</div>
+      <div class="form-grid">
+        <div class="field form-full">
+          <label>Variação de Preço de Venda (%)</label>
+          <div style="display:flex;align-items:center;gap:10px">
+            <input type="range" id="sim-preco-range" min="-30" max="50" value="0" step="1" oninput="syncRange('sim-preco')" style="flex:1">
+            <input type="number" id="sim-preco" value="0" step="1" style="width:70px;padding:6px;border:1.5px solid var(--border2);border-radius:6px;font-family:inherit;text-align:center" oninput="syncInput('sim-preco');calcSimReal()">
+            <span style="font-weight:700;color:var(--purple)">%</span>
+          </div>
+        </div>
+        <div class="field form-full">
+          <label>Variação de Custo de MP (%)</label>
+          <div style="display:flex;align-items:center;gap:10px">
+            <input type="range" id="sim-mp-range" min="-30" max="50" value="0" step="1" oninput="syncRange('sim-mp')" style="flex:1">
+            <input type="number" id="sim-mp" value="0" step="1" style="width:70px;padding:6px;border:1.5px solid var(--border2);border-radius:6px;font-family:inherit;text-align:center" oninput="syncInput('sim-mp');calcSimReal()">
+            <span style="font-weight:700;color:var(--red)">%</span>
+          </div>
+        </div>
+        <div class="field form-full">
+          <label>Variação de Volume de Vendas (%)</label>
+          <div style="display:flex;align-items:center;gap:10px">
+            <input type="range" id="sim-vol-range" min="-50" max="100" value="0" step="1" oninput="syncRange('sim-vol')" style="flex:1">
+            <input type="number" id="sim-vol" value="0" step="1" style="width:70px;padding:6px;border:1.5px solid var(--border2);border-radius:6px;font-family:inherit;text-align:center" oninput="syncInput('sim-vol');calcSimReal()">
+            <span style="font-weight:700;color:var(--blue)">%</span>
+          </div>
+        </div>
+        <div class="field form-full">
+          <label>Variação de Despesas Fixas (%)</label>
+          <div style="display:flex;align-items:center;gap:10px">
+            <input type="range" id="sim-fixo-range" min="-30" max="50" value="0" step="1" oninput="syncRange('sim-fixo')" style="flex:1">
+            <input type="number" id="sim-fixo" value="0" step="1" style="width:70px;padding:6px;border:1.5px solid var(--border2);border-radius:6px;font-family:inherit;text-align:center" oninput="syncInput('sim-fixo');calcSimReal()">
+            <span style="font-weight:700;color:var(--orange)">%</span>
+          </div>
+        </div>
+      </div>
+      <!-- Cenários rápidos -->
+      <div style="margin-top:14px">
+        <div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:8px;text-transform:uppercase">Cenários Rápidos</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button onclick="aplicarCenario(0,0,0,0)" style="padding:6px 12px;border:1.5px solid var(--border2);border-radius:6px;background:var(--bg);font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">📊 Atual</button>
+          <button onclick="aplicarCenario(10,0,20,0)" style="padding:6px 12px;border:1.5px solid var(--green);border-radius:6px;background:#d1fae5;color:#065f46;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">🚀 Crescimento</button>
+          <button onclick="aplicarCenario(0,-10,0,0)" style="padding:6px 12px;border:1.5px solid var(--purple);border-radius:6px;background:var(--purple-light);color:var(--purple);font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">💡 Reduzir MP</button>
+          <button onclick="aplicarCenario(5,-5,10,0)" style="padding:6px 12px;border:1.5px solid var(--blue);border-radius:6px;background:#dbeafe;color:#1e40af;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">⭐ Ideal</button>
+          <button onclick="aplicarCenario(-10,10,-20,0)" style="padding:6px 12px;border:1.5px solid var(--red);border-radius:6px;background:#fee2e2;color:#991b1b;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">📉 Crise</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card card-body">
+      <div style="font-size:13px;font-weight:800;margin-bottom:14px">📈 Resultado Projetado</div>
+      <div id="sim-resultado-real"></div>
+    </div>
+  </div>
+
+  <!-- Comparativo lado a lado -->
+  <div class="card card-body">
+    <div style="font-size:13px;font-weight:800;margin-bottom:14px">⚖️ Atual vs Projetado</div>
+    <div id="sim-comparativo"></div>
+  </div>
+
 </main>
 </div>
 
@@ -2611,7 +2691,7 @@ main { padding: 24px 28px; }
   function switchTab(tab){
     document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active');});
     document.querySelectorAll('.tab-content').forEach(function(t){t.classList.remove('active');});
-    const tabs=['resumo','caixa','receber','pagar','despesas','saude','simulador','crescimento','dre','fluxo','categorias'];
+    const tabs=['resumo','caixa','receber','pagar','despesas','saude','precificacao','simulador','crescimento','dre','fluxo','categorias'];
     var idx=tabs.indexOf(tab);
     if(idx>=0)document.querySelectorAll('.tab')[idx].classList.add('active');
     var tabEl=document.getElementById('tab-'+tab);
@@ -3529,53 +3609,242 @@ main { padding: 24px 28px; }
   }
 
 
-  function calcSimulador(){
-    var el=document.getElementById('sim-resultado');if(!el)return;
-    var recBase=parseFloat(document.getElementById('sim-fat')?.value)||getReceitaMes();
-    var fatVar=parseFloat(document.getElementById('sim-fat-var')?.value||0)/100;
-    var mpVar=parseFloat(document.getElementById('sim-mp-var')?.value||0)/100;
-    var fixoVar=parseFloat(document.getElementById('sim-fixo-var')?.value||0)/100;
-    var comissaoPct=parseFloat(document.getElementById('sim-comissao')?.value||5)/100;
-    var impostosPct=parseFloat(document.getElementById('sim-impostos')?.value||6)/100;
 
-    var fatNovo=recBase*(1+fatVar);
-    var despAtual=getDespesasMes();
-    var despFixaAtual=despesas.filter(function(d){return d.tipo==='fixo'&&d.ativo;}).reduce(function(s,d){return s+Number(d.valor||0);},0);
-    var despVarAtual=despAtual-despFixaAtual;
-    
-    var despFixaNova=despFixaAtual*(1+fixoVar);
-    var despMPNova=despVarAtual*(1+mpVar);
-    var comissaoVal=fatNovo*comissaoPct;
-    var impostosVal=fatNovo*impostosPct;
-    var despTotal=despFixaNova+despMPNova+comissaoVal+impostosVal;
-    var lucroNovo=fatNovo-despTotal;
-    var margemNova=fatNovo>0?lucroNovo/fatNovo*100:0;
-    
-    var lucroAtual=getReceitaMes()-getDespesasMes();
-    var difLucro=lucroNovo-lucroAtual;
-    var cor=lucroNovo>=0?'#10b981':'#ef4444';
+  function calcPrec(){
+    var elRes=document.getElementById('prec-resultado-fin');
+    var elSim=document.getElementById('prec-sim-fin');
+    if(!elRes)return;
+    var mp=parseFloat(document.getElementById('prec-mp')?.value||0);
+    var emb=parseFloat(document.getElementById('prec-emb')?.value||0);
+    var facc=parseFloat(document.getElementById('prec-facc')?.value||0);
+    var fixo=parseFloat(document.getElementById('prec-fixo')?.value||0);
+    var com=parseFloat(document.getElementById('prec-com')?.value||5)/100;
+    var imp=parseFloat(document.getElementById('prec-imp')?.value||6)/100;
+    var marg=parseFloat(document.getElementById('prec-marg')?.value||35)/100;
 
-    el.innerHTML=[
-      {label:'Faturamento',val:fmt(fatNovo),sub:(fatVar>=0?'+':'')+( fatVar*100).toFixed(0)+'% vs atual',cor:'var(--purple)'},
-      {label:'Despesas Total',val:fmt(despTotal),sub:'Fixo: '+fmt(despFixaNova)+' · Var: '+fmt(despMPNova),cor:'#ef4444'},
-      {label:'Lucro Líquido',val:fmt(lucroNovo),sub:'Margem: '+margemNova.toFixed(1)+'%',cor:cor},
-      {label:'Impacto vs Hoje',val:(difLucro>=0?'+':'')+fmt(difLucro),sub:difLucro>=0?'Melhora':'Piora no resultado',cor:difLucro>=0?'#10b981':'#ef4444'},
-    ].map(function(k){
-      return '<div style="background:var(--bg);border-radius:10px;padding:12px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">'+
-        '<div><div style="font-size:11px;font-weight:700;color:var(--text2)">'+k.label+'</div><div style="font-size:11px;color:var(--text2)">'+k.sub+'</div></div>'+
-        '<div style="font-size:20px;font-weight:900;color:'+k.cor+'">'+k.val+'</div>'+
+    var custo=mp+emb+facc+fixo;
+    if(custo<=0){elRes.innerHTML='<div style="color:var(--text2);text-align:center;padding:20px">Preencha os custos para calcular.</div>';return;}
+
+    var divisor=1-marg-com-imp;
+    if(divisor<=0){elRes.innerHTML='<div style="color:var(--red)">Margem+comissão+impostos excede 100%.</div>';return;}
+    var preco=custo/divisor;
+    var lucroUnit=preco-custo-preco*com-preco*imp;
+    var margemReal=(preco-custo)/preco*100;
+
+    elRes.innerHTML=
+      '<div style="display:flex;flex-direction:column;gap:10px">'+
+      // Cost breakdown
+      '<div style="background:var(--bg);border-radius:10px;padding:14px">'+
+        '<div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:8px;text-transform:uppercase">Composição</div>'+
+        [['🧶 MP',mp],['📦 Embalagem',emb],['🤝 Faccionista',facc],['⚙️ Custo Fixo',fixo]].filter(function(x){return x[1]>0;}).map(function(x){
+          return '<div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">'+
+            '<span style="color:var(--text2)">'+x[0]+'</span><span style="font-weight:700">R$ '+x[1].toFixed(3)+'</span></div>';
+        }).join('')+
+        '<div style="border-top:1px solid var(--border);margin-top:8px;padding-top:8px;display:flex;justify-content:space-between;font-weight:800">'+
+          '<span>Custo Total</span><span>R$ '+custo.toFixed(3)+'</span></div>'+
+      '</div>'+
+      // Price result
+      '<div style="background:var(--purple-light);border-radius:12px;padding:18px;text-align:center">'+
+        '<div style="font-size:12px;font-weight:700;color:var(--purple);margin-bottom:6px">PREÇO MÍNIMO SUGERIDO</div>'+
+        '<div style="font-size:36px;font-weight:900;color:var(--purple)">R$ '+preco.toFixed(2)+'</div>'+
+        '<div style="font-size:13px;color:var(--purple);margin-top:6px">Lucro: R$ '+lucroUnit.toFixed(3)+'/pct · Margem: '+margemReal.toFixed(1)+'%</div>'+
+      '</div>'+
+      // Deductions
+      '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">'+
+      [
+        {label:'Custo',val:'R$ '+custo.toFixed(3),cor:'#ef4444'},
+        {label:'Comissão '+( com*100).toFixed(0)+'%',val:'R$ '+(preco*com).toFixed(3),cor:'#f59e0b'},
+        {label:'Impostos '+(imp*100).toFixed(0)+'%',val:'R$ '+(preco*imp).toFixed(3),cor:'#94a3b8'},
+      ].map(function(k){
+        return '<div style="background:var(--bg);border-radius:8px;padding:10px;text-align:center">'+
+          '<div style="font-size:10px;color:var(--text2);margin-bottom:3px">'+k.label+'</div>'+
+          '<div style="font-size:14px;font-weight:800;color:'+k.cor+'">'+k.val+'</div>'+
+        '</div>';
+      }).join('')+
+      '</div>'+
       '</div>';
-    }).join('')+
-    '<div style="margin-top:12px;padding:12px;background:'+(lucroNovo>=0?'#d1fae5':'#fee2e2')+';border-radius:10px;font-size:13px;font-weight:700;color:'+(lucroNovo>=0?'#065f46':'#991b1b')+'">'+
-      (lucroNovo>=0?'✅ Cenário positivo — R$ '+lucroNovo.toFixed(2)+' de lucro projetado':'🚨 Cenário negativo — prejuízo de R$ '+Math.abs(lucroNovo).toFixed(2))+
-    '</div>';
+
+    // Simulador impacto
+    if(elSim){
+      elSim.innerHTML='<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">'+
+        [
+          {label:'MP -10%',custoNovo:custo-mp*0.1},
+          {label:'MP +10%',custoNovo:custo+mp*0.1},
+          {label:'Preço +5%',precoNovo:preco*1.05},
+          {label:'Preço +10%',precoNovo:preco*1.10},
+        ].map(function(s){
+          var pNovo=s.precoNovo||(s.custoNovo/divisor);
+          var cNovo=s.custoNovo||custo;
+          var mNova=(pNovo-cNovo)/pNovo*100;
+          var impacto=mNova-margemReal;
+          return '<div style="background:var(--bg);border-radius:10px;padding:12px;text-align:center">'+
+            '<div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:6px">'+s.label+'</div>'+
+            '<div style="font-size:20px;font-weight:900;color:'+(impacto>=0?'var(--green)':'var(--red)')+'">'+
+              (impacto>=0?'+':'')+impacto.toFixed(1)+'%</div>'+
+            '<div style="font-size:11px;color:var(--text2)">margem</div>'+
+            '<div style="font-size:12px;font-weight:700;color:var(--purple);margin-top:4px">→ R$ '+pNovo.toFixed(2)+'</div>'+
+          '</div>';
+        }).join('')+'</div>';
+    }
   }
 
-  function simCenario(fatV,mpV,fixoV){
-    document.getElementById('sim-fat-var').value=fatV;
-    document.getElementById('sim-mp-var').value=mpV;
-    document.getElementById('sim-fixo-var').value=fixoV;
-    calcSimulador();
+
+  function syncRange(id){
+    var r=document.getElementById(id+'-range');
+    var i=document.getElementById(id);
+    if(r&&i){i.value=r.value;calcSimReal();}
+  }
+  function syncInput(id){
+    var r=document.getElementById(id+'-range');
+    var i=document.getElementById(id);
+    if(r&&i)r.value=i.value;
+  }
+  function aplicarCenario(preco,mp,vol,fixo){
+    document.getElementById('sim-preco').value=preco;
+    document.getElementById('sim-preco-range').value=preco;
+    document.getElementById('sim-mp').value=mp;
+    document.getElementById('sim-mp-range').value=mp;
+    document.getElementById('sim-vol').value=vol;
+    document.getElementById('sim-vol-range').value=vol;
+    document.getElementById('sim-fixo').value=fixo;
+    document.getElementById('sim-fixo-range').value=fixo;
+    calcSimReal();
+  }
+
+  function calcSimReal(){
+    var baseEl=document.getElementById('sim-base-real');
+    var resEl=document.getElementById('sim-resultado-real');
+    var compEl=document.getElementById('sim-comparativo');
+    if(!resEl)return;
+
+    // Load real data
+    var hoje=new Date();
+    var mes=hoje.getMonth(), ano=hoje.getFullYear();
+    var noMes=function(d){if(!d)return false;var dt=new Date(d+'T00:00');return dt.getMonth()===mes&&dt.getFullYear()===ano;};
+
+    var recebimentosAll=JSON.parse(localStorage.getItem('allhair_recebimentos')||'[]');
+    var despesasAll=JSON.parse(localStorage.getItem('allhair_despesas')||'[]');
+    var comprasAll=JSON.parse(localStorage.getItem('allhair_compras')||'[]');
+    var pedidosAll=JSON.parse(localStorage.getItem('allhair_pedidos')||'[]');
+    var sociosAll=JSON.parse(localStorage.getItem('allhair_socios')||'[]');
+    var cfg=JSON.parse(localStorage.getItem('allhair_config')||'{}');
+
+    // Real current values
+    var fatAtual=recebimentosAll.filter(function(r){return noMes(r.data);}).reduce(function(s,r){return s+Number(r.valor||0);},0);
+    var mpAtual=comprasAll.filter(function(c){return noMes(c.data);}).reduce(function(s,c){return s+Number(c.total||c.valor||0);},0);
+    var fixosAtual=despesasAll.filter(function(d){return d.tipo==='fixo'&&d.ativo;}).reduce(function(s,d){return s+Number(d.valor||0);},0);
+    var comissaoPct=(cfg.comissaoPct||5)/100;
+    var impostosPct=(cfg.aliquota||6)/100;
+    var despVarAtual=despesasAll.filter(function(d){return d.tipo==='variavel'&&d.ativo;}).reduce(function(s,d){return s+Number(d.valor||0);},0);
+
+    var comissaoAtual=fatAtual*comissaoPct;
+    var impostosAtual=fatAtual*impostosPct;
+    var despTotalAtual=mpAtual+fixosAtual+despVarAtual+comissaoAtual+impostosAtual;
+    var lucroAtual=fatAtual-despTotalAtual;
+    var margemAtual=fatAtual>0?lucroAtual/fatAtual*100:0;
+    var margemLiqAtual=fatAtual>0?(lucroAtual-impostosAtual)/fatAtual*100:margemAtual;
+
+    // Socios distribution
+    var sociosList=sociosAll.filter(function(s){return s.tipo==='socio';});
+    var totalPart=sociosList.reduce(function(s,sc){return s+Number(sc.participacao||0);},0);
+    var reservaPct=cfg.reservaPct||30;
+    var bolsoAtual=lucroAtual*(1-reservaPct/100);
+
+    // Show base
+    if(baseEl){
+      baseEl.innerHTML=[
+        {icon:'💰',label:'Faturamento',val:fmt(fatAtual),cor:'var(--purple)'},
+        {icon:'🧶',label:'Custo MP',val:fmt(mpAtual),cor:'#ef4444'},
+        {icon:'⚙️',label:'Despesas Fixas',val:fmt(fixosAtual),cor:'#f59e0b'},
+        {icon:'📊',label:'Margem Atual',val:margemAtual.toFixed(1)+'%',cor:margemAtual>=30?'#10b981':margemAtual>=15?'#f59e0b':'#ef4444'},
+        {icon:'💵',label:'No Bolso (sócios)',val:fmt(bolsoAtual),cor:'#10b981'},
+      ].map(function(k){
+        return '<div style="background:var(--bg);border-radius:10px;padding:12px;text-align:center">'+
+          '<div style="font-size:10px;font-weight:700;color:var(--text2);margin-bottom:4px">'+k.icon+' '+k.label+'</div>'+
+          '<div style="font-size:15px;font-weight:900;color:'+k.cor+'">'+k.val+'</div>'+
+        '</div>';
+      }).join('');
+    }
+
+    // Get slider values
+    var varPreco=parseFloat(document.getElementById('sim-preco')?.value||0)/100;
+    var varMP=parseFloat(document.getElementById('sim-mp')?.value||0)/100;
+    var varVol=parseFloat(document.getElementById('sim-vol')?.value||0)/100;
+    var varFixo=parseFloat(document.getElementById('sim-fixo')?.value||0)/100;
+
+    // Calculate projected
+    var fatProj=fatAtual*(1+varPreco)*(1+varVol);
+    var mpProj=mpAtual*(1+varMP)*(1+varVol); // volume affects MP too
+    var fixosProj=fixosAtual*(1+varFixo);
+    var despVarProj=despVarAtual*(1+varVol);
+    var comissaoProj=fatProj*comissaoPct;
+    var impostosProj=fatProj*impostosPct;
+    var despTotalProj=mpProj+fixosProj+despVarProj+comissaoProj+impostosProj;
+    var lucroProj=fatProj-despTotalProj;
+    var margemProj=fatProj>0?lucroProj/fatProj*100:0;
+    var margemLiqProj=fatProj>0?(lucroProj)/fatProj*100:margemProj;
+    var bolsoProj=lucroProj*(1-reservaPct/100);
+
+    var difLucro=lucroProj-lucroAtual;
+    var difMargem=margemProj-margemAtual;
+    var difBolso=bolsoProj-bolsoAtual;
+    var corLucro=difLucro>=0?'#10b981':'#ef4444';
+
+    // Result
+    resEl.innerHTML=
+      '<div style="background:'+(lucroProj>=0?'var(--purple-light)':'#fee2e2')+';border-radius:12px;padding:16px;margin-bottom:12px;text-align:center">'+
+        '<div style="font-size:11px;font-weight:700;color:'+(lucroProj>=0?'var(--purple)':'#991b1b')+';margin-bottom:6px">LUCRO LÍQUIDO PROJETADO</div>'+
+        '<div style="font-size:32px;font-weight:900;color:'+(lucroProj>=0?'var(--purple)':'#ef4444')+'">'+fmt(lucroProj)+'</div>'+
+        '<div style="font-size:13px;color:'+(difLucro>=0?'#10b981':'#ef4444')+';margin-top:4px;font-weight:700">'+
+          (difLucro>=0?'▲ +':' ▼ ')+fmt(Math.abs(difLucro))+' vs hoje'+
+        '</div>'+
+      '</div>'+
+      '<div style="display:flex;flex-direction:column;gap:8px">'+
+      [
+        {label:'Faturamento',atual:fatAtual,proj:fatProj,fmt:fmt},
+        {label:'Custo MP',atual:mpAtual,proj:mpProj,fmt:fmt,inverso:true},
+        {label:'Despesas Fixas',atual:fixosAtual,proj:fixosProj,fmt:fmt,inverso:true},
+        {label:'Impostos',atual:impostosAtual,proj:impostosProj,fmt:fmt,inverso:true},
+        {label:'Margem Líquida',atual:margemAtual,proj:margemProj,fmt:function(v){return v.toFixed(1)+'%';}},
+        {label:'💵 No Bolso (sócios)',atual:bolsoAtual,proj:bolsoProj,fmt:fmt,destaque:true},
+      ].map(function(k){
+        var dif=k.proj-k.atual;
+        var melhorou=k.inverso?dif<=0:dif>=0;
+        var cor=melhorou?'#10b981':'#ef4444';
+        return '<div style="display:flex;align-items:center;justify-content:space-between;padding:'+(k.destaque?'10px 12px':'7px 10px')+';background:'+(k.destaque?'#d1fae5':'var(--bg)')+';border-radius:8px">'+
+          '<span style="font-size:12px;font-weight:'+(k.destaque?'800':'600')+'">'+k.label+'</span>'+
+          '<div style="display:flex;align-items:center;gap:8px">'+
+            '<span style="font-size:12px;color:var(--text2)">'+k.fmt(k.atual)+'</span>'+
+            '<span style="font-size:12px;color:var(--text3)">→</span>'+
+            '<span style="font-size:'+(k.destaque?'15':'13')+'px;font-weight:800;color:'+cor+'">'+k.fmt(k.proj)+'</span>'+
+            (dif!==0?'<span style="font-size:11px;font-weight:700;color:'+cor+';">'+(melhorou?'+':'')+k.fmt(dif)+'</span>':'')+
+          '</div>'+
+        '</div>';
+      }).join('')+
+      '</div>';
+
+    // Comparativo por socio
+    if(compEl&&sociosList.length){
+      compEl.innerHTML='<div style="display:grid;grid-template-columns:repeat('+Math.min(3,sociosList.length)+',1fr);gap:12px">'+
+        sociosList.map(function(sc){
+          var part=Number(sc.participacao||0);
+          var pl=Number(sc.prolabore||0);
+          var bolsoScAtual=totalPart>0?bolsoAtual*part/totalPart+pl:pl;
+          var bolsoScProj=totalPart>0?bolsoProj*part/totalPart+pl:pl;
+          var dif=bolsoScProj-bolsoScAtual;
+          var cor=dif>=0?'#10b981':'#ef4444';
+          return '<div style="background:var(--bg);border-radius:10px;padding:14px">'+
+            '<div style="font-weight:800;margin-bottom:10px">'+sc.nome+' ('+part+'%)</div>'+
+            '<div style="font-size:11px;color:var(--text2);margin-bottom:4px">Hoje</div>'+
+            '<div style="font-size:18px;font-weight:900;color:var(--text)">'+fmt(bolsoScAtual)+'</div>'+
+            '<div style="font-size:11px;color:var(--text2);margin-top:8px;margin-bottom:4px">Projetado</div>'+
+            '<div style="font-size:22px;font-weight:900;color:'+cor+'">'+fmt(bolsoScProj)+'</div>'+
+            '<div style="font-size:12px;font-weight:700;color:'+cor+';margin-top:4px">'+(dif>=0?'▲ +':'▼ ')+fmt(Math.abs(dif))+'</div>'+
+          '</div>';
+        }).join('')+'</div>';
+    } else if(compEl){
+      compEl.innerHTML='<div style="color:var(--text2);font-size:13px;text-align:center;padding:20px">Cadastre sócios em Sócios → Configurar para ver distribuição.</div>';
+    }
   }
 
   function renderCrescimento(){

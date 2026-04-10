@@ -3080,124 +3080,127 @@ main { padding: 24px 28px; }
     var mes=hoje.getMonth(), ano=hoje.getFullYear();
     var mesPrev=mes===0?11:mes-1, anoPrev=mes===0?ano-1:ano;
     var nomeMes=hoje.toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
-
-    var noMes=function(d,m,a){if(!d)return false;var dt=new Date(d+'T00:00');return dt.getMonth()===m&&dt.getFullYear()===a;};
+    var noMes=function(d,m,a){if(!d)return false;var dt=new Date(d+'T00:00');return dt.getMonth()===(m===undefined?mes:m)&&dt.getFullYear()===(a===undefined?ano:a);};
 
     // Load all data
     var pedidosAll=JSON.parse(localStorage.getItem('allhair_pedidos')||'[]');
     var producoes=JSON.parse(localStorage.getItem('allhair_producoes2')||'[]');
     var recebimentos=JSON.parse(localStorage.getItem('allhair_recebimentos')||'[]');
-    var despesas=JSON.parse(localStorage.getItem('allhair_despesas')||'[]');
+    var despesasAll=JSON.parse(localStorage.getItem('allhair_despesas')||'[]');
     var compras=JSON.parse(localStorage.getItem('allhair_compras')||'[]');
-    var clientes=JSON.parse(localStorage.getItem('allhair_clientes')||'[]');
-    var produtos=JSON.parse(localStorage.getItem('allhair_produtos')||'[]');
-    var estoque=JSON.parse(localStorage.getItem('allhair_estoque_v2')||'{}');
     var aReceber=JSON.parse(localStorage.getItem('allhair_a_receber')||'[]');
+    var sociosAll=JSON.parse(localStorage.getItem('allhair_socios')||'[]');
     var cfg=JSON.parse(localStorage.getItem('allhair_config')||'{}');
-    var socios=JSON.parse(localStorage.getItem('allhair_socios')||'[]');
     var metas=cfg.metas||{};
 
-    // ===== FINANCEIRO =====
-    var fatMes=recebimentos.filter(function(r){return noMes(r.data,mes,ano);}).reduce(function(s,r){return s+Number(r.valor||0);},0);
+    // ===== DADOS FINANCEIROS REAIS =====
+    var fatBruto=recebimentos.filter(function(r){return noMes(r.data);}).reduce(function(s,r){return s+Number(r.valor||0);},0);
     var fatPrev=recebimentos.filter(function(r){return noMes(r.data,mesPrev,anoPrev);}).reduce(function(s,r){return s+Number(r.valor||0);},0);
-    var despFixas=despesas.filter(function(d){return d.tipo==='fixo'&&d.ativo;}).reduce(function(s,d){return s+Number(d.valor||0);},0);
-    var custMP=compras.filter(function(c){return noMes(c.data,mes,ano);}).reduce(function(s,c){return s+Number(c.total||c.valor||0);},0);
-    var despTotal=despFixas+custMP;
-    var lucro=fatMes-despTotal;
-    var margem=fatMes>0?lucro/fatMes*100:0;
-    var margemPrev=fatPrev>0?(fatPrev-despFixas-compras.filter(function(c){return noMes(c.data,mesPrev,anoPrev);}).reduce(function(s,c){return s+Number(c.total||c.valor||0);},0))/fatPrev*100:0;
-    var crescFat=fatPrev>0?(fatMes-fatPrev)/fatPrev*100:0;
-    var metaFat=Number(metas.fat||0);
-    var pctMeta=metaFat>0?fatMes/metaFat*100:null;
 
-    // ===== PRODUCAO =====
-    var kgMes=producoes.filter(function(p){return p.etapa==='maquina'&&noMes(p.data,mes,ano);}).reduce(function(s,p){return s+Number(p.kg||0);},0);
-    var kgPrev=producoes.filter(function(p){return p.etapa==='maquina'&&noMes(p.data,mesPrev,anoPrev);}).reduce(function(s,p){return s+Number(p.kg||0);},0);
-    var pcsMes=producoes.filter(function(p){return p.etapa==='embalagem'&&noMes(p.data,mes,ano);}).reduce(function(s,p){return s+Number(p.pacotes||0);},0);
+    // Custos variáveis
+    var custMP=compras.filter(function(c){return noMes(c.data);}).reduce(function(s,c){return s+Number(c.total||c.valor||0);},0);
+    var comissaoPct=(cfg.comissaoPct||5)/100;
+    var impostosPct=(cfg.aliquota||6)/100;
+    var comissaoVal=fatBruto*comissaoPct;
+    var impostosVal=fatBruto*impostosPct;
+    var custVar=custMP+comissaoVal+impostosVal;
+
+    // Custos fixos
+    var custFixo=despesasAll.filter(function(d){return d.tipo==='fixo'&&d.ativo;}).reduce(function(s,d){return s+Number(d.valor||0);},0);
+    var custVar2=despesasAll.filter(function(d){return d.tipo==='variavel'&&d.ativo;}).reduce(function(s,d){return s+Number(d.valor||0);},0);
+    custVar+=custVar2;
+
+    var custTotal=custVar+custFixo;
+
+    // Margens
+    var margemContrib=fatBruto>0?(fatBruto-custVar)/fatBruto*100:0; // MC = (Fat - CustVar) / Fat
+    var margemBruta=fatBruto>0?(fatBruto-custMP)/fatBruto*100:0;   // MB = (Fat - MP) / Fat
+    var lucroLiq=fatBruto-custTotal;
+    var margemLiq=fatBruto>0?lucroLiq/fatBruto*100:0;              // ML = Lucro / Fat
+    var pontEq=margemContrib>0?custFixo/(margemContrib/100):0;     // Ponto Equilíbrio
+
+    // Crescimento
+    var crescFat=fatPrev>0?(fatBruto-fatPrev)/fatPrev*100:0;
+
+    // Sócios - distribuição real
+    var sociosList=sociosAll.filter(function(s){return s.tipo==='socio';});
+    var totalPart=sociosList.reduce(function(s,sc){return s+Number(sc.participacao||0);},0);
+    var reservaPct=cfg.reservaPct||30;
+    var lucroDistribuivel=Math.max(0,lucroLiq*(1-reservaPct/100));
+    var prolaboreTotal=sociosList.reduce(function(s,sc){return s+Number(sc.prolabore||0);},0);
+
+    // Produção
+    var kgMes=producoes.filter(function(p){return p.etapa==='maquina'&&noMes(p.data);}).reduce(function(s,p){return s+Number(p.kg||0);},0);
+    var pcsMes=producoes.filter(function(p){return p.etapa==='embalagem'&&noMes(p.data);}).reduce(function(s,p){return s+Number(p.pacotes||0);},0);
     var cfgProd=cfg.producao||{};
     var capMensal=((cfgProd.maqMeia||2)*(cfgProd.prodMeia||2)+(cfgProd.maqLiso||4)*(cfgProd.prodLiso||2.5)+(cfgProd.maqMini||4)*(cfgProd.prodMini||1.2))*22;
     var eficiencia=capMensal>0?kgMes/capMensal*100:0;
 
-    // ===== CLIENTES =====
-    var pedsMes=pedidosAll.filter(function(p){return noMes(p.data,mes,ano);});
-    var pedsPrev=pedidosAll.filter(function(p){return noMes(p.data,mesPrev,anoPrev);});
+    // Clientes
+    var pedsMes=pedidosAll.filter(function(p){return noMes(p.data);});
     var clientesMes=new Set(pedsMes.map(function(p){return p.clienteId||p.clienteNome;})).size;
-    var clientesPrev=new Set(pedsPrev.map(function(p){return p.clienteId||p.clienteNome;})).size;
     var ticketMedio=pedsMes.length?pedsMes.reduce(function(s,p){return s+(p.itens||[]).reduce(function(s2,i){return s2+Number(i.total||0);},0);},0)/pedsMes.length:0;
-    var inadimplentes=aReceber.filter(function(r){return r.status!=='pago'&&r.vencimento&&new Date(r.vencimento+' 00:00')<hoje;});
-    var totalInad=inadimplentes.reduce(function(s,r){return s+Number(r.valor||0);},0);
-    var pctInad=fatMes>0?totalInad/fatMes*100:0;
+    var inadimpl=aReceber.filter(function(r){return r.status!=='pago'&&r.vencimento&&new Date(r.vencimento+' 00:00')<hoje;});
+    var totalInad=inadimpl.reduce(function(s,r){return s+Number(r.valor||0);},0);
+
+    // Meta
+    var metaFat=Number(metas.fat||0);
+    var pctMeta=metaFat>0?fatBruto/metaFat*100:null;
 
     // ===== SCORING =====
     var scores=[];
-    var acoes=[];
-    var pontos_positivos=[];
-    var pontos_negativos=[];
+    var acoes=[], positivos=[], negativos=[];
 
-    // 1. Margem (peso 25)
-    var scoreMargem=margem>=40?100:margem>=30?80:margem>=20?60:margem>=10?40:20;
-    scores.push({label:'Margem',score:scoreMargem,peso:25,val:margem.toFixed(1)+'%'});
-    if(margem>=30)pontos_positivos.push('Margem saudável de '+margem.toFixed(1)+'%');
-    else{pontos_negativos.push('Margem baixa ('+margem.toFixed(1)+'%) — revisar preços e custos');acoes.push({prio:'alta',txt:'Revisar precificação — margem de '+margem.toFixed(1)+'% está abaixo do ideal (30%)'});}
-    if(margem>margemPrev&&margemPrev>0)pontos_positivos.push('Margem melhorou vs mês anterior (+'+( margem-margemPrev).toFixed(1)+'pp)');
+    var sMargLiq=margemLiq>=35?100:margemLiq>=25?80:margemLiq>=15?60:margemLiq>=5?40:20;
+    scores.push({l:'Margem Líq.',s:sMargLiq,p:25,v:margemLiq.toFixed(1)+'%'});
+    if(margemLiq>=25)positivos.push('Margem líquida saudável de '+margemLiq.toFixed(1)+'%');
+    else{negativos.push('Margem líquida baixa ('+margemLiq.toFixed(1)+'%)');acoes.push({prio:'alta',txt:'Revisar preços ou reduzir custo de MP para aumentar margem líquida'});}
 
-    // 2. Meta de faturamento (peso 20)
-    var scoreMeta=pctMeta===null?50:pctMeta>=100?100:pctMeta>=80?75:pctMeta>=60?50:25;
-    scores.push({label:'Meta Fat.',score:scoreMeta,peso:20,val:pctMeta!==null?Math.round(pctMeta)+'%':'Sem meta'});
-    if(pctMeta!==null&&pctMeta>=100)pontos_positivos.push('Meta de faturamento batida! ('+Math.round(pctMeta)+'%)');
-    else if(pctMeta!==null&&pctMeta<80){pontos_negativos.push('Meta de faturamento em '+Math.round(pctMeta)+'%');acoes.push({prio:'alta',txt:'Prospectar novos clientes — faltaram '+fmt(metaFat-fatMes)+' para bater a meta'});}
+    var sMargC=margemContrib>=50?100:margemContrib>=40?80:margemContrib>=30?60:margemContrib>=20?40:20;
+    scores.push({l:'Margem Contrib.',s:sMargC,p:20,v:margemContrib.toFixed(1)+'%'});
 
-    // 3. Crescimento (peso 15)
-    var scoreCresc=crescFat>=20?100:crescFat>=10?85:crescFat>=0?70:crescFat>=-10?40:20;
-    scores.push({label:'Crescimento',score:scoreCresc,peso:15,val:(crescFat>=0?'+':'')+crescFat.toFixed(1)+'%'});
-    if(crescFat>=10)pontos_positivos.push('Crescimento forte de +'+crescFat.toFixed(1)+'% vs mês anterior');
-    else if(crescFat<0){pontos_negativos.push('Queda de '+crescFat.toFixed(1)+'% vs mês anterior');acoes.push({prio:'media',txt:'Investigar causa da queda de faturamento — contatar clientes inativos'});}
+    var sMeta=pctMeta===null?50:pctMeta>=100?100:pctMeta>=80?70:pctMeta>=60?50:25;
+    scores.push({l:'Meta Fat.',s:sMeta,p:15,v:pctMeta!==null?Math.round(pctMeta)+'%':'Sem meta'});
+    if(pctMeta!==null&&pctMeta>=100)positivos.push('Meta de faturamento batida! ('+Math.round(pctMeta)+'%)');
+    else if(pctMeta!==null&&pctMeta<80)acoes.push({prio:'alta',txt:'Faltaram '+fmt(metaFat-fatBruto)+' para bater a meta de faturamento'});
 
-    // 4. Eficiência produtiva (peso 20)
-    var scoreEfic=eficiencia>=90?100:eficiencia>=70?80:eficiencia>=50?60:eficiencia>=30?40:20;
-    scores.push({label:'Produção',score:scoreEfic,peso:20,val:eficiencia.toFixed(0)+'% cap.'});
-    if(eficiencia>=70)pontos_positivos.push('Produção em '+eficiencia.toFixed(0)+'% da capacidade');
-    else if(eficiencia<50){pontos_negativos.push('Produção em apenas '+eficiencia.toFixed(0)+'% da capacidade');acoes.push({prio:'media',txt:'Aumentar volume de pedidos ou reduzir máquinas ativas para cortar custos fixos'});}
+    var sCresc=crescFat>=15?100:crescFat>=5?80:crescFat>=0?65:crescFat>=-10?40:20;
+    scores.push({l:'Crescimento',s:sCresc,p:15,v:(crescFat>=0?'+':'')+crescFat.toFixed(1)+'%'});
+    if(crescFat>=10)positivos.push('Crescimento forte de +'+crescFat.toFixed(1)+'% vs mês anterior');
+    else if(crescFat<0)acoes.push({prio:'media',txt:'Queda de '+Math.abs(crescFat).toFixed(1)+'% — contatar clientes inativos e reforçar prospecção'});
 
-    // 5. Inadimplência (peso 10)
-    var scoreInad=pctInad===0?100:pctInad<2?85:pctInad<5?65:pctInad<10?40:20;
-    scores.push({label:'Inadimplência',score:scoreInad,peso:10,val:pctInad.toFixed(1)+'%'});
-    if(pctInad===0)pontos_positivos.push('Zero inadimplência no mês!');
-    else if(pctInad>5){pontos_negativos.push('Inadimplência alta: '+pctInad.toFixed(1)+'% ('+fmt(totalInad)+')');acoes.push({prio:'alta',txt:'Cobrar '+inadimplentes.length+' cliente(s) com '+fmt(totalInad)+' em atraso'});}
+    var sEfic=eficiencia>=80?100:eficiencia>=60?75:eficiencia>=40?55:35;
+    scores.push({l:'Produção',s:sEfic,p:15,v:eficiencia.toFixed(0)+'%'});
+    if(eficiencia<50&&kgMes>0)acoes.push({prio:'media',txt:'Capacidade produtiva em apenas '+eficiencia.toFixed(0)+'% — avaliar aumentar pedidos ou reduzir máquinas ativas'});
 
-    // 6. Clientes ativos (peso 10)
-    var scoreClientes=clientesMes>=clientesPrev?100:clientesMes>=clientesPrev*0.8?75:50;
-    scores.push({label:'Clientes',score:scoreClientes,peso:10,val:clientesMes+' ativos'});
-    if(clientesMes>clientesPrev)pontos_positivos.push(clientesMes-clientesPrev+' cliente(s) novos comprando');
-    else if(clientesMes<clientesPrev)acoes.push({prio:'media',txt:(clientesPrev-clientesMes)+' cliente(s) não compraram este mês — verificar frequência de compra'});
+    var sInad=totalInad===0?100:totalInad<fatBruto*0.02?80:totalInad<fatBruto*0.05?55:30;
+    scores.push({l:'Inadimplência',s:sInad,p:10,v:fatBruto>0?(totalInad/fatBruto*100).toFixed(1)+'%':'0%'});
+    if(totalInad>0)acoes.push({prio:totalInad>fatBruto*0.05?'alta':'media',txt:'Cobrar '+inadimpl.length+' cliente(s) — '+fmt(totalInad)+' em atraso'});
+    else positivos.push('Zero inadimplência no mês!');
 
-    // Calculate weighted score
-    var totalPeso=scores.reduce(function(s,x){return s+x.peso;},0);
-    var notaFinal=scores.reduce(function(s,x){return s+x.score*x.peso;},0)/totalPeso/10;
+    var totalPeso=scores.reduce(function(s,x){return s+x.p;},0);
+    var nota=scores.reduce(function(s,x){return s+x.s*x.p;},0)/totalPeso/10;
+    var notaCor=nota>=8?'#10b981':nota>=6?'#f59e0b':nota>=4?'#f97316':'#ef4444';
+    var notaLabel=nota>=8?'Excelente 🏆':nota>=6?'Bom 👍':nota>=4?'Regular ⚠️':'Crítico 🚨';
 
-    var notaCor=notaFinal>=8?'#10b981':notaFinal>=6?'#f59e0b':notaFinal>=4?'#f97316':'#ef4444';
-    var notaLabel=notaFinal>=8?'Excelente':notaFinal>=6?'Bom':notaFinal>=4?'Regular':'Crítico';
-
-    // Sort acoes by priority
-    var prioOrder={alta:0,media:1,baixa:2};
-    acoes.sort(function(a,b){return prioOrder[a.prio]-prioOrder[b.prio];});
+    acoes.sort(function(a,b){return (a.prio==='alta'?0:1)-(b.prio==='alta'?0:1);});
 
     // ===== RENDER =====
     body.innerHTML=
-      // Header score
+      // Score header
       '<div style="background:linear-gradient(135deg,#1e3a5f,#0f172a);padding:24px">'+
-        '<div style="display:flex;align-items:center;justify-content:space-between">'+
+        '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">'+
           '<div>'+
-            '<div style="font-size:12px;font-weight:700;color:rgba(255,255,255,0.4);text-transform:uppercase;margin-bottom:4px">Avaliação de '+nomeMes+'</div>'+
-            '<div style="font-size:36px;font-weight:900;color:'+notaCor+'">'+notaFinal.toFixed(1)+'<span style="font-size:18px;color:rgba(255,255,255,0.4)">/10</span></div>'+
-            '<div style="font-size:16px;font-weight:700;color:'+notaCor+'">'+notaLabel+'</div>'+
+            '<div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.4);text-transform:uppercase;margin-bottom:4px">'+nomeMes.charAt(0).toUpperCase()+nomeMes.slice(1)+'</div>'+
+            '<div style="font-size:40px;font-weight:900;color:'+notaCor+'">'+nota.toFixed(1)+'<span style="font-size:18px;color:rgba(255,255,255,0.3)">/10</span></div>'+
+            '<div style="font-size:15px;font-weight:700;color:'+notaCor+'">'+notaLabel+'</div>'+
           '</div>'+
           '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">'+
           scores.map(function(s){
-            var cor=s.score>=80?'#4ade80':s.score>=60?'#fbbf24':'#f87171';
+            var cor=s.s>=80?'#4ade80':s.s>=60?'#fbbf24':'#f87171';
             return '<div style="background:rgba(255,255,255,0.08);border-radius:8px;padding:8px;text-align:center">'+
-              '<div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:2px">'+s.label+'</div>'+
-              '<div style="font-size:14px;font-weight:800;color:'+cor+'">'+s.val+'</div>'+
+              '<div style="font-size:9px;color:rgba(255,255,255,0.4);margin-bottom:2px">'+s.l+'</div>'+
+              '<div style="font-size:13px;font-weight:800;color:'+cor+'">'+s.v+'</div>'+
             '</div>';
           }).join('')+
           '</div>'+
@@ -3206,62 +3209,135 @@ main { padding: 24px 28px; }
 
       '<div style="padding:20px;display:flex;flex-direction:column;gap:16px">'+
 
-      // KPIs principais
-      '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">'+
-      [
-        {icon:'💰',label:'Faturamento',val:fmt(fatMes),sub:fatPrev>0?(crescFat>=0?'↑ +':' ↓')+Math.abs(crescFat).toFixed(1)+'% vs anterior':'Primeiro mês',cor:crescFat>=0?'#10b981':'#ef4444'},
-        {icon:'📈',label:'Lucro Líquido',val:fmt(lucro),sub:'Margem '+margem.toFixed(1)+'%',cor:lucro>=0?'#10b981':'#ef4444'},
-        {icon:'🏭',label:'Produção',val:kgMes.toFixed(1)+'kg',sub:pcsMes+' pacotes embalados',cor:'#8b5cf6'},
-        {icon:'👥',label:'Clientes Ativos',val:clientesMes,sub:'Ticket médio: '+fmt(ticketMedio),cor:'#3b82f6'},
-      ].map(function(k){
-        return '<div style="background:var(--bg);border-radius:10px;padding:12px">'+
-          '<div style="font-size:10px;font-weight:700;color:var(--text2);margin-bottom:4px">'+k.icon+' '+k.label+'</div>'+
-          '<div style="font-size:18px;font-weight:900;color:'+k.cor+'">'+k.val+'</div>'+
-          '<div style="font-size:11px;color:var(--text2);margin-top:2px">'+k.sub+'</div>'+
-        '</div>';
-      }).join('')+
+      // ===== FINANCEIRO COMPLETO =====
+      '<div>'+
+        '<div style="font-weight:800;font-size:14px;margin-bottom:10px;color:var(--purple)">💰 Resultado Financeiro Completo</div>'+
+        '<div style="background:var(--white);border:1px solid var(--border);border-radius:12px;overflow:hidden">'+
+          // DRE simplificado
+          [
+            {label:'(+) Faturamento Bruto',val:fatBruto,tipo:'fat',bold:true},
+            {label:'(-) Custo de MP',val:-custMP,tipo:'custo'},
+            {label:'(-) Comissão Representantes ('+( comissaoPct*100).toFixed(0)+'%)',val:-comissaoVal,tipo:'custo'},
+            {label:'(-) Impostos/Taxas ('+(impostosPct*100).toFixed(0)+'%)',val:-impostosVal,tipo:'custo'},
+            {label:'(=) MARGEM DE CONTRIBUIÇÃO',val:fatBruto-custVar,tipo:'mc',bold:true,bg:'#ede9fe'},
+            {label:'    Margem Contrib. %',val:margemContrib,tipo:'pct',sub:true},
+            {label:'(-) Despesas Fixas',val:-custFixo,tipo:'custo'},
+            {label:'(=) LUCRO LÍQUIDO',val:lucroLiq,tipo:'lucro',bold:true,bg:lucroLiq>=0?'#d1fae5':'#fee2e2'},
+            {label:'    Margem Líquida %',val:margemLiq,tipo:'pct',sub:true},
+            {label:'    Margem Bruta %',val:margemBruta,tipo:'pct',sub:true},
+            {label:'(-) Reserva Empresa ('+reservaPct+'%)',val:-(lucroLiq*reservaPct/100),tipo:'reserva'},
+            {label:'(=) PARA DISTRIBUIR AOS SÓCIOS',val:lucroDistribuivel,tipo:'bolso',bold:true,bg:'#d1fae5'},
+          ].map(function(r){
+            var valor=r.tipo==='pct'?r.val.toFixed(1)+'%':(r.val>=0?'+':'')+fmt(Math.abs(r.val));
+            var cor=r.tipo==='fat'?'var(--purple)':r.tipo==='custo'||r.tipo==='reserva'?'#ef4444':r.tipo==='mc'?'var(--purple)':r.tipo==='lucro'?(lucroLiq>=0?'#10b981':'#ef4444'):r.tipo==='bolso'?'#10b981':r.tipo==='pct'?(r.val>=20?'#10b981':r.val>=10?'#f59e0b':'#ef4444'):'var(--text)';
+            return '<div style="display:flex;justify-content:space-between;align-items:center;padding:'+(r.sub?'4px 16px 4px 28px':'10px 16px')+';background:'+(r.bg||'transparent')+';border-bottom:1px solid var(--border)">'+
+              '<span style="font-size:'+(r.sub?'12':'13')+'px;font-weight:'+(r.bold?'800':'400')+';color:'+(r.sub?'var(--text2)':'var(--text)')+'">'+r.label+'</span>'+
+              '<span style="font-size:'+(r.bold?'15':'13')+'px;font-weight:'+(r.bold?'900':'600')+';color:'+cor+'">'+valor+'</span>'+
+            '</div>';
+          }).join('')+
+          // Ponto de equilíbrio
+          '<div style="padding:10px 16px;background:#fef3c7;display:flex;justify-content:space-between">'+
+            '<span style="font-size:12px;font-weight:700;color:#92400e">⚖️ Ponto de Equilíbrio</span>'+
+            '<span style="font-size:13px;font-weight:800;color:#92400e">'+fmt(pontEq)+'</span>'+
+          '</div>'+
+          (fatBruto>0?'<div style="padding:8px 16px;background:'+(fatBruto>=pontEq?'#d1fae5':'#fee2e2')+';font-size:12px;font-weight:700;color:'+(fatBruto>=pontEq?'#065f46':'#991b1b')+'">'+
+            (fatBruto>=pontEq?'✅ Acima do ponto de equilíbrio — lucro de '+fmt(fatBruto-pontEq):'🚨 Abaixo do ponto de equilíbrio — faltam '+fmt(pontEq-fatBruto))+
+          '</div>':'')+
+        '</div>'+
       '</div>'+
 
-      // Pontos positivos e negativos
+      // ===== BOLSO POR SÓCIO =====
+      (sociosList.length?
+        '<div>'+
+          '<div style="font-weight:800;font-size:14px;margin-bottom:10px;color:#10b981">💵 No Bolso — Por Sócio</div>'+
+          '<div style="display:grid;grid-template-columns:repeat('+Math.min(3,sociosList.length)+',1fr);gap:10px">'+
+          sociosList.map(function(sc){
+            var part=Number(sc.participacao||0);
+            var pl=Number(sc.prolabore||0);
+            var lucroSc=totalPart>0?lucroDistribuivel*part/totalPart:0;
+            var totalSc=lucroSc+pl;
+            return '<div style="background:var(--white);border:1px solid var(--border);border-radius:12px;padding:14px">'+
+              '<div style="font-weight:800;margin-bottom:8px">'+sc.nome+'</div>'+
+              '<div style="font-size:24px;font-weight:900;color:#10b981">'+fmt(totalSc)+'</div>'+
+              '<div style="font-size:11px;color:var(--text2);margin-top:6px;display:flex;flex-direction:column;gap:3px">'+
+                (pl>0?'<span>💼 Pró-labore: '+fmt(pl)+'</span>':'')+
+                '<span>📊 Lucro ('+part+'%): '+fmt(lucroSc)+'</span>'+
+              '</div>'+
+            '</div>';
+          }).join('')+
+          '</div>'+
+        '</div>':'')+ 
+
+      // ===== PRODUÇÃO & CLIENTES =====
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'+
+        '<div style="background:var(--white);border:1px solid var(--border);border-radius:12px;padding:14px">'+
+          '<div style="font-weight:800;margin-bottom:10px">🏭 Produção</div>'+
+          [
+            {l:'Kg produzidos',v:kgMes.toFixed(1)+'kg'},
+            {l:'Pacotes embalados',v:pcsMes+' pct'},
+            {l:'Eficiência',v:eficiencia.toFixed(0)+'%',cor:eficiencia>=70?'#10b981':eficiencia>=50?'#f59e0b':'#ef4444'},
+            {l:'Custo MP/kg',v:kgMes>0?fmt(custMP/kgMes)+'/kg':'—'},
+          ].map(function(k){
+            return '<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px">'+
+              '<span style="color:var(--text2)">'+k.l+'</span>'+
+              '<span style="font-weight:700;color:'+(k.cor||'var(--text)')+'">'+k.v+'</span>'+
+            '</div>';
+          }).join('')+
+        '</div>'+
+        '<div style="background:var(--white);border:1px solid var(--border);border-radius:12px;padding:14px">'+
+          '<div style="font-weight:800;margin-bottom:10px">👥 Clientes & Vendas</div>'+
+          [
+            {l:'Clientes ativos',v:clientesMes},
+            {l:'Pedidos no mês',v:pedsMes.length},
+            {l:'Ticket médio',v:fmt(ticketMedio)},
+            {l:'Inadimplência',v:fmt(totalInad),cor:totalInad>0?'#ef4444':'#10b981'},
+            {l:'Crescimento',v:(crescFat>=0?'+':'')+crescFat.toFixed(1)+'%',cor:crescFat>=0?'#10b981':'#ef4444'},
+          ].map(function(k){
+            return '<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px">'+
+              '<span style="color:var(--text2)">'+k.l+'</span>'+
+              '<span style="font-weight:700;color:'+(k.cor||'var(--text)')+'">'+k.v+'</span>'+
+            '</div>';
+          }).join('')+
+        '</div>'+
+      '</div>'+
+
+      // ===== PONTOS E AÇÕES =====
       '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'+
         '<div style="background:#f0fdf4;border-radius:10px;padding:14px">'+
           '<div style="font-weight:800;color:#15803d;margin-bottom:8px">✅ Pontos Positivos</div>'+
-          (pontos_positivos.length?
-            pontos_positivos.map(function(p){return '<div style="font-size:12px;color:#166534;margin-bottom:5px">· '+p+'</div>';}).join(''):
-            '<div style="font-size:12px;color:#166534">Continue cadastrando dados para análise completa.</div>')+
+          (positivos.length?positivos.map(function(p){return '<div style="font-size:12px;color:#166534;margin-bottom:5px">· '+p+'</div>';}).join(''):
+          '<div style="font-size:12px;color:#166534">Continue cadastrando dados para análise completa.</div>')+
         '</div>'+
         '<div style="background:#fef2f2;border-radius:10px;padding:14px">'+
-          '<div style="font-weight:800;color:#dc2626;margin-bottom:8px">⚠️ Pontos de Atenção</div>'+
-          (pontos_negativos.length?
-            pontos_negativos.map(function(p){return '<div style="font-size:12px;color:#991b1b;margin-bottom:5px">· '+p+'</div>';}).join(''):
-            '<div style="font-size:12px;color:#991b1b">Nenhum ponto crítico este mês!</div>')+
+          '<div style="font-weight:800;color:#dc2626;margin-bottom:8px">⚠️ Atenção</div>'+
+          (negativos.length?negativos.map(function(p){return '<div style="font-size:12px;color:#991b1b;margin-bottom:5px">· '+p+'</div>';}).join(''):
+          '<div style="font-size:12px;color:#166534">Nenhum ponto crítico!</div>')+
         '</div>'+
       '</div>'+
 
-      // Ações prioritárias
       (acoes.length?
         '<div>'+
-          '<div style="font-weight:800;font-size:14px;margin-bottom:10px">🎯 '+Math.min(3,acoes.length)+' Ações Prioritárias para o Próximo Mês</div>'+
+          '<div style="font-weight:800;font-size:14px;margin-bottom:10px">🎯 Ações para o Próximo Mês</div>'+
           acoes.slice(0,3).map(function(a,i){
             var cor=a.prio==='alta'?'#ef4444':'#f59e0b';
             return '<div style="background:'+cor+'10;border-left:4px solid '+cor+';border-radius:8px;padding:12px 16px;margin-bottom:8px">'+
-              '<div style="font-size:11px;font-weight:700;color:'+cor+';margin-bottom:3px">PRIORIDADE '+(a.prio==='alta'?'ALTA':'MÉDIA')+'</div>'+
-              '<div style="font-size:13px;font-weight:600;color:var(--text)">'+( i+1)+'. '+a.txt+'</div>'+
+              '<div style="font-size:10px;font-weight:700;color:'+cor+';margin-bottom:3px">PRIORIDADE '+(a.prio==='alta'?'ALTA':'MÉDIA')+'</div>'+
+              '<div style="font-size:13px;font-weight:600">'+( i+1)+'. '+a.txt+'</div>'+
             '</div>';
           }).join('')+
         '</div>':'')+ 
 
-      // Margem focus
-      '<div style="background:linear-gradient(135deg,#8b5cf620,#ec489920);border:1px solid #8b5cf640;border-radius:10px;padding:14px">'+
-        '<div style="font-weight:800;font-size:13px;margin-bottom:8px">💡 Como aumentar sua margem</div>'+
+      // ===== COMO AUMENTAR MARGEM =====
+      '<div style="background:linear-gradient(135deg,#8b5cf620,#ec489920);border:1px solid #8b5cf640;border-radius:12px;padding:16px">'+
+        '<div style="font-weight:800;font-size:13px;margin-bottom:10px">💡 Alavancas para Aumentar Margem</div>'+
         '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;font-size:12px">'+
         [
-          {icon:'📉',titulo:'Reduzir MP',txt:custMP>0?'MP representa '+(custMP/fatMes*100).toFixed(0)+'% do fat. — negociar preço ou comprar em volume':'Cadastre compras para análise'},
-          {icon:'💲',titulo:'Aumentar Preço',txt:'Cada 5% de aumento no preço = +'+(margem*0.05+5).toFixed(1)+'pp de margem sem mudar custos'},
-          {icon:'⚙️',titulo:'Aumentar Volume',txt:'Mais kg na máquina dilui o custo fixo. Capac. atual: '+eficiencia.toFixed(0)+'% — potencial de crescimento'},
+          {icon:'📉',titulo:'Reduzir MP',txt:custMP>0&&fatBruto>0?'MP = '+(custMP/fatBruto*100).toFixed(0)+'% do fat. Cada 5% de redução → +'+(5*(1-margemLiq/100)).toFixed(1)+'pp margem':'Cadastre compras para análise'},
+          {icon:'💲',titulo:'Aumentar Preço',txt:'Preço +5% com mesmo volume → +5pp margem bruta (efeito direto no lucro)'},
+          {icon:'📈',titulo:'Mais Volume',txt:'Capacidade atual: '+eficiencia.toFixed(0)+'%. Mais kg produzidos dilui custo fixo de '+fmt(custFixo)+'/mês'},
         ].map(function(k){
-          return '<div style="background:rgba(255,255,255,0.5);border-radius:8px;padding:10px">'+
-            '<div style="font-weight:700;margin-bottom:4px">'+k.icon+' '+k.titulo+'</div>'+
+          return '<div style="background:rgba(255,255,255,0.6);border-radius:8px;padding:10px">'+
+            '<div style="font-weight:800;margin-bottom:4px">'+k.icon+' '+k.titulo+'</div>'+
             '<div style="color:var(--text2)">'+k.txt+'</div>'+
           '</div>';
         }).join('')+
