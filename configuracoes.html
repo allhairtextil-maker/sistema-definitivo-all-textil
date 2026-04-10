@@ -2051,7 +2051,6 @@ main { padding: 24px 28px; }
 </style>
 </head>
 <body>
-<script>(function(){var s=localStorage.getItem("allhair_sessao");if(!s){window.location.href="login.html";}})();</script>
 <script src="acesso.js"></script>
 <div class="sidebar">
   <div class="sb-header">
@@ -2110,7 +2109,6 @@ main { padding: 24px 28px; }
   <div class="tab" onclick="switchTab('metas')">🎯 Metas</div>
   <div class="tab" onclick="switchTab('producao-cfg')">🏭 Produção
   </div>
-  <div class="tab" onclick="switchTab('acessos')">🔒 Acessos / PINs</div>
 </div>
 
 <!-- TAB GERAL -->
@@ -2260,14 +2258,6 @@ main { padding: 24px 28px; }
 
 </main>
 </div>
-<div class="tab-content" id="tab-acessos">
-<main>
-  <div style="margin-bottom:20px"><h1 class="page-title">Acessos & PINs</h1></div>
-  <div id="usuarios-wrap" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px"></div>
-  <div id="modal-dropin-root"></div>
-</main>
-</div>
-
 </div>
 </div>
 
@@ -2279,11 +2269,11 @@ main { padding: 24px 28px; }
     if(tab==='producao-cfg'){loadProducaoCfg();}
     document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active');});
     document.querySelectorAll('.tab-content').forEach(function(t){t.classList.remove('active');});
-    var tabs=['geral','metas','producao-cfg','acessos'];
+    var tabs=['geral','metas','producao-cfg'];
     var idx=tabs.indexOf(tab);
     if(idx>=0)document.querySelectorAll('.tab')[idx].classList.add('active');
     var el=document.getElementById('tab-'+tab);if(el)el.classList.add('active');
-    if(tab==='acessos')initAcessos();
+    
   }
 
 
