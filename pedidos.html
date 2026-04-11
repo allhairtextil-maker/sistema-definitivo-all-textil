@@ -2182,20 +2182,29 @@ main { padding: 24px 28px; }
 <!-- TAB LISTA -->
 <div class="tab-content" id="tab-lista">
 <main>
-  <div class="topbar-actions">
+  <div class="topbar-actions" style="margin-bottom:16px">
+    <div style="display:flex;gap:6px">
+      <button id="filtro-pendentes" class="btn-primary" onclick="setFiltroLista('pendentes')" style="font-size:12px;padding:6px 14px">⏳ Pendentes</button>
+      <button id="filtro-entregues" onclick="setFiltroLista('entregues')" style="font-size:12px;padding:6px 14px;background:var(--bg);color:var(--text);border:1.5px solid var(--border2);border-radius:8px;cursor:pointer;font-family:inherit;font-weight:700">✅ Entregues</button>
+      <button id="filtro-todos" onclick="setFiltroLista('todos')" style="font-size:12px;padding:6px 14px;background:var(--bg);color:var(--text);border:1.5px solid var(--border2);border-radius:8px;cursor:pointer;font-family:inherit;font-weight:700">📋 Todos</button>
+    </div>
     <div class="spacer"></div>
-    <div class="search-box"><span class="search-icon">🔍</span><input type="text" id="search-lista" placeholder="Buscar cliente..." oninput="renderLista()"></div>
+    <div class="search-box"><span class="search-icon">🔍</span><input type="text" id="search-lista" placeholder="Buscar cliente ou nº..." oninput="renderLista()"></div>
     <button class="btn-primary" onclick="openModalPedido()">+ Novo Pedido</button>
   </div>
+  <div id="lista-resumo" style="display:flex;gap:10px;margin-bottom:14px"></div>
   <div class="card">
     <table>
-      <thead><tr><th>#</th><th>Cliente</th><th>Itens</th><th>Entrega</th><th>Prazo Calc.</th><th>Valor</th><th>Pagamento</th><th>Status</th><th>Ações</th></tr></thead>
+      <thead><tr>
+        <th>#</th><th>Cliente</th><th>Itens</th>
+        <th>Entrega</th><th>Valor</th><th>Status</th><th>Ações</th>
+      </tr></thead>
       <tbody id="tbody-lista"></tbody>
     </table>
     <div id="empty-lista" class="empty" style="display:none">
       <div class="empty-emoji">📋</div>
-      <div class="empty-title">Nenhum pedido ainda</div>
-      <div class="empty-sub">Clique em "+ Novo Pedido" para começar.</div>
+      <div class="empty-title">Nenhum pedido</div>
+      <div class="empty-sub">Nenhum pedido neste filtro.</div>
     </div>
   </div>
 </main>
@@ -3535,10 +3544,20 @@ main { padding: 24px 28px; }
 
   function deletePedido(id){
     if(!confirm('Excluir este pedido?'))return;
-    pedidos=pedidos.filter(x=>x.id!==id);
-    liberarReserva(id);
-    save(); renderKanban(); renderLista();
+    pedidos=pedidos.filter(function(x){return x.id!==id;});
+    try{liberarReserva(id);}catch(e){}
+    try{save();}catch(e){alert('Erro ao salvar: '+e.message);return;}
+    window._filtroLista='pendentes';
+  renderKanban();
+  renderLista();
+    renderLista();
+    var toast=document.createElement('div');
+    toast.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#ef4444;color:#fff;padding:12px 24px;border-radius:12px;font-size:14px;font-weight:700;z-index:99999';
+    toast.textContent='🗑️ Pedido excluído. Total: '+pedidos.length+' pedido(s)';
+    document.body.appendChild(toast);
+    setTimeout(function(){toast.remove();},3000);
   }
+  window.deletePedido=deletePedido;
 
   function avancarStatus(id){
     const p=pedidos.find(x=>x.id===id); if(!p)return;
@@ -4126,30 +4145,155 @@ main { padding: 24px 28px; }
 
   /* ===== LISTA ===== */
   function renderLista(){
-    const q=(document.getElementById('search-lista').value||'').toLowerCase();
-    const filtered=pedidos.filter(p=>!q||p.clienteNome.toLowerCase().includes(q)||(p.numero||'').toLowerCase().includes(q)).sort((a,b)=>new Date(b.data)-new Date(a.data));
-    const tbody=document.getElementById('tbody-lista');
-    const empty=document.getElementById('empty-lista');
+    var filtro=window._filtroLista||'pendentes';
+    var q=(document.getElementById('search-lista')?.value||'').toLowerCase();
+    var pendentesStatus=['recebido','producao','pronto','expedido','nf_enviada','boleto_enviado'];
+    var entreguesStatus=['finalizado'];
+
+    var base=pedidos.filter(function(p){
+      if(filtro==='pendentes')return pendentesStatus.includes(p.status);
+      if(filtro==='entregues')return entreguesStatus.includes(p.status)||p.status==='cancelado';
+      return true;
+    });
+    var filtered=base.filter(function(p){
+      return !q||( p.clienteNome||'').toLowerCase().includes(q)||(p.numero||'').toLowerCase().includes(q);
+    }).sort(function(a,b){return new Date(b.data)-new Date(a.data);});
+
+    // Update filter buttons
+    ['pendentes','entregues','todos'].forEach(function(f){
+      var btn=document.getElementById('filtro-'+f);
+      if(!btn)return;
+      var count=f==='pendentes'?pedidos.filter(function(p){return pendentesStatus.includes(p.status);}).length:
+                f==='entregues'?pedidos.filter(function(p){return entreguesStatus.includes(p.status);}).length:
+                pedidos.length;
+      btn.textContent=(f==='pendentes'?'⏳ Pendentes':f==='entregues'?'✅ Entregues':'📋 Todos')+' ('+count+')';
+      if(f===filtro){
+        btn.style.background='var(--purple)';btn.style.color='#fff';btn.style.border='none';
+      } else {
+        btn.style.background='var(--bg)';btn.style.color='var(--text)';btn.style.border='1.5px solid var(--border2)';
+      }
+    });
+
+    // Resumo
+    var resumoEl=document.getElementById('lista-resumo');
+    if(resumoEl){
+      var totalVal=filtered.reduce(function(s,p){return s+getTotal(p);},0);
+      var totalPend=filtered.reduce(function(s,p){return s+getSaldo(p);},0);
+      resumoEl.innerHTML=[
+        {label:'Pedidos',val:filtered.length,cor:'var(--purple)'},
+        {label:'Total',val:fmt(totalVal),cor:'var(--text)'},
+        {label:'A Receber',val:fmt(totalPend),cor:'#f59e0b'},
+      ].map(function(k){
+        return '<div style="background:var(--white);border:1px solid var(--border);border-radius:10px;padding:10px 16px;display:flex;gap:8px;align-items:center">'+
+          '<span style="font-size:12px;color:var(--text2)">'+k.label+'</span>'+
+          '<span style="font-weight:800;color:'+k.cor+'">'+k.val+'</span>'+
+        '</div>';
+      }).join('');
+    }
+
+    var tbody=document.getElementById('tbody-lista');
+    var empty=document.getElementById('empty-lista');
     if(!filtered.length){tbody.innerHTML='';empty.style.display='block';return;}
     empty.style.display='none';
-    tbody.innerHTML=filtered.map(p=>`
-      <tr>
-        <td><div style="font-weight:700">${p.numero||'—'}</div><div style="font-size:11px;color:var(--text3)">${p.data?new Date(p.data+' 00:00').toLocaleDateString('pt-BR'):''}</div></td>
-        <td><div class="name-cell">${p.clienteNome||'—'}</div></td>
-        <td style="font-size:12px;color:var(--text2)">${(p.itens||[]).map(i=>{const pr=produtos.find(x=>x.id===i.prodId);return i.qtd+'× '+(pr?pr.nome:'?');}).join(', ')}</td>
-        <td><span class="${prazoClass(p.entrega)} pc-prazo" style="padding:3px 8px;border-radius:20px;font-size:11px;font-weight:700">${prazoLabel(p.entrega)}</span></td>
-        <td><div style="font-weight:800">${fmt(getTotal(p))}</div>${getSaldo(p)>0?`<div style="font-size:11px;color:var(--orange)">Saldo: ${fmt(getSaldo(p))}</div>`:''}</td>
-        <td><span class="pgto-badge pgto-${p.pgtoStatus}">${p.pgtoStatus==='pago'?'✅ Pago':p.pgtoStatus==='parcial'?'🔶 Parcial':'⏳ Pendente'}</span></td>
-        <td><span class="status-badge st-${p.status}">${STATUS_LABEL[p.status]}</span></td>
-        <td><div class="action-btns">
-          <button class="btn-icon" onclick="openDetalhe('${p.id}')">👁️</button>
-          <button class="btn-icon" onclick="openModalPedido('${p.id}')">✏️</button>
-          <button class="btn-icon danger" onclick="deletePedido('${p.id}')">🗑️</button>
-        </div></td>
-      </tr>`).join('');
+
+    tbody.innerHTML=filtered.map(function(p){
+      var itensResumo=(p.itens||[]).map(function(i){
+        var pr=produtos.find(function(x){return x.id===i.prodId;});
+        return (i.qtd||0)+'× '+(pr?( pr.ref?pr.ref+' '+pr.nome:pr.nome):'?');
+      }).join('<br>');
+      var corStatus=p.status==='finalizado'?'#10b981':p.status==='pronto'?'#3b82f6':'#8b5cf6';
+      return '<tr style="cursor:pointer" onclick="openDetalhe(this.dataset.pid)" data-pid="'+p.id+'">'+
+        '<td><div style="font-weight:700">'+(p.numero||'—')+'</div><div style="font-size:11px;color:var(--text3)">'+(p.data?new Date(p.data+' 00:00').toLocaleDateString('pt-BR'):'')+'</div></td>'+
+        '<td><div style="font-weight:700">'+(p.clienteNome||'—')+'</div></td>'+
+        '<td style="font-size:12px;color:var(--text2);max-width:200px">'+itensResumo+'</td>'+
+        '<td>'+(p.entrega?'<span style="font-size:12px">'+new Date(p.entrega+' 00:00').toLocaleDateString('pt-BR')+'</span>':'—')+'</td>'+
+        '<td><div style="font-weight:800">'+fmt(getTotal(p))+'</div>'+(getSaldo(p)>0?'<div style="font-size:11px;color:#f59e0b">Saldo: '+fmt(getSaldo(p))+'</div>':'')+'</td>'+
+        '<td><span style="background:'+corStatus+'20;color:'+corStatus+';padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700">'+STATUS_LABEL[p.status]+'</span></td>'+
+        '<td onclick="event.stopPropagation()"><div style="display:flex;gap:4px">'+
+          '<button title="Imprimir" onclick="window._printPed=\''+(p.id)+'\';imprimirPedido(window._printPed)" style="background:#3b82f6;color:#fff;border:none;padding:5px 8px;border-radius:6px;cursor:pointer;font-size:13px">🖨️</button>'+
+          '<button title="Editar" onclick="window._editPed=\''+(p.id)+'\';openModalPedido(window._editPed)" style="background:var(--purple);color:#fff;border:none;padding:5px 8px;border-radius:6px;cursor:pointer;font-size:13px">✏️</button>'+
+          '<button title="Excluir" onclick="window._delPed=\''+(p.id)+'\';deletePedido(window._delPed)" style="background:#ef4444;color:#fff;border:none;padding:5px 8px;border-radius:6px;cursor:pointer;font-size:13px">🗑️</button>'+
+        '</div></td>'+
+      '</tr>';
+    }).join('');
   }
 
+  function setFiltroLista(filtro){
+    window._filtroLista=filtro;
+    renderLista();
+  }
+
+  function imprimirPedido(id){
+    var p=pedidos.find(function(x){return x.id===id;});
+    if(!p)return;
+    var hoje=new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+    var itensHtml=(p.itens||[]).map(function(it){
+      var prod=produtos.find(function(x){return x.id===it.prodId;});
+      var nome=prod?((prod.ref?prod.ref+' — ':'')+prod.nome):(it.prodId||'?');
+      var unid=prod?prod['unid-pacote']||12:12;
+      var totalPcs=(it.qtd||0)*unid;
+      return '<tr style="border-bottom:1px solid #e2e8f0">'+
+        '<td style="padding:10px 12px;font-weight:700;font-size:14px">'+nome+'</td>'+
+        '<td style="padding:10px 12px;text-align:center;font-size:14px">'+unid+' pçs/pct</td>'+
+        '<td style="padding:10px 12px;text-align:center;font-weight:800;font-size:16px;color:#8b5cf6">'+(it.qtd||0)+' pct</td>'+
+        '<td style="padding:10px 12px;text-align:center;font-size:13px;color:#64748b">'+totalPcs+' pçs</td>'+
+        '<td style="padding:10px 12px;text-align:right;font-weight:700">R$ '+Number(it.total||0).toFixed(2)+'</td>'+
+        '<td style="padding:10px 12px;text-align:center"><div style="width:20px;height:20px;border:2px solid #94a3b8;border-radius:4px;display:inline-block"></div></td>'+
+      '</tr>';
+    }).join('');
+    var total=getTotal(p);
+    var win=window.open('','_blank','width=700,height:900');
+    win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8">'+
+      '<title>Pedido '+( p.numero||p.id)+'</title>'+
+      '<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Arial,sans-serif;padding:24px;color:#1e293b}'+
+      'h1{font-size:22px;font-weight:900;margin-bottom:4px}'+
+      'table{width:100%;border-collapse:collapse}'+
+      'th{background:#f1f5f9;padding:8px 12px;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;text-align:left}'+
+      '.footer{margin-top:20px;border-top:2px solid #e2e8f0;padding-top:16px}'+
+      '@media print{body{padding:12px}}</style></head><body>'+
+      '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;padding-bottom:16px;border-bottom:2px solid #8b5cf6">'+
+        '<div>'+
+          '<div style="font-size:11px;font-weight:700;color:#8b5cf6;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">ALL HAIR — Ordem de Separação/Embalagem</div>'+
+          '<h1>Pedido #'+(p.numero||'—')+'</h1>'+
+          '<div style="font-size:13px;color:#64748b;margin-top:4px">'+hoje+'</div>'+
+        '</div>'+
+        '<div style="text-align:right">'+
+          '<div style="font-size:13px;color:#64748b">Cliente</div>'+
+          '<div style="font-size:18px;font-weight:900">'+(p.clienteNome||'—')+'</div>'+
+          (p.entrega?'<div style="font-size:13px;color:#ef4444;font-weight:700;margin-top:4px">📅 Entrega: '+new Date(p.entrega+' 00:00').toLocaleDateString('pt-BR')+'</div>':'')+
+        '</div>'+
+      '</div>'+
+      '<table><thead><tr>'+
+        '<th>Produto</th><th style="text-align:center">Unid/Pct</th>'+
+        '<th style="text-align:center">Qtd Pacotes</th><th style="text-align:center">Total Peças</th>'+
+        '<th style="text-align:right">Valor</th><th style="text-align:center">✓</th>'+
+      '</tr></thead><tbody>'+itensHtml+'</tbody></table>'+
+      '<div class="footer">'+
+        '<div style="display:flex;justify-content:space-between;align-items:center">'+
+          '<div>'+
+            '<div style="font-size:11px;color:#94a3b8;margin-bottom:4px">FORMA DE PAGAMENTO</div>'+
+            '<div style="font-weight:700">'+(p.formaPgto||'—')+'</div>'+
+          '</div>'+
+          '<div style="text-align:right">'+
+            '<div style="font-size:13px;color:#64748b">Total do Pedido</div>'+
+            '<div style="font-size:28px;font-weight:900;color:#8b5cf6">R$ '+total.toFixed(2)+'</div>'+
+          '</div>'+
+        '</div>'+
+        '<div style="margin-top:20px;padding:12px;background:#f8fafc;border-radius:8px;display:flex;gap:40px">'+
+          '<div><div style="font-size:11px;color:#94a3b8;margin-bottom:4px">SEPARADO POR</div><div style="border-bottom:1px solid #94a3b8;width:150px;margin-top:16px"></div></div>'+
+          '<div><div style="font-size:11px;color:#94a3b8;margin-bottom:4px">CONFERIDO POR</div><div style="border-bottom:1px solid #94a3b8;width:150px;margin-top:16px"></div></div>'+
+          '<div><div style="font-size:11px;color:#94a3b8;margin-bottom:4px">DATA</div><div style="border-bottom:1px solid #94a3b8;width:100px;margin-top:16px"></div></div>'+
+        '</div>'+
+      '</div>'+
+    '</body></html>');
+    win.document.close();
+    setTimeout(function(){win.print();},300);
+  }
+
+
+  window._filtroLista='pendentes';
   renderKanban();
+  renderLista();
 </script>
 </div>
 </div>
