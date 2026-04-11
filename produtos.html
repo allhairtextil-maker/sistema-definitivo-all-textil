@@ -2773,13 +2773,17 @@ main { padding: 24px 28px; }
   }
 
   function getSelectedCores(){
+    // Try new p-cores-wrap system first
     var wrap=document.getElementById('p-cores-wrap');
-    if(!wrap)return[];
-    var selecionadas=[];
-    wrap.querySelectorAll('[data-cor-id]').forEach(function(el){
-      if(el.dataset.selecionada==='1')selecionadas.push(el.dataset.corId);
-    });
-    return selecionadas;
+    if(wrap){
+      var selecionadas=[];
+      wrap.querySelectorAll('[data-cor-id]').forEach(function(el){
+        if(el.dataset.selecionada==='1')selecionadas.push(el.dataset.corId);
+      });
+      if(selecionadas.length>0)return selecionadas;
+    }
+    // Fall back to original coresSel array
+    return coresSel?[...coresSel]:[];
   }
 
   function calcMargemProd(){
@@ -3148,6 +3152,7 @@ main { padding: 24px 28px; }
   function toggleCor(id){
     if(coresSel.includes(id))coresSel=coresSel.filter(x=>x!==id);else coresSel.push(id);
     renderCoresSel();renderCorOptions();
+    renderCoresModal(coresSel||[]);
   }
   function renderCoresSel(){
     const c=document.getElementById('cores-selecionadas');
@@ -3207,6 +3212,7 @@ main { padding: 24px 28px; }
       }
     } else{document.getElementById('modal-prod-title').textContent='Novo Produto';}
     renderCoresSel();renderCorOptions();
+    renderCoresModal(coresSel||[]);
     document.getElementById('overlay-prod').classList.add('open');
   }
   function closeModalProd(){document.getElementById('overlay-prod').classList.remove('open');editingProdId=null;coresSel=[];}
