@@ -3445,12 +3445,25 @@ main { padding: 24px 28px; }
       vencimento:document.getElementById('ped-vencimento').value,
       parcelas:(document.getElementById('ped-forma-pgto').value==='Boleto'?parseInt(document.getElementById('ped-parcelas')&&document.getElementById('ped-parcelas').value||1):1),
       vencimentos:(function(){
-        if(document.getElementById('ped-forma-pgto').value!=='Boleto') return [];
-        var n=parseInt(document.getElementById('ped-parcelas')&&document.getElementById('ped-parcelas').value||1);
+        if(document.getElementById('ped-forma-pgto')?.value!=='Boleto') return [];
         var datas=[];
-        for(var i=1;i<=n;i++){
-          var el=document.getElementById('ped-venc-'+i);
-          if(el&&el.value) datas.push(el.value);
+        // First vencimento
+        var v1=document.getElementById('ped-venc-1')?.value;
+        if(v1) datas.push(v1);
+        // Additional parcelas from dynamic inputs
+        var wrap=document.getElementById('parcelas-datas');
+        if(wrap){
+          wrap.querySelectorAll('input[type="date"]').forEach(function(el){
+            if(el.value) datas.push(el.value);
+          });
+        }
+        // Also try numbered approach as fallback
+        if(datas.length<=1){
+          var n=parseInt(document.getElementById('ped-parcelas')?.value||1);
+          for(var i=2;i<=n;i++){
+            var el=document.getElementById('ped-venc-'+i);
+            if(el&&el.value&&!datas.includes(el.value)) datas.push(el.value);
+          }
         }
         return datas;
       })(),
@@ -3495,6 +3508,7 @@ main { padding: 24px 28px; }
     document.body.appendChild(toast);
     setTimeout(function(){toast.remove();},3000);
     // Gera parcelas no A Receber (financeiro) para boleto parcelado
+    console.log('[A Receber] formaPgto='+data.formaPgto+' vencimentos='+JSON.stringify(data.vencimentos));
     if(data.formaPgto==='Boleto' && data.vencimentos && data.vencimentos.length>0){
       try{
         var recArr=JSON.parse(localStorage.getItem('allhair_a_receber')||'[]');

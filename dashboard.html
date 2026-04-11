@@ -3022,7 +3022,13 @@ main { padding: 24px 28px; }
     var semanaAgo=new Date(hoje); semanaAgo.setDate(semanaAgo.getDate()-7);
 
     // Metrics
-    var fatMes=recebimentos.filter(function(r){return noMes(r.data);}).reduce(function(s,r){return s+Number(r.valor||0);},0);
+    // Faturamento = total dos pedidos do mês (por data do pedido)
+    var pedidosMes=pedidosAll.filter(function(p){return noMes(p.data)&&p.status!=='cancelado';});
+    var fatMes=pedidosMes.reduce(function(s,p){return s+(p.itens||[]).reduce(function(s2,i){return s2+Number(i.total||0);},0);},0);
+    // Fallback: also check recebimentos if pedidos is empty
+    if(fatMes===0){
+      fatMes=recebimentos.filter(function(r){return noMes(r.data);}).reduce(function(s,r){return s+Number(r.valor||0);},0);
+    }
     var despMes=despesas.filter(function(d){return d.ativo;}).reduce(function(s,d){return s+Number(d.valor||0);},0);
     var lucroMes=fatMes-despMes;
     var margem=fatMes>0?lucroMes/fatMes*100:0;
