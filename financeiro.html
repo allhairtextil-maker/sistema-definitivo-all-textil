@@ -2267,6 +2267,7 @@ main { padding: 24px 28px; }
 </div>
 
 <div class="tab-content" id="tab-receber">
+  <div id="debug-receber"></div>
   <div id="kpi-receber" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin-bottom:20px"></div>
   <div class="card">
     <div style="padding:14px 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)">
@@ -3272,6 +3273,21 @@ main { padding: 24px 28px; }
       comsPendEl.innerHTML='';
     }
     const hoje=new Date();
+
+    // DEBUG - show what's in pedidos
+    var debugEl=document.getElementById('debug-receber');
+    if(debugEl){
+      var pedBoleto=pedidos.filter(function(p){return (p.formaPgto||'').toLowerCase()==='boleto';});
+      var todos=pedidos;
+      debugEl.innerHTML='<div style="background:#1e293b;color:#4ade80;padding:12px;border-radius:8px;font-size:12px;margin-bottom:12px;font-family:monospace">'+
+        '📊 Debug A Receber:<br>'+
+        '• Total pedidos: '+todos.length+'<br>'+
+        '• Pedidos Boleto: '+pedBoleto.length+'<br>'+
+        (pedBoleto.map(function(p){
+          return '  - Ped '+p.numero+' | '+p.clienteNome+' | formaPgto='+p.formaPgto+' | vencimentos='+JSON.stringify(p.vencimentos||[]);
+        }).join('<br>'))+
+        '</div>';
+    }
 
     // Build parcelas directly from pedidos with boleto
     // This is the source of truth - no need for separate a_receber generation
