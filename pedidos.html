@@ -2954,9 +2954,19 @@ main { padding: 24px 28px; }
     saveReservas();
   }
 
-  function save(){ localStorage.setItem('allhair_pedidos', JSON.stringify(pedidos)); }
+  var _justSaved=false;
+  function save(){
+    localStorage.setItem('allhair_pedidos', JSON.stringify(pedidos));
+    _justSaved=true;
+    setTimeout(function(){_justSaved=false;},30000);
+    // Force immediate upload to Firebase
+    if(typeof window.syncUp==='function'){
+      window.syncUp();
+    }
+  }
 
   window.render = function(){
+    if(_justSaved){console.log('[Pedidos] Skipping render — just saved');return;}
     pedidos   = JSON.parse(localStorage.getItem('allhair_pedidos')||'[]');
     clientes  = JSON.parse(localStorage.getItem('allhair_clientes')||'[]');
     produtos  = JSON.parse(localStorage.getItem('allhair_produtos')||'[]');
@@ -3431,7 +3441,19 @@ main { padding: 24px 28px; }
       console.error('savePedido error:',e);
       return;
     }
+    // Verify it was actually saved
+    var verifica=JSON.parse(localStorage.getItem('allhair_pedidos')||'[]');
+    if(!verifica.find(function(p){return p.id===data.id;})){
+      alert('❌ Erro: pedido não foi salvo no localStorage. Tente novamente.');
+      return;
+    }
     renderKanban(); renderLista(); closeModalPedido();
+    // Show toast with count
+    var toast=document.createElement('div');
+    toast.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#10b981;color:#fff;padding:12px 24px;border-radius:12px;font-size:14px;font-weight:700;z-index:99999;box-shadow:0 4px 20px rgba(0,0,0,0.2)';
+    toast.textContent='✅ Pedido salvo! Total: '+verifica.length+' pedido(s)';
+    document.body.appendChild(toast);
+    setTimeout(function(){toast.remove();},3000);
     // Gera parcelas no A Receber (financeiro) para boleto parcelado
     if(!editingId && data.formaPgto==='Boleto' && data.vencimentos && data.vencimentos.length>0){
       try{
