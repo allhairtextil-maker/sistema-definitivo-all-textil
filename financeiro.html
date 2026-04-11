@@ -3220,6 +3220,37 @@ main { padding: 24px 28px; }
     }
     // Reload aReceber fresh
     aReceber = JSON.parse(localStorage.getItem('allhair_a_receber')||'[]');
+    // Auto-generate missing a_receber from pedidos with boleto
+    var pedidosAll2=JSON.parse(localStorage.getItem('allhair_pedidos')||'[]');
+    pedidosAll2.filter(function(p){
+      return p.formaPgto==='Boleto'&&p.vencimentos&&p.vencimentos.length>0&&p.status!=='cancelado';
+    }).forEach(function(p){
+      // Check if already in aReceber
+      var jatem=aReceber.some(function(r){return r.pedidoId===p.id;});
+      if(jatem)return;
+      // Generate missing parcelas
+      var totalPed=(p.itens||[]).reduce(function(s,i){return s+Number(i.total||0);},0);
+      var nParc=Number(p.parcelas||p.vencimentos.length||1);
+      var valorParc=Math.round(totalPed/nParc*100)/100;
+      p.vencimentos.forEach(function(dtVenc,ii){
+        aReceber.push({
+          id:'rec_auto_'+p.id+'_p'+(ii+1),
+          pedidoId:p.id,
+          pedidoNum:p.numero,
+          clienteNome:p.clienteNome,
+          desc:'Boleto '+p.numero+' — '+p.clienteNome+' ('+(ii+1)+'/'+nParc+'x)',
+          valor:valorParc,
+          vencimento:dtVenc,
+          forma:'Boleto',
+          status:'pendente',
+          parcela:(ii+1),
+          totalParcelas:nParc,
+          criadoEm:new Date().toISOString()
+        });
+      });
+    });
+    // Save the auto-generated entries
+    if(aReceber.length)localStorage.setItem('allhair_a_receber',JSON.stringify(aReceber));
 
     const pedAbertos=pedidos.filter(function(p){return p.status!=='finalizado'&&getSaldoPed(p)>0;}).sort(function(a,b){return new Date(a.vencimento||'9999')-new Date(b.vencimento||'9999');});
     const totalRec=pedAbertos.reduce(function(s,p){return s+getSaldoPed(p);},0);

@@ -3558,7 +3558,13 @@ main { padding: 24px 28px; }
     pedidos=pedidos.filter(function(x){return x.id!==id;});
     try{liberarReserva(id);}catch(e){}
     try{save();}catch(e){alert('Erro ao salvar: '+e.message);return;}
-    window._filtroLista='pendentes';
+  
+  // Expose as globals so inline onclick works
+  window.openModalPedido = openModalPedido;
+  window.deletePedido = deletePedido;
+  window.imprimirPedido = imprimirPedido;
+  window.openDetalhe = openDetalhe;
+  window._filtroLista='pendentes';
   renderKanban();
   renderLista();
     renderLista();
@@ -4210,7 +4216,8 @@ main { padding: 24px 28px; }
     tbody.innerHTML=filtered.map(function(p){
 
       var corStatus=p.status==='finalizado'?'#10b981':p.status==='pronto'?'#3b82f6':'#8b5cf6';
-      return '<tr style="cursor:pointer" data-action-row="'+p.id+'">'+
+      var _pid=p.id.replace(/'/g,"\\'");
+      return '<tr style="cursor:pointer" onclick="window.openDetalhe(\''+_pid+'\')">'+
         '<td><div style="font-weight:700">'+(p.numero||'—')+'</div><div style="font-size:11px;color:var(--text3)">'+(p.data?new Date(p.data+' 00:00').toLocaleDateString('pt-BR'):'')+'</div></td>'+
         '<td><div style="font-weight:700">'+(p.clienteNome||'—')+'</div></td>'+
         '<td style="font-size:12px;font-weight:700">'+(p.nf?'🧾 '+p.nf:'<span style="color:var(--text3)">—</span>')+'</td>'+
@@ -4219,33 +4226,16 @@ main { padding: 24px 28px; }
         '<td><span style="background:'+corStatus+'20;color:'+corStatus+';padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700">'+STATUS_LABEL[p.status]+'</span></td>'+
         (function(){
           var pid=p.id;
+          var safe=pid.replace(/'/g,"\\'");
           return '<td onclick="event.stopPropagation()"><div style="display:flex;gap:4px">'+
-            '<button title="Imprimir" data-action="print" data-pid="'+pid+'" style="background:#3b82f6;color:#fff;border:none;padding:5px 8px;border-radius:6px;cursor:pointer;font-size:13px">🖨️</button>'+
-            '<button title="Editar" data-action="edit" data-pid="'+pid+'" style="background:var(--purple);color:#fff;border:none;padding:5px 8px;border-radius:6px;cursor:pointer;font-size:13px">✏️</button>'+
-            '<button title="Excluir" data-action="delete" data-pid="'+pid+'" style="background:#ef4444;color:#fff;border:none;padding:5px 8px;border-radius:6px;cursor:pointer;font-size:13px">🗑️</button>'+
+            '<button title="Imprimir" onclick="window.imprimirPedido(\''+safe+'\')" style="background:#3b82f6;color:#fff;border:none;padding:5px 8px;border-radius:6px;cursor:pointer;font-size:13px">🖨️</button>'+
+            '<button title="Editar" onclick="window.openModalPedido(\''+safe+'\')" style="background:var(--purple);color:#fff;border:none;padding:5px 8px;border-radius:6px;cursor:pointer;font-size:13px">✏️</button>'+
+            '<button title="Excluir" onclick="window.deletePedido(\''+safe+'\')" style="background:#ef4444;color:#fff;border:none;padding:5px 8px;border-radius:6px;cursor:pointer;font-size:13px">🗑️</button>'+
           '</div></td>';
         })()+
       '</tr>';
     }).join('');
   }
-
-  // Event delegation for row clicks
-  document.addEventListener('click', function(e){
-    var tr=e.target.closest('tr[data-action-row]');
-    if(tr&&!e.target.closest('button'))openDetalhe(tr.dataset.actionRow);
-  });
-  // Event delegation for lista buttons
-  document.addEventListener('click', function(e){
-    var btn=e.target.closest('button[data-action]');
-    if(!btn)return;
-    var pid=btn.dataset.pid;
-    var action=btn.dataset.action;
-    if(!pid)return;
-    e.stopPropagation();
-    if(action==='print') imprimirPedido(pid);
-    else if(action==='edit') openModalPedido(pid);
-    else if(action==='delete') deletePedido(pid);
-  });
 
   function setFiltroLista(filtro){
     window._filtroLista=filtro;
@@ -4320,6 +4310,12 @@ main { padding: 24px 28px; }
   }
 
 
+
+  // Expose as globals so inline onclick works
+  window.openModalPedido = openModalPedido;
+  window.deletePedido = deletePedido;
+  window.imprimirPedido = imprimirPedido;
+  window.openDetalhe = openDetalhe;
   window._filtroLista='pendentes';
   renderKanban();
   renderLista();

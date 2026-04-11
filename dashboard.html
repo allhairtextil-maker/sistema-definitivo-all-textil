@@ -3387,12 +3387,12 @@ main { padding: 24px 28px; }
   }
 
 
-  function dashMesAnterior(){
+  window.dashMesAnterior=function dashMesAnterior(){
     if(window._dashMes===0){window._dashMes=11;window._dashAno--;}
     else window._dashMes--;
     init();
   }
-  function dashMesProximo(){
+  window.dashMesProximo=function dashMesProximo(){
     var hoje=new Date();
     if(window._dashMes===hoje.getMonth()&&window._dashAno===hoje.getFullYear())return;
     if(window._dashMes===11){window._dashMes=0;window._dashAno++;}
@@ -3403,6 +3403,10 @@ main { padding: 24px 28px; }
     var d=new Date(window._dashAno||new Date().getFullYear(),window._dashMes||0,1);
     return d.toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
   }
+
+
+  window.dashMesAnterior = dashMesAnterior;
+  window.dashMesProximo = dashMesProximo;
 
   function init(){
     const pedidos      = JSON.parse(localStorage.getItem('allhair_pedidos')        ||'[]');
