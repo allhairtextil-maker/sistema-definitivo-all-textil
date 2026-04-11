@@ -2169,15 +2169,27 @@ main { padding: 24px 28px; }
 <!-- TAB KANBAN -->
 <div class="tab-content active" id="tab-kanban">
 <main>
-  <main>
-  
+  <div class="topbar-actions">
+    <div class="page-kpis" id="page-kpis"></div>
     <div class="spacer"></div>
-    <div class="search-box"><span class="search-icon">🔍</span><input type="text" id="search-lista" placeholder="Buscar..." oninput="renderLista()"></div>
+    <div class="search-box"><span class="search-icon">🔍</span><input type="text" id="search-kanban" placeholder="Buscar cliente..." oninput="renderKanban()"></div>
+    <button class="btn-primary" onclick="openModalPedido()">+ Novo Pedido</button>
+  </div>
+  <div id="kanban-board" class="kanban-board"></div>
+</main>
+</div>
+
+<!-- TAB LISTA -->
+<div class="tab-content" id="tab-lista">
+<main>
+  <div class="topbar-actions">
+    <div class="spacer"></div>
+    <div class="search-box"><span class="search-icon">🔍</span><input type="text" id="search-lista" placeholder="Buscar cliente..." oninput="renderLista()"></div>
     <button class="btn-primary" onclick="openModalPedido()">+ Novo Pedido</button>
   </div>
   <div class="card">
     <table>
-      <thead><tr><th>#</th><th>Cliente</th><th>Itens</th><th>Entrega</th><th>Valor</th><th>Pagamento</th><th>Status</th><th>Ações</th></tr></thead>
+      <thead><tr><th>#</th><th>Cliente</th><th>Itens</th><th>Entrega</th><th>Prazo Calc.</th><th>Valor</th><th>Pagamento</th><th>Status</th><th>Ações</th></tr></thead>
       <tbody id="tbody-lista"></tbody>
     </table>
     <div id="empty-lista" class="empty" style="display:none">
@@ -2186,6 +2198,29 @@ main { padding: 24px 28px; }
       <div class="empty-sub">Clique em "+ Novo Pedido" para começar.</div>
     </div>
   </div>
+</main>
+</div>
+
+<!-- TAB AGENDA -->
+<div class="tab-content" id="tab-agenda">
+<main>
+  <div class="topbar-actions" style="margin-bottom:20px">
+    <h1 class="page-title">📅 Agenda de Entregas</h1>
+  </div>
+  <div id="agenda-alertas" style="margin-bottom:16px"></div>
+  <div id="agenda-semanas" style="display:flex;flex-direction:column;gap:16px"></div>
+</main>
+</div>
+
+<!-- TAB CICLO -->
+<div class="tab-content" id="tab-ciclo">
+<main>
+  <div class="topbar-actions" style="margin-bottom:20px">
+    <h1 class="page-title">⏱️ Ciclo do Pedido</h1>
+  </div>
+  <div id="ciclo-kpis" style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px"></div>
+  <div id="ciclo-gargalos" style="margin-bottom:16px"></div>
+  <div id="ciclo-lista"></div>
 </main>
 </div>
 
@@ -2954,19 +2989,15 @@ main { padding: 24px 28px; }
     saveReservas();
   }
 
-  var _justSaved=false;
   function save(){
     localStorage.setItem('allhair_pedidos', JSON.stringify(pedidos));
-    _justSaved=true;
-    setTimeout(function(){_justSaved=false;},30000);
-    // Force immediate upload to Firebase
+    // Force immediate upload to Firebasece immediate upload to Firebase
     if(typeof window.syncUp==='function'){
       window.syncUp();
     }
   }
 
   window.render = function(){
-    if(_justSaved){console.log('[Pedidos] Skipping render — just saved');return;}
     pedidos   = JSON.parse(localStorage.getItem('allhair_pedidos')||'[]');
     clientes  = JSON.parse(localStorage.getItem('allhair_clientes')||'[]');
     produtos  = JSON.parse(localStorage.getItem('allhair_produtos')||'[]');
