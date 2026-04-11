@@ -3572,8 +3572,8 @@ main { padding: 24px 28px; }
       else if(fn==='excluir') deletePedido(pid);
       return;
     }
-    var tr = ev.target.closest('tr[data-pid]');
-    if(tr && !ev.target.closest('td[data-pid]')) openDetalhe(tr.dataset.pid);
+    var tr = ev.target.closest('tr[data-row-pid]');
+    if(tr && !ev.target.closest('button[data-fn]')) openDetalhe(tr.dataset.rowPid);
   });
 
   window._filtroLista='pendentes';
@@ -4235,7 +4235,7 @@ main { padding: 24px 28px; }
         '<td>'+(p.entrega?'<span style="font-size:12px">'+new Date(p.entrega+' 00:00').toLocaleDateString('pt-BR')+'</span>':'—')+'</td>'+
         '<td><div style="font-weight:800">'+fmt(getTotal(p))+'</div>'+(getSaldo(p)>0?'<div style="font-size:11px;color:#f59e0b">Saldo: '+fmt(getSaldo(p))+'</div>':'')+'</td>'+
         '<td><span style="background:'+corStatus+'20;color:'+corStatus+';padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700">'+STATUS_LABEL[p.status]+'</span></td>'+
-        '<td onclick="event.stopPropagation()" data-pid="'+p.id+'">'+
+        '<td data-pid="'+p.id+'">'+
           '<div style="display:flex;gap:4px">'+
             '<button title="Imprimir" data-pid="'+p.id+'" data-fn="imprimir" style="background:#3b82f6;color:#fff;border:none;padding:5px 8px;border-radius:6px;cursor:pointer;font-size:13px">🖨️</button>'+
             '<button title="Editar" data-pid="'+p.id+'" data-fn="editar" style="background:var(--purple);color:#fff;border:none;padding:5px 8px;border-radius:6px;cursor:pointer;font-size:13px">✏️</button>'+
@@ -4332,8 +4332,8 @@ main { padding: 24px 28px; }
       else if(fn==='excluir') deletePedido(pid);
       return;
     }
-    var tr = ev.target.closest('tr[data-pid]');
-    if(tr && !ev.target.closest('td[data-pid]')) openDetalhe(tr.dataset.pid);
+    var tr = ev.target.closest('tr[data-row-pid]');
+    if(tr && !ev.target.closest('button[data-fn]')) openDetalhe(tr.dataset.rowPid);
   });
 
   window._filtroLista='pendentes';

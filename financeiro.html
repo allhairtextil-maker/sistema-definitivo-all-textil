@@ -3222,8 +3222,11 @@ main { padding: 24px 28px; }
     aReceber = JSON.parse(localStorage.getItem('allhair_a_receber')||'[]');
     // Auto-generate missing a_receber from pedidos with boleto
     var pedidosAll2=JSON.parse(localStorage.getItem('allhair_pedidos')||'[]');
+    // Debug
+    var pedsBoleto=pedidosAll2.filter(function(p){var fp=(p.formaPgto||'').toLowerCase();return fp==='boleto';});
+    console.log('[A Receber] Pedidos boleto encontrados:',pedsBoleto.length, pedsBoleto.map(function(p){return p.numero+' venc:'+JSON.stringify(p.vencimentos);}));
     pedidosAll2.filter(function(p){
-      return p.formaPgto==='Boleto'&&p.vencimentos&&p.vencimentos.length>0&&p.status!=='cancelado';
+      var fp=(p.formaPgto||'').toLowerCase(); return fp==='boleto'&&p.vencimentos&&p.vencimentos.length>0&&p.status!=='cancelado';
     }).forEach(function(p){
       // Check if already in aReceber
       var jatem=aReceber.some(function(r){return r.pedidoId===p.id;});
