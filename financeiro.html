@@ -3207,6 +3207,52 @@ main { padding: 24px 28px; }
 
   function getSaldoPed(p){ const t=(p.itens||[]).reduce((s,i)=>s+Number(i.total||0),0); return Math.max(0,t-Number(p.entrada||0)); }
 
+
+  function autoGerarAReceber(){
+    var pedidosAll2=JSON.parse(localStorage.getItem('allhair_pedidos')||'[]');
+    var aRec=JSON.parse(localStorage.getItem('allhair_a_receber')||'[]');
+    var changed=false;
+    pedidosAll2.forEach(function(p){
+      var fp=(p.formaPgto||'').toLowerCase();
+      if(fp!=='boleto')return;
+      if(p.status==='cancelado')return;
+      var venc=p.vencimentos||[];
+      if(!venc.length){
+        // Try single vencimento field
+        if(p.vencimento) venc=[p.vencimento];
+        else return;
+      }
+      var jatem=aRec.some(function(r){return r.pedidoId===p.id;});
+      if(jatem)return;
+      var totalPed=(p.itens||[]).reduce(function(s,i){return s+Number(i.total||0);},0);
+      var nParc=venc.length;
+      var valorParc=nParc>0?Math.round(totalPed/nParc*100)/100:totalPed;
+      venc.forEach(function(dtVenc,ii){
+        if(!dtVenc)return;
+        aRec.push({
+          id:'rec_auto_'+p.id+'_p'+(ii+1),
+          pedidoId:p.id,
+          pedidoNum:p.numero||'',
+          clienteNome:p.clienteNome||'',
+          desc:'Boleto '+(p.numero||'')+(p.clienteNome?' — '+p.clienteNome:'')+' ('+(ii+1)+'/'+nParc+'x)',
+          valor:valorParc,
+          vencimento:dtVenc,
+          forma:'Boleto',
+          status:'pendente',
+          parcela:(ii+1),
+          totalParcelas:nParc,
+          criadoEm:new Date().toISOString()
+        });
+        changed=true;
+      });
+    });
+    if(changed){
+      localStorage.setItem('allhair_a_receber',JSON.stringify(aRec));
+      aReceber=aRec;
+    }
+    return changed;
+  }
+
   function renderReceber(){
     // Also show pending commissions
     const coms=JSON.parse(localStorage.getItem('allhair_comissoes')||'[]');
@@ -3220,40 +3266,8 @@ main { padding: 24px 28px; }
     }
     // Reload aReceber fresh
     aReceber = JSON.parse(localStorage.getItem('allhair_a_receber')||'[]');
-    // Auto-generate missing a_receber from pedidos with boleto
-    var pedidosAll2=JSON.parse(localStorage.getItem('allhair_pedidos')||'[]');
-    // Debug
-    var pedsBoleto=pedidosAll2.filter(function(p){var fp=(p.formaPgto||'').toLowerCase();return fp==='boleto';});
-    console.log('[A Receber] Pedidos boleto encontrados:',pedsBoleto.length, pedsBoleto.map(function(p){return p.numero+' venc:'+JSON.stringify(p.vencimentos);}));
-    pedidosAll2.filter(function(p){
-      var fp=(p.formaPgto||'').toLowerCase(); return fp==='boleto'&&p.vencimentos&&p.vencimentos.length>0&&p.status!=='cancelado';
-    }).forEach(function(p){
-      // Check if already in aReceber
-      var jatem=aReceber.some(function(r){return r.pedidoId===p.id;});
-      if(jatem)return;
-      // Generate missing parcelas
-      var totalPed=(p.itens||[]).reduce(function(s,i){return s+Number(i.total||0);},0);
-      var nParc=Number(p.parcelas||p.vencimentos.length||1);
-      var valorParc=Math.round(totalPed/nParc*100)/100;
-      p.vencimentos.forEach(function(dtVenc,ii){
-        aReceber.push({
-          id:'rec_auto_'+p.id+'_p'+(ii+1),
-          pedidoId:p.id,
-          pedidoNum:p.numero,
-          clienteNome:p.clienteNome,
-          desc:'Boleto '+p.numero+' — '+p.clienteNome+' ('+(ii+1)+'/'+nParc+'x)',
-          valor:valorParc,
-          vencimento:dtVenc,
-          forma:'Boleto',
-          status:'pendente',
-          parcela:(ii+1),
-          totalParcelas:nParc,
-          criadoEm:new Date().toISOString()
-        });
-      });
-    });
-    // Save the auto-generated entries
-    if(aReceber.length)localStorage.setItem('allhair_a_receber',JSON.stringify(aReceber));
+    autoGerarAReceber();
+    aReceber=JSON.parse(localStorage.getItem('allhair_a_receber')||'[]');
 
     const pedAbertos=pedidos.filter(function(p){return p.status!=='finalizado'&&getSaldoPed(p)>0;}).sort(function(a,b){return new Date(a.vencimento||'9999')-new Date(b.vencimento||'9999');});
     const totalRec=pedAbertos.reduce(function(s,p){return s+getSaldoPed(p);},0);
@@ -4159,6 +4173,7 @@ main { padding: 24px 28px; }
   function delDespesa(id){if(!confirm('Excluir esta despesa?'))return;despesas=despesas.filter(x=>x.id!==id);save();renderDespesas();}
 
   render();
+  autoGerarAReceber();
 
   // ===== CONTAS BANCARIAS =====
   var editingContaId = null;
