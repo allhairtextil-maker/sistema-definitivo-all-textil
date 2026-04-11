@@ -3114,13 +3114,19 @@ main { padding: 24px 28px; }
     var prod=produtos.find(function(p){return p.id===prodId;});
     if(!prod)return;
     itensTemp[i].prodId=prodId;
-    if(!itensTemp[i].preco)itensTemp[i].preco=prod.preco||0;
+    itensTemp[i].preco=prod.preco||0;
     fecharDropdownItem(i);
-    // Show ref in search field after selection
-    var inp=document.getElementById('prod-search-'+i);
-    if(inp)inp.value=(prod.ref?prod.ref+' — ':'')+prod.nome;
+    // Auto-add next empty row if this is the last item
+    if(i===itensTemp.length-1){
+      itensTemp.push({id:'it_'+Date.now(),prodId:'',qtd:'',preco:'',total:0});
+    }
     renderItens();
     atualizarPrevisaoEntrega();
+    // Focus quantity field of current row
+    setTimeout(function(){
+      var qtdEl=document.getElementById('qtd-'+i);
+      if(qtdEl)qtdEl.focus();
+    },50);
   }
 
   function addItemRow(prodId='', qtd='', preco=''){
@@ -3129,7 +3135,6 @@ main { padding: 24px 28px; }
   }
 
   function renderItens(){
-    setTimeout(atualizarPrevisaoEntrega,100);
     const list=document.getElementById('itens-list');
     list.innerHTML=itensTemp.map((item,i)=>{
       const prod=produtos.find(p=>p.id===item.prodId);
@@ -3159,12 +3164,12 @@ main { padding: 24px 28px; }
           ${prod?`<div style="font-size:10px;color:var(--purple);margin-top:3px;font-weight:700">✅ ${prod.nome} · ${prod['unid-pacote']||'?'} un/pct · ${fmt(prod.preco)}/pct</div>`:''}
         </div>
         <div class="field">
-          <input type="number" placeholder="Qtd" value="${item.qtd}" min="1" style="padding:7px 10px;font-size:13px" oninput="updateItem(${i},'qtd',this.value)">
+          <input type="number" placeholder="Qtd" value="${item.qtd}" min="1" id="qtd-${i}" style="padding:7px 10px;font-size:13px" oninput="updateItem(${i},'qtd',this.value)" onblur="updateItem(${i},'qtd',this.value)">
           <div style="font-size:10px;color:var(--text3);margin-top:3px">pacotes</div>
         </div>
         <div class="field">
-          <input type="number" placeholder="R$ preço" value="${item.preco||precoSugerido}" min="0" step="0.01" style="padding:7px 10px;font-size:13px" oninput="updateItem(${i},'preco',this.value)">
-          <div style="font-size:10px;color:var(--purple);margin-top:3px;font-weight:700">${item.qtd&&item.preco?fmt(item.qtd*item.preco):''}</div>
+          <input type="number" placeholder="R$ preço" value="${item.preco||precoSugerido}" min="0" step="0.01" id="preco-${i}" style="padding:7px 10px;font-size:13px" oninput="updateItem(${i},'preco',this.value)" onblur="updateItem(${i},'preco',this.value)">
+          <div style="font-size:10px;color:var(--purple);margin-top:3px;font-weight:700"><span id="item-total-${i}">${item.qtd&&item.preco?fmt(item.qtd*item.preco):''}</span></div>
         </div>
         <button class="item-remove" onclick="removeItem(${i})">×</button>
       </div>`;
@@ -3173,13 +3178,20 @@ main { padding: 24px 28px; }
   }
 
   function updateItem(i,field,val){
-    itensTemp[i][field]=val;
+    itensTemp[i][field]=field==='qtd'||field==='preco'?parseFloat(val)||val:val;
     if(field==='prodId'){
       const p=produtos.find(x=>x.id===val);
-      if(p) itensTemp[i].preco=p.preco;
+      if(p){itensTemp[i].preco=p.preco;}
+      renderItens();return;
     }
-    if(itensTemp[i].qtd&&itensTemp[i].preco) itensTemp[i].total=itensTemp[i].qtd*itensTemp[i].preco;
-    renderItens();
+    // For qtd/preco: just update total display without full re-render
+    if(itensTemp[i].qtd&&itensTemp[i].preco){
+      itensTemp[i].total=Number(itensTemp[i].qtd)*Number(itensTemp[i].preco);
+    }
+    var totalEl=document.getElementById('item-total-'+i);
+    if(totalEl)totalEl.textContent=itensTemp[i].total?fmt(itensTemp[i].total):'';
+    calcTotal();
+    atualizarPrevisaoEntrega();
   }
 
   function removeItem(i){ itensTemp.splice(i,1); renderItens(); }
