@@ -2443,6 +2443,11 @@ main { padding: 24px 28px; }
   <div class="topbar">
     <div class="topbar-title" id="topbar-saud"></div>
     <div class="topbar-right">
+      <div style="display:flex;align-items:center;gap:6px;margin-right:8px">
+        <button onclick="dashMesAnterior()" style="background:var(--purple-light);color:var(--purple);border:none;padding:5px 10px;border-radius:6px;font-size:16px;cursor:pointer;font-weight:700">‹</button>
+        <div id="dash-mes-label" style="font-size:13px;font-weight:700;color:var(--purple);min-width:130px;text-align:center"></div>
+        <button onclick="dashMesProximo()" style="background:var(--purple-light);color:var(--purple);border:none;padding:5px 10px;border-radius:6px;font-size:16px;cursor:pointer;font-weight:700">›</button>
+      </div>
       <button onclick="abrirAvaliacaoMes()" style="background:linear-gradient(135deg,#8b5cf6,#ec4899);color:#fff;border:none;padding:7px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">📊 Avaliar Mês</button>
       <div class="mes-badge" id="mes-badge"></div>
       <button class="refresh-btn" onclick="init()">Atualizar</button>
@@ -3003,7 +3008,16 @@ main { padding: 24px 28px; }
     var despesas=JSON.parse(localStorage.getItem('allhair_despesas')||'[]');
     var estoque=JSON.parse(localStorage.getItem('allhair_estoque_v2')||'{}');
     var hoje=new Date();
-    var mes=hoje.getMonth(), ano=hoje.getFullYear();
+    // Support month selector
+    if(window._dashMes===undefined){window._dashMes=hoje.getMonth();window._dashAno=hoje.getFullYear();}
+    var mes=window._dashMes, ano=window._dashAno;
+    var isMesAtual=(mes===hoje.getMonth()&&ano===hoje.getFullYear());
+    var mesLabel=document.getElementById('dash-mes-label');
+    if(mesLabel){
+      var d=new Date(ano,mes,1);
+      mesLabel.textContent=d.toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
+      mesLabel.textContent=mesLabel.textContent.charAt(0).toUpperCase()+mesLabel.textContent.slice(1);
+    }
     var noMes=function(d){if(!d)return false;var dt=new Date(d+'T00:00');return dt.getMonth()===mes&&dt.getFullYear()===ano;};
     var semanaAgo=new Date(hoje); semanaAgo.setDate(semanaAgo.getDate()-7);
 
@@ -3364,6 +3378,24 @@ main { padding: 24px 28px; }
       '</div>';
 
     document.getElementById('avaliacao-titulo').textContent='📊 Avaliação — '+nomeMes.charAt(0).toUpperCase()+nomeMes.slice(1);
+  }
+
+
+  function dashMesAnterior(){
+    if(window._dashMes===0){window._dashMes=11;window._dashAno--;}
+    else window._dashMes--;
+    init();
+  }
+  function dashMesProximo(){
+    var hoje=new Date();
+    if(window._dashMes===hoje.getMonth()&&window._dashAno===hoje.getFullYear())return;
+    if(window._dashMes===11){window._dashMes=0;window._dashAno++;}
+    else window._dashMes++;
+    init();
+  }
+  function dashMesNome(){
+    var d=new Date(window._dashAno||new Date().getFullYear(),window._dashMes||0,1);
+    return d.toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
   }
 
   function init(){

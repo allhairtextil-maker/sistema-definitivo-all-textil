@@ -3495,7 +3495,7 @@ main { padding: 24px 28px; }
     document.body.appendChild(toast);
     setTimeout(function(){toast.remove();},3000);
     // Gera parcelas no A Receber (financeiro) para boleto parcelado
-    if(!editingId && data.formaPgto==='Boleto' && data.vencimentos && data.vencimentos.length>0){
+    if(data.formaPgto==='Boleto' && data.vencimentos && data.vencimentos.length>0){
       try{
         var recArr=JSON.parse(localStorage.getItem('allhair_a_receber')||'[]');
         // Remove parcelas antigas deste pedido se re-salvando
