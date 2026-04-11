@@ -2354,9 +2354,7 @@ main { padding: 24px 28px; }
         <div class="field"><label>Saldo a receber</label>
           <input type="text" id="ped-saldo" readonly>
         </div>
-        <div class="field"><label>Vencimento do boleto</label>
-          <input type="date" id="ped-vencimento">
-        </div>
+
         <div class="field"><label>Nº NF (preencher ao enviar)</label>
           <input type="text" id="ped-nf" placeholder="Ex: NF 00456">
         </div>
@@ -3283,7 +3281,7 @@ main { padding: 24px 28px; }
     const reps=JSON.parse(localStorage.getItem('allhair_representantes')||'[]');
     reps.forEach(function(r){const o=document.createElement('option');o.value=r.id;o.textContent=r.nome+(r.regiao?' ('+r.regiao+')':'')+(r.comissao?' — '+r.comissao+'%':'');repSel.appendChild(o);});
     populateClienteSelect();
-    ['data','entrega','entrada','vencimento','nf','obs'].forEach(k=>{const el=document.getElementById('ped-'+k);if(el)el.value='';});
+    ['data','entrega','entrada','nf','obs'].forEach(k=>{const el=document.getElementById('ped-'+k);if(el)el.value='';});
     document.getElementById('ped-canal').value='WhatsApp';
     document.getElementById('ped-status').value='recebido';
     document.getElementById('ped-frete').value='CIF';
@@ -3302,7 +3300,7 @@ main { padding: 24px 28px; }
         document.getElementById('modal-pedido-title').textContent='Editar Pedido';
         document.getElementById('modal-pedido-num').textContent=p.numero||'';
         populateClienteSelect(p.clienteId);
-        ['data','entrega','vencimento','nf','obs'].forEach(k=>{const el=document.getElementById('ped-'+k);if(el)el.value=p[k]||'';});
+        ['data','entrega','nf','obs'].forEach(k=>{const el=document.getElementById('ped-'+k);if(el)el.value=p[k]||'';});
         document.getElementById('ped-canal').value=p.canal||'WhatsApp';
         document.getElementById('ped-rep').value=p.repId||'';
         populateSocioRespSelect(p.socioResp||'');
@@ -3442,7 +3440,7 @@ main { padding: 24px 28px; }
       formaPgto:document.getElementById('ped-forma-pgto').value,
       pgtoStatus:document.getElementById('ped-pgto-status').value,
       entrada:parseFloat(document.getElementById('ped-entrada').value||0),
-      vencimento:document.getElementById('ped-vencimento').value,
+      vencimento:document.getElementById('ped-venc-1')?.value||'',
       parcelas:(document.getElementById('ped-forma-pgto').value==='Boleto'?parseInt(document.getElementById('ped-parcelas')&&document.getElementById('ped-parcelas').value||1):1),
       vencimentos:(function(){
         var fpEl=document.getElementById('ped-forma-pgto');
