@@ -1,4 +1,4 @@
-// ALL HAIR — Auto Sync Firebase
+// ALL HAIR — Firebase Sync
 (function() {
   const EMPRESA = 'allhair';
   const KEYS = [
@@ -12,14 +12,10 @@
     'allhair_melhorias',
   ];
 
-  // Track locally modified keys and pending upload keys
-  window._localModified = window._localModified || {};
-  window._pendingUpload = window._pendingUpload || {};
-  const PROTECT_MS = 60000; // 60s protection from download overwrite
-  let uploadTimer = null;
   let firebaseReady = null;
+  let uploadTimer = null;
+  let uploading = false;
 
-  // Firebase config
   const firebaseConfig = {
     apiKey: "AIzaSyAS9JeVtbfRekXIvKeEvnttTinJ4UT7zko",
     authDomain: "all-hair-sistema-ed955.firebaseapp.com",
@@ -60,57 +56,44 @@
     if (el) { el.style.opacity = '0'; setTimeout(() => el.remove(), 600); }
   }
 
-  // Patch localStorage.setItem to auto-upload on save
+  // AUTO-UPLOAD: whenever localStorage changes, upload after 2s debounce
   const _origSet = localStorage.setItem.bind(localStorage);
   localStorage.setItem = function(key, value) {
     _origSet(key, value);
     if (KEYS.includes(key)) {
-      window._localModified[key] = Date.now();
-      window._pendingUpload[key] = value;
       scheduleUpload();
     }
   };
 
-  function isRecentlyModified(key) {
-    var t = window._localModified[key];
-    return t && (Date.now() - t) < PROTECT_MS;
-  }
-
-  // Debounced upload — waits 2s after last save then uploads all pending keys
   function scheduleUpload() {
     if (uploadTimer) clearTimeout(uploadTimer);
     uploadTimer = setTimeout(flushUpload, 2000);
   }
 
   async function flushUpload() {
-    const pending = Object.keys(window._pendingUpload);
-    if (!pending.length) return;
+    if (uploading) return;
+    uploading = true;
     try {
-      showIndicator('☁️ Salvando na nuvem...', '#6d28d9');
       const { db, doc, setDoc } = await getFirebase();
-      for (const key of pending) {
-        try {
-          const val = localStorage.getItem(key);
-          if (val) await setDoc(doc(db, EMPRESA, key), { value: JSON.parse(val) });
-          delete window._pendingUpload[key];
-        } catch(e) {}
+      for (const key of KEYS) {
+        const val = localStorage.getItem(key);
+        if (val && val !== '[]' && val !== '{}') {
+          try {
+            await setDoc(doc(db, EMPRESA, key), { value: JSON.parse(val) });
+          } catch(e) {}
+        }
       }
-      showIndicator('✅ Salvo!', '#10b981');
-      setTimeout(hideIndicator, 1500);
-    } catch(e) {
-      showIndicator('⚠️ Sem conexão — salvo localmente', '#f59e0b');
-      setTimeout(hideIndicator, 3000);
-    }
+    } catch(e) {}
+    uploading = false;
   }
 
-  // DOWNLOAD: Firebase → localStorage (skip recently modified keys)
+  // MANUAL DOWNLOAD: only when user clicks Sincronizar
   async function syncDown() {
     try {
-      showIndicator('☁️ Sincronizando...', '#6d28d9');
+      showIndicator('⬇️ Baixando dados...', '#6d28d9');
       const { db, doc, getDoc } = await getFirebase();
       let loaded = 0;
       for (const key of KEYS) {
-        if (isRecentlyModified(key)) continue; // protect local changes
         try {
           const snap = await getDoc(doc(db, EMPRESA, key));
           if (snap.exists()) {
@@ -119,31 +102,24 @@
           }
         } catch(e) {}
       }
-      showIndicator('✅ Sincronizado!', '#10b981');
+      showIndicator('✅ Dados atualizados!', '#10b981');
       setTimeout(hideIndicator, 2000);
       if (loaded > 0) {
         if (typeof window.render === 'function') window.render();
-        else if (typeof window.init === 'function') window.init();
+        else location.reload();
       }
     } catch(e) {
-      showIndicator('⚠️ Sem conexão', '#f59e0b');
+      showIndicator('❌ Erro na sincronização', '#ef4444');
       setTimeout(hideIndicator, 3000);
     }
   }
 
-  // Manual full upload (botão Sincronizar)
+  // MANUAL UPLOAD
   async function syncUp() {
     try {
-      showIndicator('⬆️ Enviando tudo...', '#6d28d9');
-      const { db, doc, setDoc } = await getFirebase();
-      for (const key of KEYS) {
-        const val = localStorage.getItem(key);
-        if (val) {
-          try { await setDoc(doc(db, EMPRESA, key), { value: JSON.parse(val) }); } catch(e) {}
-        }
-      }
-      window._pendingUpload = {};
-      showIndicator('✅ Tudo enviado!', '#10b981');
+      showIndicator('⬆️ Enviando dados...', '#6d28d9');
+      await flushUpload();
+      showIndicator('✅ Enviado!', '#10b981');
       setTimeout(hideIndicator, 2000);
     } catch(e) {
       showIndicator('❌ Erro ao enviar', '#ef4444');
@@ -154,10 +130,8 @@
   window.syncUp = syncUp;
   window.syncDown = syncDown;
 
-  // Auto sync down on page load
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => setTimeout(syncDown, 1000));
-  } else {
-    setTimeout(syncDown, 1000);
-  }
+  // NO AUTO SYNC DOWN ON PAGE LOAD
+  // Data is always read from localStorage (which persists between pages)
+  // User clicks "Sincronizar" to pull latest from Firebase when switching devices
+
 })();
