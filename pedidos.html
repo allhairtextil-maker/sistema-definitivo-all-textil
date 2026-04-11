@@ -2396,6 +2396,7 @@ main { padding: 24px 28px; }
   let pedidos   = JSON.parse(localStorage.getItem('allhair_pedidos')   || '[]');
   let clientes  = JSON.parse(localStorage.getItem('allhair_clientes')  || '[]');
   let produtos  = JSON.parse(localStorage.getItem('allhair_produtos')  || '[]');
+  let cores     = JSON.parse(localStorage.getItem('allhair_cores')      || '[]');
 
   let editingId = null;
   let itensTemp = [];
@@ -3008,6 +3009,7 @@ main { padding: 24px 28px; }
     pedidos   = JSON.parse(localStorage.getItem('allhair_pedidos')||'[]');
     clientes  = JSON.parse(localStorage.getItem('allhair_clientes')||'[]');
     produtos  = JSON.parse(localStorage.getItem('allhair_produtos')||'[]');
+    cores     = JSON.parse(localStorage.getItem('allhair_cores')||'[]');
     try{ renderKanban(); renderLista(); }catch(e){}
   };
   function fmt(v){ return 'R$ '+Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
