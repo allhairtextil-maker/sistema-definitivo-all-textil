@@ -3341,7 +3341,9 @@ main { padding: 24px 28px; }
     }
     renderItens();
     calcPrazo();
-    document.getElementById('overlay-pedido').classList.add('open');
+    var ov=document.getElementById('overlay-pedido');
+    if(!ov){alert('Overlay não encontrado!');return;}
+    ov.classList.add('open');
   }
   function closeModalPedido(){ document.getElementById('overlay-pedido').classList.remove('open'); editingId=null; itensTemp=[]; }
 
@@ -4244,7 +4246,11 @@ main { padding: 24px 28px; }
       btnEdit.title='Editar';
       btnEdit.textContent='✏️';
       btnEdit.style.cssText='background:var(--purple);color:#fff;border:none;padding:5px 8px;border-radius:6px;cursor:pointer;font-size:13px;margin-right:3px';
-      btnEdit.onclick=function(ev){ev.stopPropagation();openModalPedido(p.id);};
+      btnEdit.onclick=function(ev){
+        ev.stopPropagation();
+        try{openModalPedido(p.id);}
+        catch(err){alert('Erro ao abrir pedido: '+err.message);console.error(err);}
+      };
 
       var btnDel=document.createElement('button');
       btnDel.title='Excluir';
