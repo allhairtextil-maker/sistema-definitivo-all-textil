@@ -3264,18 +3264,52 @@ main { padding: 24px 28px; }
     } else if(comsPendEl){
       comsPendEl.innerHTML='';
     }
-    // Reload aReceber fresh
-    aReceber = JSON.parse(localStorage.getItem('allhair_a_receber')||'[]');
-    autoGerarAReceber();
-    aReceber=JSON.parse(localStorage.getItem('allhair_a_receber')||'[]');
-
-    const pedAbertos=pedidos.filter(function(p){return p.status!=='finalizado'&&getSaldoPed(p)>0;}).sort(function(a,b){return new Date(a.vencimento||'9999')-new Date(b.vencimento||'9999');});
-    const totalRec=pedAbertos.reduce(function(s,p){return s+getSaldoPed(p);},0);
-    const vencidos=pedAbertos.filter(function(p){return p.vencimento&&new Date(p.vencimento+' 00:00')<new Date();}).length;
-
-    // Parcelas de boleto
     const hoje=new Date();
-    const parcPendentes=aReceber.filter(function(r){return r.status==='pendente';}).sort(function(a,b){return new Date(a.vencimento||'9999')-new Date(b.vencimento||'9999');});
+
+    // Build parcelas directly from pedidos with boleto
+    // This is the source of truth - no need for separate a_receber generation
+    var parcPendentes=[];
+    pedidos.forEach(function(p){
+      var fp=(p.formaPgto||'').toLowerCase();
+      if(fp!=='boleto') return;
+      if(p.status==='cancelado') return;
+      var venc=p.vencimentos||[];
+      if(!venc.length && p.vencimento) venc=[p.vencimento];
+      if(!venc.length) return;
+      var totalPed=(p.itens||[]).reduce(function(s,i){return s+Number(i.total||0);},0);
+      var nParc=venc.length;
+      var valorParc=nParc>0?Math.round(totalPed/nParc*100)/100:totalPed;
+      // Check paid parcelas from aReceber
+      aReceber=JSON.parse(localStorage.getItem('allhair_a_receber')||'[]');
+      venc.forEach(function(dtVenc,ii){
+        if(!dtVenc) return;
+        var parcId='rec_auto_'+p.id+'_p'+(ii+1);
+        var jaRecebida=aReceber.some(function(r){return (r.id===parcId||( r.pedidoId===p.id&&r.parcela===(ii+1)))&&r.status==='recebido';});
+        if(jaRecebida) return;
+        parcPendentes.push({
+          id:parcId,
+          pedidoId:p.id,
+          pedidoNum:p.numero||'',
+          nf:p.nf||'',
+          clienteNome:p.clienteNome||'',
+          desc:'Boleto '+(p.numero||'')+(p.clienteNome?' — '+p.clienteNome:'')+' ('+(ii+1)+'/'+nParc+'x)',
+          valor:valorParc,
+          vencimento:dtVenc,
+          forma:'Boleto',
+          status:'pendente',
+          parcela:(ii+1),
+          totalParcelas:nParc
+        });
+      });
+    });
+    parcPendentes.sort(function(a,b){return new Date(a.vencimento||'9999')-new Date(b.vencimento||'9999');});
+
+    const pedAbertos=pedidos.filter(function(p){
+      var fp=(p.formaPgto||'').toLowerCase();
+      return p.status!=='finalizado'&&fp!=='boleto'&&getSaldoPed(p)>0;
+    }).sort(function(a,b){return new Date(a.vencimento||'9999')-new Date(b.vencimento||'9999');});
+    const totalRec=pedAbertos.reduce(function(s,p){return s+getSaldoPed(p);},0);
+    const vencidos=pedAbertos.filter(function(p){return p.vencimento&&new Date(p.vencimento+' 00:00')<hoje;}).length;
     const totalParc=parcPendentes.reduce(function(s,r){return s+Number(r.valor||0);},0);
     const parcVencidas=parcPendentes.filter(function(r){return r.vencimento&&new Date(r.vencimento+' 00:00')<hoje;}).length;
 
