@@ -3109,6 +3109,13 @@ main { padding: 24px 28px; }
   }
 
   window.render=function render(){
+    // Reload all data from localStorage on every render
+    pedidos      = JSON.parse(localStorage.getItem('allhair_pedidos')||'[]');
+    recebimentos = JSON.parse(localStorage.getItem('allhair_recebimentos')||'[]');
+    pagamentos   = JSON.parse(localStorage.getItem('allhair_pagamentos')||'[]');
+    despesas     = JSON.parse(localStorage.getItem('allhair_despesas')||'[]');
+    compras      = JSON.parse(localStorage.getItem('allhair_compras')||'[]');
+    aReceber     = JSON.parse(localStorage.getItem('allhair_a_receber')||'[]');
     const mn = mesNome(mesAtual);
     ['mes-label-resumo','mes-label-dre','mes-label-fluxo','mes-label-saude','mes-label-simulador'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=mn.charAt(0).toUpperCase()+mn.slice(1);});
     renderResumo();
