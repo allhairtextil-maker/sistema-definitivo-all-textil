@@ -2221,7 +2221,8 @@ main { padding: 24px 28px; }
           </select>
         </div>
         <div class="field"><label>Data do pedido</label><input type="date" id="ped-data"></div>
-        <div class="field"><label>Data de entrega *</label><input type="date" id="ped-entrega" oninput="calcPrazo()"></div>
+        <div class="field"><label>Data de entrega *</label><input type="date" id="ped-entrega" oninput="atualizarPrevisaoEntrega()">
+          <div id="previsao-entrega-wrap" style="margin-top:8px"></div></div>
         <div class="field"><label>Status</label>
           <select id="ped-status">
             <option value="recebido">🔵 Recebido</option>
@@ -2954,6 +2955,13 @@ main { padding: 24px 28px; }
   }
 
   function save(){ localStorage.setItem('allhair_pedidos', JSON.stringify(pedidos)); }
+
+  window.render = function(){
+    pedidos   = JSON.parse(localStorage.getItem('allhair_pedidos')||'[]');
+    clientes  = JSON.parse(localStorage.getItem('allhair_clientes')||'[]');
+    produtos  = JSON.parse(localStorage.getItem('allhair_produtos')||'[]');
+    try{ renderKanban(); renderLista(); }catch(e){}
+  };
   function fmt(v){ return 'R$ '+Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
   function nextNum(){ const nums=pedidos.map(p=>parseInt((p.numero||'0').replace(/\D/g,''))||0); return 'PED-'+ String((Math.max(0,...nums)+1)).padStart(4,'0'); }
 
@@ -3024,24 +3032,122 @@ main { padding: 24px 28px; }
   }
 
   /* ===== ITENS ===== */
+
+  function filtrarProdutosItem(i, q){
+    var drop=document.getElementById('prod-drop-'+i);
+    if(!drop)return;
+    var ql=q.toLowerCase();
+    drop.style.display='';
+    Array.from(drop.children).forEach(function(el){
+      var txt=el.textContent.toLowerCase();
+      el.style.display=txt.includes(ql)?'':'none';
+    });
+  }
+
+  function mostrarDropdownItem(i){
+    var drop=document.getElementById('prod-drop-'+i);
+    if(drop)drop.style.display='';
+  }
+
+  function fecharDropdownItem(i){
+    var drop=document.getElementById('prod-drop-'+i);
+    if(drop)drop.style.display='none';
+  }
+
+
+  function atualizarPrevisaoEntrega(){
+    var wrap=document.getElementById('previsao-entrega-wrap');
+    if(!wrap)return;
+    if(!itensTemp.length||!itensTemp.some(function(it){return it.prodId;})){
+      wrap.innerHTML='';return;
+    }
+
+    // Build temp pedido object
+    var pedTemp={itens:itensTemp.filter(function(it){return it.prodId;}).map(function(it){
+      var prod=produtos.find(function(p){return p.id===it.prodId;});
+      return{prodId:it.prodId,qtd:it.qtd||0,'unid-pacote':prod?prod['unid-pacote']:12};
+    })};
+
+    try{
+      var prazo=calcPrazoEntrega(pedTemp,0);
+      var dataEntregaCliente=document.getElementById('ped-entrega')?.value;
+      var previsao=prazo.dataEntrega;
+
+      if(!dataEntregaCliente){
+        wrap.innerHTML='<div style="background:#ede9fe;border-radius:8px;padding:8px 12px;font-size:12px;color:#5b21b6">'+
+          '📅 Previsão de entrega: <strong>'+previsao.toLocaleDateString('pt-BR',{weekday:'short',day:'numeric',month:'short'})+'</strong>'+
+          ' ('+prazo.totalDias+' dias: '+prazo.diasProd+'d produção + '+prazo.diasFacc+'d faccionista + '+prazo.diasEmb+'d embalar + '+prazo.diasEnvio+'d envio)'+
+        '</div>';
+        return;
+      }
+
+      var dataCliente=new Date(dataEntregaCliente+' 00:00');
+      var diasDiff=Math.ceil((dataCliente-previsao)/(864e5));
+      var ok=diasDiff>=0;
+      var cor=ok?'#10b981':'#ef4444';
+      var bg=ok?'#d1fae5':'#fee2e2';
+
+      wrap.innerHTML='<div style="background:'+bg+';border-radius:8px;padding:10px 14px;font-size:12px">'+
+        '<div style="font-weight:800;color:'+cor+';margin-bottom:4px">'+
+          (ok?'✅ Prazo viável!':'🚨 Prazo inviável!')+
+        '</div>'+
+        '<div style="color:'+cor+'">'+
+          'Previsão de entrega: <strong>'+previsao.toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'})+'</strong>'+
+        '</div>'+
+        '<div style="color:'+(ok?'#065f46':'#991b1b')+';margin-top:4px;font-size:11px">'+
+          'Cliente pediu: '+dataCliente.toLocaleDateString('pt-BR')+
+          ' · '+Math.abs(diasDiff)+' dias '+(ok?'de folga':'de atraso')+
+        '</div>'+
+        '<div style="color:var(--text2);margin-top:4px;font-size:11px">'+
+          '⏱ '+prazo.diasProd+'d produção + '+prazo.diasFacc+'d faccionista + '+prazo.diasEmb+'d embalar + '+prazo.diasEnvio+'d envio'+
+        '</div>'+
+      '</div>';
+    }catch(e){wrap.innerHTML='';}
+  }
+
+  function selecionarProdItem(i, prodId){
+    var prod=produtos.find(function(p){return p.id===prodId;});
+    if(!prod)return;
+    itensTemp[i].prodId=prodId;
+    if(!itensTemp[i].preco)itensTemp[i].preco=prod.preco||0;
+    fecharDropdownItem(i);
+    renderItens();
+    atualizarPrevisaoEntrega();
+  }
+
   function addItemRow(prodId='', qtd='', preco=''){
     itensTemp.push({id:'it_'+Date.now(),prodId,qtd,preco,total:0});
     renderItens();
   }
 
   function renderItens(){
+    setTimeout(atualizarPrevisaoEntrega,100);
     const list=document.getElementById('itens-list');
     list.innerHTML=itensTemp.map((item,i)=>{
       const prod=produtos.find(p=>p.id===item.prodId);
       const precoSugerido=prod?prod.preco:'';
+      const searchVal=prod?prod.nome+(prod.codigo?' ('+prod.codigo+')':''):'';
       return `
       <div class="item-row">
-        <div class="field">
-          <select onchange="updateItem(${i},'prodId',this.value)" style="padding:7px 10px;font-size:13px">
-            <option value="">— Produto —</option>
-            ${produtos.filter(p=>p.status==='ativo').map(p=>`<option value="${p.id}" ${p.id===item.prodId?'selected':''}>${p.nome}${p.codigo?' ('+p.codigo+')':''}</option>`).join('')}
-          </select>
-          ${prod?`<div style="font-size:10px;color:var(--text3);margin-top:3px">Preço sugerido: ${fmt(prod.preco)} · ${prod['unid-pacote']||'?'} un/pacote</div>`:''}
+        <div class="field" style="position:relative">
+          <input type="text" placeholder="🔍 Nome ou código..." value="${searchVal}"
+            style="padding:7px 10px;font-size:13px;width:100%"
+            oninput="filtrarProdutosItem(${i},this.value)"
+            onfocus="mostrarDropdownItem(${i})"
+            onblur="setTimeout(()=>fecharDropdownItem(${i}),200)"
+            id="prod-search-${i}">
+          <div id="prod-drop-${i}" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--white);border:1.5px solid var(--purple);border-radius:8px;max-height:200px;overflow-y:auto;z-index:999;box-shadow:0 4px 16px rgba(0,0,0,0.12)">
+            ${produtos.filter(p=>p.status==='ativo').map(p=>`
+              <div onclick="selecionarProdItem(${i},'${p.id}')"
+                style="padding:8px 12px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--border);display:flex;gap:8px;align-items:center"
+                onmouseover="this.style.background='var(--purple-light)'"
+                onmouseout="this.style.background=''">
+                <span style="font-weight:700">${p.nome}</span>
+                ${p.codigo?`<span style="color:var(--text2);font-size:11px">${p.codigo}</span>`:''}
+                <span style="margin-left:auto;font-weight:700;color:var(--purple)">${fmt(p.preco)}</span>
+              </div>`).join('')}
+          </div>
+          ${prod?`<div style="font-size:10px;color:var(--purple);margin-top:3px;font-weight:700">✅ ${prod.nome} · ${prod['unid-pacote']||'?'} un/pct · ${fmt(prod.preco)}/pct</div>`:''}
         </div>
         <div class="field">
           <input type="number" placeholder="Qtd" value="${item.qtd}" min="1" style="padding:7px 10px;font-size:13px" oninput="updateItem(${i},'qtd',this.value)">
@@ -3297,7 +3403,14 @@ main { padding: 24px 28px; }
       var gerou=gerarOrdemProducaoAuto(data.id, itens);
       if(gerou) alert('✅ Pedido registrado!\n⚡ Ordem de produção automática gerada para o que não tem em estoque.');
     }
-    save(); renderKanban(); renderLista(); closeModalPedido();
+    try{
+      save();
+    }catch(e){
+      alert('❌ Erro ao salvar pedido: '+e.message);
+      console.error('savePedido error:',e);
+      return;
+    }
+    renderKanban(); renderLista(); closeModalPedido();
     // Gera parcelas no A Receber (financeiro) para boleto parcelado
     if(!editingId && data.formaPgto==='Boleto' && data.vencimentos && data.vencimentos.length>0){
       try{
