@@ -2341,10 +2341,11 @@ main { padding: 24px 28px; }
         </div>
         <div class="field"><label>Tipo de composição</label>
           <select id="p-comp-tipo" onchange="onCompTipo()">
-            <option value="simples">Fio único (PES + Elastano)</option>
-            <option value="colorido">Fio Cru + Fio Colorido + Elastano</option>
+            <option value="colorido_puro">🎨 Fio Colorido Puro + Elastano</option>
+            <option value="colorido_branco">🎨+🤍 Fio Colorido + Branco + Elastano</option>
+            <option value="simples">🤍 Fio Branco (PES) + Elastano</option>
           </select>
-          <div class="field-hint">Selecione "Fio Cru + Colorido" para produtos que misturam fio branco com fio da cor</div>
+          <div class="field-hint">Colorido Puro = 100% fio da cor · Colorido+Branco = mistura fio colorido com fio branco</div>
         </div>
         <div id="comp-simples">
           <div class="form-grid">
@@ -2807,11 +2808,34 @@ main { padding: 24px 28px; }
   }
 
   function onCompTipo(){
-    const tipo=document.getElementById('p-comp-tipo')?.value||'simples';
-    const cs=document.getElementById('comp-simples');
-    const cc=document.getElementById('comp-colorido');
-    if(cs)cs.style.display=tipo==='simples'?'':'none';
-    if(cc)cc.style.display=tipo==='colorido'?'':'none';
+    var tipo=document.getElementById('p-comp-tipo').value;
+    var simples=document.getElementById('comp-simples');
+    var colorido=document.getElementById('comp-colorido');
+    if(tipo==='simples'){
+      if(simples)simples.style.display='';
+      if(colorido)colorido.style.display='none';
+    } else if(tipo==='colorido_puro'){
+      if(simples)simples.style.display='none';
+      if(colorido){
+        colorido.style.display='';
+        // Hide fio cru field, show only colorido
+        var cruField=document.getElementById('fio-cru-field');
+        if(cruField)cruField.style.display='none';
+        var colLabel=document.querySelector('label[for="p-fio-colorido"]');
+        if(colLabel)colLabel.textContent='% Fio Colorido (100%)';
+        document.getElementById('p-fio-colorido').value=80;
+        document.getElementById('p-fio-cru').value=0;
+      }
+    } else if(tipo==='colorido_branco'){
+      if(simples)simples.style.display='none';
+      if(colorido){
+        colorido.style.display='';
+        var cruField2=document.getElementById('fio-cru-field');
+        if(cruField2)cruField2.style.display='';
+        var colLabel2=document.querySelector('label[for="p-fio-colorido"]');
+        if(colLabel2)colLabel2.textContent='% Fio Colorido';
+      }
+    }
   }
   function calcTotalComp(){
     const cru=parseFloat(document.getElementById('p-fio-cru')?.value||0);
@@ -3239,6 +3263,9 @@ main { padding: 24px 28px; }
     };
     if(editingProdId){const idx=produtos.findIndex(x=>x.id===editingProdId);data.id=editingProdId;data.criadoEm=produtos[idx].criadoEm;produtos[idx]=data;}
     else{data.id='prod_'+Date.now();data.criadoEm=new Date().toLocaleDateString('pt-BR');produtos.push(data);}
+    var coresSalvas=getSelectedCores();
+    data.cores=coresSalvas;
+    data.compTipo=document.getElementById('p-comp-tipo')?.value||'colorido_puro';
     try{save();}catch(e){alert('Erro ao salvar: '+e.message);return;}
     renderProdutos();updateCounts();closeModalProd();
   }
