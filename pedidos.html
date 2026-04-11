@@ -3038,9 +3038,14 @@ main { padding: 24px 28px; }
     if(!drop)return;
     var ql=q.toLowerCase();
     drop.style.display='';
-    Array.from(drop.children).forEach(function(el){
+    // Match against text AND ref codes hidden in data
+    var prods_at=produtos.filter(function(p){return p.status==='ativo';});
+    Array.from(drop.children).forEach(function(el, idx){
       var txt=el.textContent.toLowerCase();
-      el.style.display=txt.includes(ql)?'':'none';
+      var prod=prods_at[idx];
+      var ref=(prod&&prod.ref||'').toLowerCase();
+      var cod=(prod&&prod.codigo||'').toLowerCase();
+      el.style.display=(txt.includes(ql)||ref.includes(ql)||cod.includes(ql))?'':'none';
     });
   }
 
@@ -3111,6 +3116,9 @@ main { padding: 24px 28px; }
     itensTemp[i].prodId=prodId;
     if(!itensTemp[i].preco)itensTemp[i].preco=prod.preco||0;
     fecharDropdownItem(i);
+    // Show ref in search field after selection
+    var inp=document.getElementById('prod-search-'+i);
+    if(inp)inp.value=(prod.ref?prod.ref+' — ':'')+prod.nome;
     renderItens();
     atualizarPrevisaoEntrega();
   }
@@ -3126,13 +3134,13 @@ main { padding: 24px 28px; }
     list.innerHTML=itensTemp.map((item,i)=>{
       const prod=produtos.find(p=>p.id===item.prodId);
       const precoSugerido=prod?prod.preco:'';
-      const searchVal=prod?prod.nome+(prod.codigo?' ('+prod.codigo+')':''):'';
+      const searchVal=prod?(prod.ref||prod.codigo||prod.nome):'';
       return `
       <div class="item-row">
         <div class="field" style="position:relative">
           <input type="text" placeholder="🔍 Nome ou código..." value="${searchVal}"
             style="padding:7px 10px;font-size:13px;width:100%"
-            oninput="filtrarProdutosItem(${i},this.value)"
+            oninput="filtrarProdutosItem(${i},this.value)" autocomplete="off"
             onfocus="mostrarDropdownItem(${i})"
             onblur="setTimeout(()=>fecharDropdownItem(${i}),200)"
             id="prod-search-${i}">
@@ -3142,8 +3150,9 @@ main { padding: 24px 28px; }
                 style="padding:8px 12px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--border);display:flex;gap:8px;align-items:center"
                 onmouseover="this.style.background='var(--purple-light)'"
                 onmouseout="this.style.background=''">
+                ${p.ref?`<span style="background:var(--purple-light);color:var(--purple);padding:2px 7px;border-radius:6px;font-size:11px;font-weight:800">${p.ref}</span>`:''}
                 <span style="font-weight:700">${p.nome}</span>
-                ${p.codigo?`<span style="color:var(--text2);font-size:11px">${p.codigo}</span>`:''}
+                ${p.codigo?`<span style="color:var(--text2);font-size:11px">(${p.codigo})</span>`:''}
                 <span style="margin-left:auto;font-weight:700;color:var(--purple)">${fmt(p.preco)}</span>
               </div>`).join('')}
           </div>
