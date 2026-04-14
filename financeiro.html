@@ -784,20 +784,86 @@ function confirmarRecebimento(){
   var valor = parseFloat(document.getElementById('conf-valor').value||0);
   if(!data||!valor){ alert('Preencha data e valor!'); return; }
   var d = getData();
-  // Mark in aReceber
+
+  // Mark parcela as recebida
   var aRec = d.aReceber;
   var existing = aRec.find(function(r){ return r.id===_confirmarItem.id; });
   if(existing){ existing.status='recebido'; existing.dataRecebimento=data; existing.valorRecebido=valor; }
   else { aRec.push(Object.assign({},_confirmarItem,{status:'recebido',dataRecebimento:data,valorRecebido:valor})); }
   save('allhair_a_receber', aRec);
+
   // Register recebimento
   var recs = d.recebimentos;
   recs.push({id:'rec_'+Date.now(), desc:_confirmarItem.desc, clienteNome:_confirmarItem.clienteNome, pedidoId:_confirmarItem.pedidoId||'', valor:valor, data:data, forma:'Boleto', obs:document.getElementById('conf-obs').value, criadoEm:new Date().toISOString()});
   save('allhair_recebimentos', recs);
+
+  // ── Verificar se é o ÚLTIMO boleto do pedido ──
+  var pedidoId = _confirmarItem.pedidoId;
+  if(pedidoId){
+    var todasParcelas = aRec.filter(function(r){ return r.pedidoId===pedidoId; });
+    var todasRecebidas = todasParcelas.length > 0 && todasParcelas.every(function(r){ return r.status==='recebido'; });
+
+    if(todasRecebidas){
+      // Pedido 100% liquidado → gerar comissão se tiver representante
+      var pedidos2 = load('allhair_pedidos',[]);
+      var ped = pedidos2.find(function(p){ return p.id===pedidoId; });
+      var reps = load('allhair_representantes',[]);
+
+      if(ped && ped.repId){
+        var rep = reps.find(function(r){ return r.id===ped.repId; });
+        if(rep && Number(rep.comissao||0) > 0){
+          var totalPed = (ped.itens||[]).reduce(function(s,i){ return s+Number(i.total||0); }, 0);
+          var valorComissao = Math.round(totalPed * Number(rep.comissao) / 100 * 100) / 100;
+
+          // Vencimento = dia seguinte
+          var dtVenc = new Date(data+'T00:00');
+          dtVenc.setDate(dtVenc.getDate()+1);
+          var vencStr = dtVenc.toISOString().split('T')[0];
+
+          // Lança em despesas variáveis (A Pagar)
+          var despesas2 = load('allhair_despesas',[]);
+          despesas2.push({
+            id: 'com_'+Date.now(),
+            desc: 'Comissão '+rep.nome+' — Ped. '+(ped.numero||pedidoId)+' ('+rep.comissao+'%)',
+            cat: 'Comissão',
+            tipo: 'variavel',
+            valor: valorComissao,
+            dataavulso: vencStr,
+            obs: 'Auto-gerado: pedido liquidado em '+data,
+            ativo: true,
+            status: 'pendente',
+            pedidoId: pedidoId,
+            repId: rep.id,
+            criadoEm: new Date().toISOString()
+          });
+          save('allhair_despesas', despesas2);
+
+          // Atualiza status do pedido
+          ped.pgtoStatus = 'pago';
+          save('allhair_pedidos', pedidos2);
+
+          fecharModalConfirmar();
+          render('areceber');
+          render('resumo');
+          alert('✅ Pedido liquidado!\n\n💰 Comissão de '+rep.nome+' gerada:\nR$ '+valorComissao.toFixed(2)+' — vence em '+fmtD(vencStr));
+          return;
+        }
+      }
+
+      // Sem representante — apenas marcar como pago
+      if(ped){ ped.pgtoStatus='pago'; save('allhair_pedidos', pedidos2); }
+      fecharModalConfirmar();
+      render('areceber');
+      render('resumo');
+      alert('✅ Pedido liquidado! Todos os boletos recebidos.');
+      return;
+    }
+  }
+
   fecharModalConfirmar();
   render('areceber');
   render('resumo');
-  alert('✅ Recebimento de '+fmt(valor)+' confirmado!');
+  alert('✅ Parcela de '+fmt(valor)+' confirmada!');
 }
 
 // ============================================================
