@@ -486,16 +486,31 @@ function rKanban(){
   board.innerHTML='';
 
   var COLS=[
-    {s:'aguardando',label:'📋 Aguardando',cor:'#64748b',btn:{l:'▶ Colocar na Máquina',c:'#8b5cf6',fn:function(l){setLoteStatus(l.id,'maquina');R('kanban');}}},
-    {s:'maquina',   label:'🏭 Máquina / Corte',cor:'#8b5cf6',btn:{l:'🏭 Lançar',c:'#8b5cf6',fn:function(l){prefillMaquina(l);}}},
-    {s:'cru',       label:'📦 Estoque Cru', cor:'#f59e0b',btn:{l:'🤝 Enviar Facc.',c:'#f59e0b',fn:function(l){if(l.fluxo==='corte'){d.lotes[l.id]='virado';S('allhair_lotes',d.lotes);R(_aba);}else prefillFacc(l);}}},
-    {s:'facc',      label:'🤝 Faccionista', cor:'#ef4444',btn:{l:'📦 Reg. Retorno',c:'#3b82f6',fn:function(l){prefillRetorno(l);}}},
-    {s:'virado',    label:'✅ Pronto p/ Embalar',cor:'#3b82f6',btn:{l:'📦 Embalar',c:'#10b981',fn:function(l){abrirEmbalar();}}},
-    {s:'pronto',    label:'🚚 Pronto p/ Expedir',cor:'#10b981',btn:null},
+    {s:'aguardando',label:'📋 Aguardando',       cor:'#64748b',
+     btn:{l:'▶ Colocar na Máquina',c:'#8b5cf6',fn:function(l){setLoteStatus(l.id,'maquina');R('kanban');}}},
+    {s:'maquina',   label:'🏭 Máquina',           cor:'#8b5cf6',
+     btn:{l:'🏭 Lançar Produção',c:'#8b5cf6',fn:function(l){prefillMaquina(l);}}},
+    {s:'cru',       label:'📦 Estoque Cru',        cor:'#f59e0b',
+     btn:{l:'🤝 Enviar Facc.',c:'#f59e0b',fn:function(l){prefillFacc(l);}},
+     filter:function(l){return l.fluxo!=='corte';}},
+    {s:'facc',      label:'🤝 Faccionista',         cor:'#ef4444',
+     btn:{l:'📦 Reg. Retorno',c:'#3b82f6',fn:function(l){prefillRetorno(l);}},
+     filter:function(l){return l.fluxo!=='corte';}},
+    {s:'corte',     label:'✂️ Corte Manual',        cor:'#7c3aed',
+     btn:{l:'✅ Corte Concluído',c:'#10b981',fn:function(l){setLoteStatus(l.id,'pronto');R('kanban');}},
+     filter:function(l){return l.fluxo==='corte';}},
+    {s:'virado',    label:'✅ Pronto p/ Embalar',   cor:'#3b82f6',
+     btn:{l:'📦 Embalar',c:'#10b981',fn:function(l){abrirEmbalar();}},
+     filter:function(l){return l.fluxo!=='corte';}},
+    {s:'pronto',    label:'🚚 Pronto p/ Expedir',   cor:'#10b981',btn:null}
   ];
 
   COLS.forEach(function(col){
-    var items=lotes.filter(function(l){return l.status===col.s;});
+    var items=lotes.filter(function(l){
+      if(l.status!==col.s)return false;
+      if(col.filter)return col.filter(l);
+      return true;
+    });
     // Sort by urgency then pedido date
     items.sort(function(a,b){
       var pa=a.atrasado?0:a.urgente?1:2;
@@ -708,7 +723,7 @@ function maqFillCores(){
   // Update label based on fluxo
   var h2=document.querySelector('#ov-maq .mh h2');
   var hasCorte=buildLotes(d).some(function(l){return l.fluxo==='corte'&&['aguardando','maquina'].includes(l.status);});
-  if(h2)h2.textContent=hasCorte?'✂️ Corte / 🏭 Lançar Produção':'🏭 Lançar Produção da Máquina';
+  if(h2)h2.textContent=hasCorte?'🏭 Máquina / ✂️ Corte':'🏭 Lançar Produção da Máquina';
   maqPrev();
 }
 function maqPrev(){
@@ -761,7 +776,7 @@ function salvarMaquina(){
     if(kgTotal>=meta*0.95){
       // Meta atingida (tolerância 5%) → avança
       // Se corte: vai direto pro virado (sem facc)
-      d.lotes[match.id]=(match.fluxo==='corte'||match.fluxo==='maquina')?'virado':'cru';
+      d.lotes[match.id]=match.fluxo==='corte'?'corte':'cru';
       delete d.lotes._kg[kgKey];
     } else {
       // Parcial → mantém em maquina
