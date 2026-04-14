@@ -264,11 +264,17 @@ function load(k,d){ try{ return JSON.parse(localStorage.getItem(k)||'null')||d; 
 function save(k,v){ localStorage.setItem(k,JSON.stringify(v)); }
 
 function getData(){
+  var est = load('allhair_estoque_v2',{});
+  // Normalize estoque structure
+  if(!est.mp) est.mp={};
+  if(!est.cru) est.cru={};
+  if(!est.virado) est.virado={};
+  if(!est.embalado) est.embalado={};
   return {
     pedidos:      load('allhair_pedidos',[]),
     produtos:     load('allhair_produtos',[]),
     cores:        load('allhair_cores',[]),
-    estoque:      load('allhair_estoque_v2',{mp:{},cru:{},virado:{},virando:{},embalado:{}}),
+    estoque:      est,
     producoes:    load('allhair_producoes2',[]),
     envios:       load('allhair_envios_v2',[]),
     faccionistas: load('allhair_faccionistas',[]),
@@ -324,6 +330,7 @@ function aba(id){
   if(el) el.classList.add('active');
   render(id);
 }
+
 
 function render(which){
   var d=getData();
@@ -868,8 +875,9 @@ function salvarMaquina(){
   save('allhair_producoes2',d.producoes);
   save('allhair_estoque_v2',d.estoque);
   fechar('maquina');
-  render(abaAtiva);
-  alert('✅ '+kgUtil.toFixed(2)+'kg lançados no estoque cru!');
+  render('hoje');
+  render('kanban');
+  alert('✅ '+kgUtil.toFixed(2)+'kg lançados no estoque cru! Aparece na coluna "Pronto p/ Facc." do Kanban.');
 }
 
 // ============================================================
