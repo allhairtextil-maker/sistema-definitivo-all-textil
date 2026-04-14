@@ -328,11 +328,11 @@ function aba(id){
   if(idx>=0) document.querySelectorAll('.tab')[idx].classList.add('active');
   var el=document.getElementById('tab-'+id);
   if(el) el.classList.add('active');
-  render(id);
+  _render(id);
 }
 
 
-function render(which){
+function _render(which){
   var d=getData();
   if(which==='hoje'||which==='all') renderHoje(d);
   if(which==='kanban'||which==='all') renderKanban(d);
@@ -661,7 +661,7 @@ function moverParaMaquina(pedId){
   var d=getData();
   var p=d.pedidos.find(function(x){return x.id===pedId;});
   if(p){ p.status='producao'; save('allhair_pedidos',d.pedidos); }
-  render('kanban');
+  _render('kanban');
 }
 
 function marcarExpedido(pedId){
@@ -669,7 +669,7 @@ function marcarExpedido(pedId){
   var d=getData();
   var p=d.pedidos.find(function(x){return x.id===pedId;});
   if(p){ p.status='expedido'; save('allhair_pedidos',d.pedidos); }
-  render('kanban');
+  _render('kanban');
 }
 
 // ============================================================
@@ -875,8 +875,8 @@ function salvarMaquina(){
   save('allhair_producoes2',d.producoes);
   save('allhair_estoque_v2',d.estoque);
   fechar('maquina');
-  render('hoje');
-  render('kanban');
+  _render('hoje');
+  _render('kanban');
   alert('✅ '+kgUtil.toFixed(2)+'kg lançados no estoque cru! Aparece na coluna "Pronto p/ Facc." do Kanban.');
 }
 
@@ -938,7 +938,7 @@ function salvarFacc(){
   save('allhair_producoes2',d.producoes);
   save('allhair_estoque_v2',d.estoque);
   fechar('facc');
-  render(abaAtiva);
+  _render(abaAtiva);
   alert('✅ '+kg.toFixed(2)+'kg enviados para faccionista! Retorno previsto: '+fmtD(prev));
 }
 
@@ -981,7 +981,7 @@ function salvarRetorno(){
   save('allhair_producoes2',d.producoes);
   _retornoEnvId=null;
   fechar('retorno');
-  render(abaAtiva);
+  _render(abaAtiva);
   alert('✅ '+kg.toFixed(2)+'kg virados registrados em estoque!');
 }
 
@@ -1062,7 +1062,7 @@ function salvarEmbalagem(){
   save('allhair_producoes2',d.producoes);
   save('allhair_estoque_v2',d.estoque);
   fechar('embalagem');
-  render(abaAtiva);
+  _render(abaAtiva);
   alert('✅ '+qtd+' pacotes embalados!');
 }
 
@@ -1134,10 +1134,10 @@ function tick(){
 }
 setInterval(tick,1000); tick();
 
-window.render=function(){ render(abaAtiva); };
+window.render=function(){ _render(abaAtiva); };
 
 // INIT
-render('hoje');
+_render('hoje');
 </script>
 <script src="firebase-sync.js"></script>
 </body>
