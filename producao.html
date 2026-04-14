@@ -286,6 +286,7 @@ function buildLotes(d){
       var rend=prod.rendimento||1000;
       var qtdPct=Number(it.qtd||0);
       var kgTotal=qtdPct*unid/rend;
+      var fluxo=prod.fluxo||'maquina_facc';
       var coresProd=prod.cores||[];
       if(!coresProd.length)coresProd=[''];
       var kgPorCor=kgTotal/coresProd.length;
