@@ -2898,6 +2898,56 @@ main { padding: 24px 28px; }
     return totalKg>0?totalVal/totalKg:0;
   }
 
+  function imprimirInsumos(){
+    var mats=window._matsInsumos||[];
+    var hoje=new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+    var html='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Necessidade de Insumos</title>'+
+      '<style>*{margin:0;padding:0;box-sizing:border-box;}body{font-family:Arial,sans-serif;font-size:11px;color:#1e293b;padding:24px;}'+
+      'h1{font-size:16px;font-weight:bold;margin-bottom:2px;}'+
+      '.sub{font-size:11px;color:#64748b;margin-bottom:20px;}'+
+      'table{width:100%;border-collapse:collapse;}'+
+      'th{background:#f1f5f9;padding:7px 12px;text-align:left;font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.5px;border:1px solid #e2e8f0;}'+
+      'td{padding:7px 12px;border:1px solid #e2e8f0;font-size:11px;}'+
+      '.grp{background:#f8fafc;font-size:9px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;}'+
+      '.ok{background:#d1fae5;color:#065f46;}.warn{background:#fef3c7;color:#92400e;}.crit{background:#fee2e2;color:#991b1b;}'+
+      '.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:9px;font-weight:700;}'+
+      '@media print{body{padding:12px}}</style>'+
+      '</head><body>'+
+      '<h1>ALL HAIR — Necessidade de Insumos</h1>'+
+      '<p class="sub">'+hoje+' · Gerado pelo sistema ALL HAIR</p>'+
+      '<table><thead><tr>'+
+        '<th>Material</th><th style="text-align:right">Estoque (kg)</th><th style="text-align:right">Nec. Pedidos</th><th style="text-align:right">Sugestão Compra</th><th style="text-align:right">Preço Médio</th><th style="text-align:center">Status</th>'+
+      '</tr></thead><tbody>';
+    var grupos=['Fios Base','Fios Coloridos','Embalagens','Etiquetas'];
+    grupos.forEach(function(g){
+      var gm=mats.filter(function(m){return m.grupo===g;});
+      if(!gm.length)return;
+      html+='<tr><td colspan="6" class="grp">'+g+'</td></tr>';
+      gm.forEach(function(m){
+        var dias=0;
+        if(m.qty<=0){var cls='crit';var s='Zerado';}
+        else if(m.qty<2){var cls='warn';var s='Atenção ('+Math.round(m.qty)+'d)';}
+        else{var cls='ok';var s='OK';}
+        var nec=Math.max(0,(m.necPed+(m.necProj||0))-m.qty);
+        var sug=nec>0?(m.unidade==='un'?Math.ceil(nec+m.qty*0.2)+' un':(nec+m.qty*0.2).toFixed(3)+' kg'):'—';
+        html+='<tr style="background:'+(m.qty<=0?'#fff5f5':m.qty<2?'#fffbeb':'#f8fff8')+'">'+
+          '<td><strong>'+m.nome+'</strong></td>'+
+          '<td style="text-align:right;font-weight:bold">'+(m.unidade==='un'?Math.floor(m.qty)+' un':m.qty.toFixed(3)+' kg')+'</td>'+
+          '<td style="text-align:right">'+(m.necPed>0?m.necPed.toFixed(3):' — ')+'</td>'+
+          '<td style="text-align:right;font-weight:bold;color:'+(nec>0?'#b45309':'#64748b')+'">'+sug+'</td>'+
+          '<td style="text-align:right">'+(m.pm>0?'R$ '+m.pm.toFixed(2)+'/kg':'—')+'</td>'+
+          '<td style="text-align:center"><span class="badge '+cls+'">'+s+'</span></td>'+
+        '</tr>';
+      });
+    });
+    html+='</tbody></table>'+
+      '<div style="margin-top:20px;font-size:10px;color:#94a3b8">* Sugestão de compra = necessidade dos pedidos abertos + 20% de reserva</div>'+
+      '</body></html>';
+    var w=window.open('','_blank','width=800,height=900');
+    w.document.write(html);w.document.close();
+    setTimeout(function(){w.print();},400);
+  }
+
   function renderMP(){
     const cores2=JSON.parse(localStorage.getItem('allhair_cores')||'[]');
     const comprasArr=JSON.parse(localStorage.getItem('allhair_compras')||'[]');
@@ -2964,46 +3014,139 @@ main { padding: 24px 28px; }
     var proj15Fio=proj15*0.80;
 
     // Build materials list
+    var cap=getCap?getCap():{meia:4,liso:10,mini:5};
     var mats=[];
-    mats.push({nome:'Fio PES Branco', key:'PES_BRANCO', qty:parseFloat(estoque.mp?.PES_BRANCO||estoque.mp?.PES||0), pm:pmPESB, hex:'#f1f5f9', necPed:necPedidos.PES_BRANCO, necProj:proj15Fio*0.7});
-    mats.push({nome:'Fio PES Preto',  key:'PES_PRETO',  qty:parseFloat(estoque.mp?.PES_PRETO||0), pm:pmPESP, hex:'#1e293b', necPed:0, necProj:proj15Fio*0.3});
-    mats.push({nome:'Elastano',       key:'ELA',        qty:parseFloat(estoque.mp?.ELA||0), pm:pm30('ELA'), hex:'#e2e8f0', necPed:necPedidos.ELA, necProj:proj15Ela});
+    mats.push({nome:'Fio PES Branco', grupo:'Fios Base',  key:'PES_BRANCO', qty:parseFloat(estoque.mp&&estoque.mp.PES_BRANCO||estoque.mp&&estoque.mp.PES||0), pm:pmPESB, hex:'#e2e8f0', necPed:necPedidos.PES_BRANCO, necProj:proj15Fio*0.7});
+    mats.push({nome:'Fio PES Preto',  grupo:'Fios Base',  key:'PES_PRETO',  qty:parseFloat(estoque.mp&&estoque.mp.PES_PRETO||0), pm:pmPESP, hex:'#334155', necPed:0, necProj:proj15Fio*0.3});
+    mats.push({nome:'Elastano',       grupo:'Fios Base',  key:'ELA',        qty:parseFloat(estoque.mp&&estoque.mp.ELA||0), pm:pm30('ELA'), hex:'#a5b4fc', necPed:necPedidos.ELA, necProj:proj15Ela});
     cores2.forEach(function(cor){
-      var qty=parseFloat(fios['FIO_'+cor.id]||fios[cor.id]||0);
+      var qty=parseFloat(fios&&fios['FIO_'+cor.id]||fios&&fios[cor.id]||0);
       var necPed=necPedidos.fios[cor.id]||0;
-      mats.push({nome:'Fio '+cor.nome, key:'FIO_'+cor.id, qty:qty, pm:pm30('FIO_'+cor.id), hex:cor.hex||'#888', necPed:necPed, necProj:0, corId:cor.id});
+      mats.push({nome:'Fio '+cor.nome, grupo:'Fios Coloridos', key:'FIO_'+cor.id, qty:qty, pm:pm30('FIO_'+cor.id), hex:cor.hex||'#888', necPed:necPed, necProj:0, corId:cor.id});
     });
 
-    var cardsEl=document.getElementById('mp-cards');
-    if(cardsEl){
-      var html='<table style="width:100%;border-collapse:collapse;background:var(--white)">'+
-        '<thead><tr style="background:var(--bg)">'+
-          '<th style="padding:12px 16px;text-align:left;font-size:12px;font-weight:700;color:var(--text2)">MATERIAL</th>'+
-          '<th style="padding:12px 16px;text-align:right;font-size:12px;font-weight:700;color:var(--text2)">ESTOQUE (kg)</th>'+
-          '<th style="padding:12px 16px;text-align:right;font-size:12px;font-weight:700;color:var(--text2)">PREÇO MÉDIO 30d</th>'+
-          '<th style="padding:12px 16px;text-align:right;font-size:12px;font-weight:700;color:var(--orange)">NECESSIDADE</th>'+
-          '<th style="padding:12px 16px;text-align:center;font-size:12px;font-weight:700;color:var(--text2)">STATUS</th>'+
-        '</tr></thead><tbody>';
+    // Embalagens e Etiquetas
+    var embalagensArr=JSON.parse(localStorage.getItem('allhair_embalagens_prod')||'[]');
+    var etiquetasArr=JSON.parse(localStorage.getItem('allhair_etiquetas')||'[]');
+    var insumos=estoque.insumos||{};
 
-      mats.forEach(function(m){
-        var nec=Math.max(0,(m.necPed+m.necProj)-m.qty);
-        var status=m.qty<=0?'Zerado':nec>0?'Comprar':m.qty<2?'Baixo':'OK';
-        var sc=m.qty<=0?'#ef4444':nec>0?'#f59e0b':m.qty<2?'#f59e0b':'#10b981';
-        var necTxt=nec>0?'<span style="font-weight:800;color:#f59e0b">'+nec.toFixed(2)+' kg</span>':'<span style="color:var(--text3)">—</span>';
-        html+='<tr style="border-bottom:1px solid var(--border)">'+
-          '<td style="padding:12px 16px"><div style="display:flex;align-items:center;gap:10px">'+
-            '<span style="width:12px;height:12px;border-radius:50%;background:'+m.hex+';display:inline-block;border:1px solid rgba(0,0,0,0.1);flex-shrink:0"></span>'+
-            '<span style="font-weight:600;font-size:13px">'+m.nome+'</span>'+
-          '</div></td>'+
-          '<td style="padding:12px 16px;text-align:right;font-size:15px;font-weight:900">'+m.qty.toFixed(3)+'</td>'+
-          '<td style="padding:12px 16px;text-align:right;font-size:13px;color:var(--text2)">'+(m.pm>0?'R$ '+m.pm.toFixed(2)+'/kg':'—')+'</td>'+
-          '<td style="padding:12px 16px;text-align:right">'+necTxt+'</td>'+
-          '<td style="padding:12px 16px;text-align:center"><span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;background:'+sc+'22;color:'+sc+'">'+status+'</span></td>'+
-        '</tr>';
+    // Calcular necessidade de embalagens/etiquetas pelos pedidos abertos
+    var necEmb={};  // embId → qtd pacotes necessária
+    var necEtiq={}; // etiqId → qtd necessária
+    pedidos2.filter(function(p){return['recebido','producao','pronto'].includes(p.status);}).forEach(function(ped){
+      (ped.itens||[]).forEach(function(it){
+        var prod=produtos2.find(function(x){return x.id===it.prodId;});
+        if(!prod)return;
+        var qtdPct=Number(it.qtd||0);
+        if(prod.embalagem){
+          necEmb[prod.embalagem]=(necEmb[prod.embalagem]||0)+qtdPct;
+        }
+        if(prod.etiqueta){
+          necEtiq[prod.etiqueta]=(necEtiq[prod.etiqueta]||0)+qtdPct;
+        }
       });
-      html+='</tbody></table>';
-      cardsEl.innerHTML=html;
+    });
+
+    embalagensArr.forEach(function(emb){
+      var qty=Number((insumos['emb_'+emb.id]||insumos[emb.id]||{}).qty||0);
+      var necPed=necEmb[emb.id]||0;
+      mats.push({nome:emb.nome||('Embalagem '+emb.id), grupo:'Embalagens', key:'emb_'+emb.id, qty:qty, pm:0, hex:'#fbbf24', necPed:necPed, necProj:0, unidade:'un'});
+    });
+
+    etiquetasArr.forEach(function(etq){
+      var qty=Number((insumos['etq_'+etq.id]||insumos[etq.id]||{}).qty||0);
+      var necPed=necEtiq[etq.id]||0;
+      mats.push({nome:etq.nome||('Etiqueta '+etq.id), grupo:'Etiquetas', key:'etq_'+etq.id, qty:qty, pm:0, hex:'#a78bfa', necPed:necPed, necProj:0, unidade:'un'});
+    });
+
+    // Status logic: dias de producao restantes
+    // Folga = qty / consumo_diario >= 5d → verde
+    // Atenção = 1-4d → amarelo  
+    // Crítico/Zerado = 0d → vermelho
+    function getStatus(m){
+      // For embalagens/etiquetas: compare qty vs necPed directly
+      if(m.unidade==='un'){
+        if(m.qty<=0&&m.necPed>0) return {s:'Zerado',  c:'#ef4444', bg:'#fee2e2', dias:0};
+        if(m.qty<m.necPed)       return {s:'Faltando', c:'#ef4444', bg:'#fee2e2', dias:0};
+        if(m.qty<m.necPed*1.2)   return {s:'Atenção',  c:'#f59e0b', bg:'#fef3c7', dias:0};
+        if(m.qty<=0)             return {s:'Zerado',   c:'#ef4444', bg:'#fee2e2', dias:0};
+        return                          {s:'OK',       c:'#10b981', bg:'#d1fae5', dias:99};
+      }
+      // For fios: dias de produção
+      var consumoDia=projDia>0?(m.necProj+m.necPed)/(15):0.1;
+      var dias=consumoDia>0?m.qty/consumoDia:99;
+      if(m.qty<=0) return {s:'Zerado',  c:'#ef4444', bg:'#fee2e2', dias:0};
+      if(dias<=2)  return {s:'Crítico', c:'#ef4444', bg:'#fee2e2', dias:Math.round(dias)};
+      if(dias<=5)  return {s:'Atenção', c:'#f59e0b', bg:'#fef3c7', dias:Math.round(dias)};
+      return       {s:'OK',      c:'#10b981', bg:'#d1fae5', dias:Math.round(dias)};
     }
+
+    var cardsEl=document.getElementById('mp-cards');
+    if(!cardsEl) return;
+
+    // Header com botão imprimir
+    var header='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">'+
+      '<div>'+
+        '<div style="font-size:15px;font-weight:800">Necessidade de Insumos</div>'+
+        '<div style="font-size:12px;color:var(--text2)">Gerado em '+new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long',year:'numeric'})+'</div>'+
+      '</div>'+
+      '<button onclick="imprimirInsumos()" style="background:var(--purple);color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">🖨️ Imprimir / Enviar</button>'+
+    '</div>';
+
+    // Tabela formal
+    var grupos=['Fios Base','Fios Coloridos','Embalagens','Etiquetas'];
+    var tableHtml='<div style="border:1px solid #cbd5e1;border-radius:10px;overflow:hidden">'+
+      '<table style="width:100%;border-collapse:collapse;font-size:12px;font-family:Arial,sans-serif">'+
+      '<thead>'+
+        '<tr style="background:#f1f5f9">'+
+          '<th style="padding:9px 14px;text-align:left;font-size:11px;font-weight:700;color:#64748b;letter-spacing:.5px;border-bottom:2px solid #e2e8f0">MATERIAL</th>'+
+          '<th style="padding:9px 14px;text-align:right;font-size:11px;font-weight:700;color:#64748b;letter-spacing:.5px;border-bottom:2px solid #e2e8f0">ESTOQUE</th>'+
+          '<th style="padding:9px 14px;text-align:right;font-size:11px;font-weight:700;color:#64748b;letter-spacing:.5px;border-bottom:2px solid #e2e8f0">NECESSIDADE PEDIDOS</th>'+
+          '<th style="padding:9px 14px;text-align:right;font-size:11px;font-weight:700;color:#64748b;letter-spacing:.5px;border-bottom:2px solid #e2e8f0">SUGESTÃO COMPRA</th>'+
+          '<th style="padding:9px 14px;text-align:right;font-size:11px;font-weight:700;color:#64748b;letter-spacing:.5px;border-bottom:2px solid #e2e8f0">PREÇO MÉDIO</th>'+
+          '<th style="padding:9px 14px;text-align:center;font-size:11px;font-weight:700;color:#64748b;letter-spacing:.5px;border-bottom:2px solid #e2e8f0">STATUS</th>'+
+        '</tr>'+
+      '</thead><tbody>';
+
+    grupos.forEach(function(grupo,gi){
+      var gMats=mats.filter(function(m){return m.grupo===grupo;});
+      if(!gMats.length) return;
+      // Group header
+      tableHtml+='<tr><td colspan="6" style="padding:6px 14px;background:#f8fafc;font-size:10px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid #e2e8f0">'+grupo+'</td></tr>';
+      gMats.forEach(function(m,i){
+        var st=getStatus(m);
+        var nec=Math.max(0,(m.necPed+m.necProj)-m.qty);
+        var sugestao=nec>0?nec+m.qty*0.2:0; // compra = necessidade + 20% reserva
+        var isLast=i===gMats.length-1&&gi===grupos.length-1;
+        var border=isLast?'':'border-bottom:1px solid #e2e8f0';
+        tableHtml+=
+          '<tr style="background:'+st.bg+'20">'+
+          '<td style="padding:8px 14px;'+border+'">'+
+            '<div style="display:flex;align-items:center;gap:8px">'+
+              '<span style="width:10px;height:10px;border-radius:50%;background:'+m.hex+';display:inline-block;border:1px solid rgba(0,0,0,.15);flex-shrink:0"></span>'+
+              '<span style="font-weight:600;color:#1e293b">'+m.nome+'</span>'+
+            '</div>'+
+          '</td>'+
+          '<td style="padding:8px 14px;text-align:right;font-weight:700;color:#1e293b;'+border+'">'+m.qty.toFixed(3)+' kg</td>'+
+          '<td style="padding:8px 14px;text-align:right;color:#64748b;'+border+'">'+(m.necPed>0?m.necPed.toFixed(3)+' kg':'—')+'</td>'+
+          '<td style="padding:8px 14px;text-align:right;font-weight:'+(sugestao>0?'800':'400')+';color:'+(sugestao>0?st.c:'#94a3b8')+';'+border+'">'+
+            (sugestao>0?sugestao.toFixed(3)+' kg':'✅ Suficiente')+
+          '</td>'+
+          '<td style="padding:8px 14px;text-align:right;color:#64748b;'+border+'">'+(m.pm>0?'R$ '+m.pm.toFixed(2)+'/kg':'—')+'</td>'+
+          '<td style="padding:8px 14px;text-align:center;'+border+'">'+
+            '<span style="display:inline-block;padding:3px 10px;border-radius:20px;font-size:10px;font-weight:800;background:'+st.bg+';color:'+st.c+';border:1px solid '+st.c+'40">'+
+              st.s+(st.dias<99?' ('+st.dias+'d)':'')+
+            '</span>'+
+          '</td>'+
+          '</tr>';
+      });
+    });
+
+    tableHtml+='</tbody></table></div>';
+    cardsEl.innerHTML=header+tableHtml;
+
+    // Expose data for print
+    window._matsInsumos=mats;
 
     // Histórico
     var movMP=movimentos.filter(function(m){return m.tipo==='entrada_mp'||m.tipo==='entrada_compra'||m.tipo==='consumo_mp';}).sort(function(a,b){return new Date(b.criadoEm)-new Date(a.criadoEm);}).slice(0,50);
