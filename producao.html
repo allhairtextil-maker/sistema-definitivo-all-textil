@@ -54,7 +54,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
 .modal-body{padding:20px;display:flex;flex-direction:column;gap:12px;}
 .modal-footer{padding:14px 20px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;}
 /* HOJE */
-.hoje-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:16px;}
+.hoje-grid{display:flex;flex-direction:column;gap:12px;margin-bottom:16px;}
 .hoje-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
 .hoje-card-header{padding:12px 16px;font-weight:800;font-size:13px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
 .hoje-card-body{padding:12px 16px;}
@@ -81,6 +81,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
 .cap-bar-wrap{background:var(--bg);border-radius:20px;height:10px;overflow:hidden;margin:6px 0;}
 .cap-bar{height:100%;border-radius:20px;transition:width .8s;}
 @media print{.sidebar,.topbar,.tabs-bar,.btn,.btn-sm{display:none!important;}.tab-content{display:block!important;padding:12px;}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
 </style>
 </head>
 <body>
@@ -346,156 +347,182 @@ function _render(which){
 // ============================================================
 function renderHoje(d){
   var cap=getCap();
-  var cfg=getCfg();
-  var pedAbertos=d.pedidos.filter(function(p){return['recebido','producao','pronto'].includes(p.status);});
+  var grid=document.getElementById('hoje-grid');
+  var alertasEl=document.getElementById('hoje-alertas');
+  var rodando=load('allhair_rodando',{});
+
+  var pedAbertos=d.pedidos.filter(function(p){return['recebido','producao'].includes(p.status);});
   pedAbertos.sort(function(a,b){return new Date(a.entrega||'9999')-new Date(b.entrega||'9999');});
 
-  // O que rodar na máquina hoje
-  var maqItems=[];
-  var capR={meia:cap.meia,liso:cap.liso,mini:cap.mini};
+  var ordens=[];
+  var capRest={meia:cap.meia,liso:cap.liso,mini:cap.mini};
+
   pedAbertos.forEach(function(ped){
     var dias=diasAte(ped.entrega);
     (ped.itens||[]).forEach(function(it){
       var prod=d.produtos.find(function(p){return p.id===it.prodId;});
-      if(!prod)return;
-      var tipo=prod.tecidoTipo||'liso';
-      if(!capR[tipo]||capR[tipo]<=0)return;
+      if(!prod) return;
+      var tipo=(prod.tecidoTipo||'liso').toLowerCase();
+      var unid=prod['unid-pacote']||12;
       var rend=prod.rendimento||1000;
-      var kg=Number(it.qtd||0)*(prod['unid-pacote']||12)/rend;
-      var kgH=Math.min(kg,capR[tipo]);
-      capR[tipo]-=kgH;
-      if(kgH<0.01)return;
-      maqItems.push({
-        tipo:tipo.toUpperCase(),
-        nome:prod.nome,
-        kg:kgH,
-        cliente:ped.clienteNome,
-        dias:dias,
-        urgente:dias<=3&&dias>=0,
-        atrasado:dias<0,
+      var qtdPct=Number(it.qtd||0);
+      var kgTotal=qtdPct*unid/rend;
+      if(kgTotal<0.01) return;
+      var capDisp=capRest[tipo]||0;
+      var kgHoje=Math.min(kgTotal, capDisp);
+      if(kgHoje<0.01) return;
+      capRest[tipo]=Math.max(0, capRest[tipo]-kgHoje);
+      var pctHoje=Math.round(kgHoje*rend/unid);
+      var osId='os_'+ped.id+'_'+it.prodId;
+      var status=rodando[osId]||'aguardando';
+      var coresProd=prod.cores||[];
+      var corNomes=coresProd.length>0?coresProd.map(function(cid){
+        var cor=d.cores.find(function(x){return x.id===cid;});
+        return cor?cor.nome:cid;
+      }).join(', '):'Cor padrão';
+      ordens.push({
+        osId:osId,pedId:ped.id,prodId:it.prodId,
+        modelo:prod.nome,ref:prod.ref||'',
+        tipo:tipo.toUpperCase(),cor:corNomes,
+        pct:pctHoje,kg:kgHoje,unid:unid,
+        cliente:ped.clienteNome,entrega:ped.entrega,dias:dias,
+        urgente:dias>=0&&dias<=3,atrasado:dias<0,status:status,
       });
     });
   });
 
-  // Próximo lote faccionista
-  var cruEntries=Object.entries(d.estoque.cru||{}).filter(function(e){return Number(e[1].kg||0)>0;});
-  var capLote={
-    meia:cfg.faccPessoas*cfg.faccMeia*7,
-    liso:cfg.faccPessoas*cfg.faccLiso*7,
-    mini:cfg.faccPessoas*cfg.faccMini*7,
-  };
-  var faccItems=cruEntries.map(function(e){
-    var v=e[1]; var kg=Number(v.kg||0);
-    var tipo=(v.tecido||'liso').toLowerCase();
-    var cap2=capLote[tipo]||capLote.liso;
-    var kgEnviar=Math.min(kg,cap2);
-    return {desc:(v.tecido||'').toUpperCase()+' — '+(v.corNome||''),kg:kgEnviar,cabe:kgEnviar>=kg};
-  });
-  // Próxima segunda
-  var prxSeg=new Date(); var ds=prxSeg.getDay();
-  prxSeg.setDate(prxSeg.getDate()+(ds===1?7:(ds===0?1:8-ds)));
-  var retorno=new Date(prxSeg); retorno.setDate(retorno.getDate()+cfg.faccDias);
+  grid.innerHTML='';
 
-  // O que embalar
-  var viradoEntries=Object.entries(d.estoque.virado||{}).filter(function(e){return Number(e[1].kg||0)>0;});
-  var embItems=[];
-  var embRest=cap.embDia;
-  viradoEntries.forEach(function(e){
-    var v=e[1]; var kg=Number(v.kg||0);
-    if(embRest<=0)return;
-    var rend=1000; var pcts=Math.floor(kg*rend/12);
-    var pctH=Math.min(pcts,embRest);
-    embRest-=pctH;
-    embItems.push({desc:(v.tecido||'').toUpperCase()+' — '+(v.corNome||''),pcts:pctH,kg:kg});
+  if(!ordens.length){
+    grid.innerHTML='<div style="text-align:center;padding:60px;color:var(--text2)"><div style="font-size:48px;margin-bottom:12px">✅</div><div style="font-size:16px;font-weight:700">Nenhum pedido na fila</div><div style="font-size:13px;margin-top:4px">Cadastre pedidos em Pedidos para aparecer aqui</div></div>';
+    alertasEl.innerHTML='';
+    return;
+  }
+
+  var nAg=ordens.filter(function(o){return o.status==='aguardando';}).length;
+  var nRod=ordens.filter(function(o){return o.status==='rodando';}).length;
+  var nConc=ordens.filter(function(o){return o.status==='concluido';}).length;
+
+  // Header
+  var header=document.createElement('div');
+  header.style.cssText='background:var(--navy);border-radius:var(--radius);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;margin-bottom:4px';
+  header.innerHTML='<div><div style="color:rgba(255,255,255,.5);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px">Ordem do Dia — '+new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'})+'</div><div style="color:#fff;font-size:18px;font-weight:900;margin-top:2px">'+ordens.length+' lote(s) para produzir hoje</div></div>'+
+    '<div style="display:flex;gap:16px">'+
+      '<div style="text-align:center"><div style="font-size:22px;font-weight:900;color:#94a3b8">'+nAg+'</div><div style="font-size:10px;color:rgba(255,255,255,.4);text-transform:uppercase">Aguard.</div></div>'+
+      '<div style="text-align:center"><div style="font-size:22px;font-weight:900;color:#f59e0b">'+nRod+'</div><div style="font-size:10px;color:rgba(255,255,255,.4);text-transform:uppercase">Rodando</div></div>'+
+      '<div style="text-align:center"><div style="font-size:22px;font-weight:900;color:#10b981">'+nConc+'</div><div style="font-size:10px;color:rgba(255,255,255,.4);text-transform:uppercase">Concluído</div></div>'+
+    '</div>';
+  grid.appendChild(header);
+
+  ordens.forEach(function(o, idx){
+    var card=document.createElement('div');
+    var borderCor=o.atrasado?'#ef4444':o.urgente?'#f59e0b':o.status==='rodando'?'#8b5cf6':o.status==='concluido'?'#10b981':'var(--border)';
+    var bgCor=o.status==='concluido'?'#f0fdf4':o.status==='rodando'?'#faf5ff':'var(--white)';
+    card.style.cssText='background:'+bgCor+';border:2px solid '+borderCor+';border-radius:var(--radius);padding:16px;position:relative';
+
+    var numLabel=document.createElement('div');
+    numLabel.style.cssText='position:absolute;top:12px;right:14px;font-size:11px;font-weight:700;color:var(--text3)';
+    numLabel.textContent='#'+(idx+1);
+    card.appendChild(numLabel);
+
+    if(o.status==='rodando'){
+      var badge=document.createElement('div');
+      badge.style.cssText='display:inline-block;background:#8b5cf6;color:#fff;padding:2px 12px;border-radius:20px;font-size:11px;font-weight:800;margin-bottom:10px';
+      badge.textContent='🔴 RODANDO';
+      card.appendChild(badge);
+    }
+
+    var info=document.createElement('div');
+    info.style.cssText='display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:center;margin-bottom:14px';
+    info.innerHTML=
+      '<div style="background:var(--purple-light);border-radius:10px;padding:10px 14px;text-align:center;min-width:80px">'+
+        '<div style="font-size:11px;font-weight:700;color:var(--purple);text-transform:uppercase">'+o.tipo+'</div>'+
+        '<div style="font-size:32px;font-weight:900;color:var(--purple)">'+o.pct+'</div>'+
+        '<div style="font-size:11px;color:var(--text2)">pacotes</div>'+
+      '</div>'+
+      '<div>'+
+        '<div style="font-size:17px;font-weight:900">'+o.modelo+(o.ref?' <span style="font-size:12px;color:var(--text2)">('+o.ref+')</span>':'')+'</div>'+
+        '<div style="font-size:13px;color:var(--purple);font-weight:700;margin-top:2px">🎨 '+o.cor+'</div>'+
+        '<div style="font-size:12px;color:var(--text2);margin-top:4px">'+o.kg.toFixed(2)+'kg &nbsp;·&nbsp; '+o.unid+' pçs/pct &nbsp;·&nbsp; '+(o.pct*o.unid)+' peças total</div>'+
+        '<div style="font-size:12px;margin-top:4px"><span style="font-weight:600">'+o.cliente+'</span> &nbsp;·&nbsp; <span style="color:'+(o.atrasado?'#ef4444':o.urgente?'#f59e0b':'var(--text2)')+';font-weight:700">'+(o.atrasado?'🔴 '+Math.abs(o.dias)+'d atrasado':o.dias===0?'⚡ Entrega Hoje!':o.urgente?'⚠️ '+o.dias+'d para entregar':o.dias<99?'📅 '+o.dias+'d':' ')+'</span></div>'+
+      '</div>';
+    card.appendChild(info);
+
+    // Buttons
+    if(o.status==='aguardando'){
+      var btn=document.createElement('button');
+      btn.style.cssText='background:var(--purple);color:#fff;border:none;padding:10px 20px;border-radius:8px;font-weight:800;font-size:14px;cursor:pointer;width:100%';
+      btn.textContent='▶ INICIAR NA MÁQUINA';
+      btn.onclick=(function(osId){return function(){_iniciarOS(osId);};})(o.osId);
+      card.appendChild(btn);
+    } else if(o.status==='rodando'){
+      var row=document.createElement('div');
+      row.style.cssText='display:flex;gap:8px';
+      var btnConc=document.createElement('button');
+      btnConc.style.cssText='background:var(--green);color:#fff;border:none;padding:10px 16px;border-radius:8px;font-weight:800;font-size:14px;cursor:pointer;flex:1';
+      btnConc.textContent='✅ CONCLUÍDO';
+      btnConc.onclick=(function(osId,pedId){return function(){_concluirOS(osId,pedId);};})(o.osId,o.pedId);
+      var btnPause=document.createElement('button');
+      btnPause.style.cssText='background:var(--bg);color:var(--text2);border:1.5px solid var(--border2);padding:10px 16px;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer';
+      btnPause.textContent='⏸';
+      btnPause.onclick=(function(osId){return function(){_pausarOS(osId);};})(o.osId);
+      row.appendChild(btnConc);
+      row.appendChild(btnPause);
+      card.appendChild(row);
+    } else {
+      var done=document.createElement('div');
+      done.style.cssText='background:#d1fae5;border-radius:8px;padding:10px;text-align:center;font-weight:800;color:#065f46;font-size:13px';
+      done.textContent='✅ Concluído — use "Lançar Máquina" para registrar kg';
+      card.appendChild(done);
+    }
+
+    grid.appendChild(card);
   });
 
   // Alertas
   var alertas=[];
-  var pedAtrasados=pedAbertos.filter(function(p){return p.entrega&&diasAte(p.entrega)<0;});
-  if(pedAtrasados.length) alertas.push({cor:'#ef4444',msg:'🚨 '+pedAtrasados.length+' pedido(s) em atraso: '+pedAtrasados.map(function(p){return p.clienteNome;}).join(', ')});
-  var pedUrgentes=pedAbertos.filter(function(p){return p.entrega&&diasAte(p.entrega)>=0&&diasAte(p.entrega)<=3;});
-  if(pedUrgentes.length) alertas.push({cor:'#f59e0b',msg:'⚠️ '+pedUrgentes.length+' entrega(s) em até 3 dias: '+pedUrgentes.map(function(p){return p.clienteNome+' ('+diasAte(p.entrega)+'d)';}).join(', ')});
-  var enviosAguardando=d.envios.filter(function(e){return e.status==='enviado';});
-  if(enviosAguardando.length) alertas.push({cor:'#3b82f6',msg:'📬 '+enviosAguardando.length+' lote(s) no faccionista aguardando retorno'});
-
-  var grid=document.getElementById('hoje-grid');
-  var dataHoje=new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'});
-  
-  grid.innerHTML=
-    // MÁQUINA
-    '<div class="hoje-card">'+
-      '<div class="hoje-card-header" style="background:var(--purple-light);color:var(--purple)">'+
-        '<span>🏭 Rodar Hoje na Máquina</span>'+
-        '<button class="btn-sm" style="background:var(--purple);color:#fff" onclick="imprimirMaquina()">🖨️</button>'+
-      '</div>'+
-      '<div style="padding:10px 14px;font-size:11px;color:var(--text2);border-bottom:1px solid var(--border)">'+
-        'Cap: Meia '+cap.meia.toFixed(1)+'kg · Liso '+cap.liso.toFixed(1)+'kg · Mini '+cap.mini.toFixed(1)+'kg'+
-      '</div>'+
-      '<div class="hoje-card-body">'+
-      (maqItems.length ? maqItems.map(function(m){
-        var cor=m.atrasado?'#ef4444':m.urgente?'#f59e0b':'var(--text2)';
-        var bg=m.atrasado?'#fee2e2':m.urgente?'#fff7ed':'var(--bg)';
-        return '<div class="hoje-item" style="background:'+bg+';padding:8px 10px;border-radius:8px;margin-bottom:6px;border:none">'+
-          '<div style="flex:1">'+
-            '<div style="font-weight:700;font-size:13px">'+(m.atrasado?'🔴':m.urgente?'⚡':'')+' '+m.tipo+' — '+m.kg.toFixed(2)+'kg</div>'+
-            '<div style="font-size:11px;color:'+cor+'">'+m.cliente+(m.atrasado?' · ATRASADO':m.urgente?' · Entrega em '+m.dias+'d':m.dias<99?' · '+m.dias+'d':'')+'</div>'+
-          '</div>'+
-        '</div>';
-      }).join('')+'<button class="btn btn-primary" style="width:100%;margin-top:8px;font-size:12px" onclick="abrirLancarMaquina()">+ Lançar Produção</button>':
-      '<div style="color:var(--text2);font-size:13px;padding:8px 0;text-align:center">✅ Sem pedidos em fila</div>')+
-      '</div>'+
-    '</div>'+
-
-    // FACCIONISTA
-    '<div class="hoje-card">'+
-      '<div class="hoje-card-header" style="background:#fff7ed;color:#c2410c">'+
-        '<span>🤝 Próximo Lote Facc.</span>'+
-        '<span style="font-size:11px;font-weight:600">Seg '+prxSeg.toLocaleDateString('pt-BR',{day:'numeric',month:'short'})+'</span>'+
-      '</div>'+
-      '<div style="padding:10px 14px;font-size:11px;color:var(--text2);border-bottom:1px solid var(--border)">'+
-        'Retorno: '+retorno.toLocaleDateString('pt-BR',{day:'numeric',month:'short'})+' · '+cfg.faccPessoas+' faccionista(s)'+
-      '</div>'+
-      '<div class="hoje-card-body">'+
-      (faccItems.length ? faccItems.map(function(f){
-        return '<div class="hoje-item">'+
-          '<div style="flex:1">'+
-            '<div style="font-weight:700;font-size:13px">'+f.desc+'</div>'+
-            '<div style="font-size:11px;color:var(--text2)">'+f.kg.toFixed(2)+'kg para enviar'+(f.cabe?' ✅ cabe no lote':' ⚠️ excede capacidade')+'</div>'+
-          '</div>'+
-        '</div>';
-      }).join('')+'<button class="btn btn-orange" style="width:100%;margin-top:8px;font-size:12px;color:#fff" onclick="abrirLancarFacc()">+ Registrar Envio</button>':
-      '<div style="color:var(--text2);font-size:13px;padding:8px 0;text-align:center">✅ Estoque cru zerado</div>')+
-      '</div>'+
-    '</div>'+
-
-    // EMBALAR
-    '<div class="hoje-card">'+
-      '<div class="hoje-card-header" style="background:var(--green-light);color:#065f46">'+
-        '<span>📦 Embalar Hoje</span>'+
-        '<button class="btn-sm" style="background:var(--green);color:#fff" onclick="imprimirEmbalar()">🖨️</button>'+
-      '</div>'+
-      '<div style="padding:10px 14px;font-size:11px;color:var(--text2);border-bottom:1px solid var(--border)">'+
-        cap.embDia+' pct/dia · '+cfg.embPessoas+' pessoa(s)'+
-      '</div>'+
-      '<div class="hoje-card-body">'+
-      (embItems.length ? embItems.map(function(e){
-        return '<div class="hoje-item">'+
-          '<div style="flex:1">'+
-            '<div style="font-weight:700;font-size:13px">'+e.desc+'</div>'+
-            '<div style="font-size:11px;color:var(--text2)">'+e.pcts+' pacotes · '+e.kg.toFixed(2)+'kg disponível</div>'+
-          '</div>'+
-        '</div>';
-      }).join('')+'<button class="btn btn-green" style="width:100%;margin-top:8px;font-size:12px;color:#fff" onclick="abrirLancarEmbalagem()">+ Registrar Embalagem</button>':
-      '<div style="color:var(--text2);font-size:13px;padding:8px 0;text-align:center">✅ Nada para embalar</div>')+
-      '</div>'+
-    '</div>';
-
-  // Alertas
-  var alertasEl=document.getElementById('hoje-alertas');
+  var atrasados=d.pedidos.filter(function(p){return['recebido','producao'].includes(p.status)&&p.entrega&&diasAte(p.entrega)<0;});
+  if(atrasados.length) alertas.push({cor:'#ef4444',msg:'🚨 '+atrasados.length+' pedido(s) em atraso!'});
+  var urgentes=ordens.filter(function(o){return o.urgente&&o.status!=='concluido';});
+  if(urgentes.length) alertas.push({cor:'#f59e0b',msg:'⚠️ '+urgentes.length+' lote(s) com entrega em até 3 dias'});
+  if(nRod>0) alertas.push({cor:'#8b5cf6',msg:'🏭 '+nRod+' lote(s) em produção agora'});
   alertasEl.innerHTML=alertas.map(function(a){
-    return '<div style="background:'+a.cor+'15;border-left:4px solid '+a.cor+';border-radius:8px;padding:12px 16px;margin-bottom:8px;font-size:13px;font-weight:600;color:'+a.cor+'">'+a.msg+'</div>';
+    return '<div style="background:'+a.cor+'15;border-left:4px solid '+a.cor+';border-radius:8px;padding:10px 16px;margin-bottom:8px;font-size:13px;font-weight:700;color:'+a.cor+'">'+a.msg+'</div>';
   }).join('');
 }
+
+
+function _iniciarOS(osId){
+  var rodando=load('allhair_rodando',{});
+  rodando[osId]='rodando';
+  save('allhair_rodando',rodando);
+  _render('hoje');
+}
+
+function _pausarOS(osId){
+  var rodando=load('allhair_rodando',{});
+  rodando[osId]='aguardando';
+  save('allhair_rodando',rodando);
+  _render('hoje');
+}
+
+function _concluirOS(osId,pedId){
+  // Mark as concluido
+  var rodando=load('allhair_rodando',{});
+  rodando[osId]='concluido';
+  save('allhair_rodando',rodando);
+  // Move pedido to producao status
+  var d=getData();
+  var ped=d.pedidos.find(function(p){return p.id===pedId;});
+  if(ped&&ped.status==='recebido'){ped.status='producao';save('allhair_pedidos',d.pedidos);}
+  _render('hoje');
+  _render('kanban');
+  // Prompt to launch on machine
+  if(confirm('Lote concluído! Deseja lançar os kg produzidos agora?')){
+    abrirLancarMaquina();
+  }
+}
+
 
 // ============================================================
 // KANBAN PRODUÇÃO
@@ -1123,6 +1150,19 @@ function imprimirEmbalar(){
 function imprimirHoje(){
   if(abaAtiva==='hoje') imprimirMaquina();
 }
+
+// ============================================================
+// HOJE BUTTON DELEGATION
+document.addEventListener('click', function(ev){
+  var btn=ev.target.closest('button[data-action]');
+  if(!btn)return;
+  var action=btn.dataset.action;
+  var osId=btn.dataset.osid;
+  var pedId=btn.dataset.pedid;
+  if(action==='iniciar') _iniciarOS(osId);
+  else if(action==='pausar') _pausarOS(osId);
+  else if(action==='concluir') _concluirOS(osId, pedId);
+});
 
 // ============================================================
 // CLOCK + WINDOW.RENDER
