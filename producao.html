@@ -539,10 +539,15 @@ function abrirDetalhe(l){
   // Embalagem
   var embKey='_emb_'+l.id;
   var kgEmb=Number(d.lotes[embKey]||0);
+  var prodEmb=d.produtos.find(function(p){return p.id===l.prodId;});
+  var unidEmb=prodEmb?prodEmb['unid-pacote']||12:12;
+  var rendEmb=prodEmb?prodEmb.rendimento||1000:1000;
+  var pctEmbFeito=Math.round(kgEmb*rendEmb/unidEmb);
+  var pctEmbMeta=l.pctTotal;
   if(kgEmb>0){
     var embs=d.producoes.filter(function(p){return p.etapa==='embalagem'&&p.prodId===l.prodId;});
     embs.forEach(function(p){
-      eventos.push({icon:'📦',cor:'#10b981',titulo:'Embalagem — '+p.pacotes+' pacotes',data:p.data,obs:p.pecas+' peças'});
+      eventos.push({icon:'📦',cor:'#10b981',titulo:'Embalagem — '+p.pacotes+' pacotes ('+p.pecas+' peças)',data:p.data,obs:''});
     });
   }
 
@@ -570,14 +575,34 @@ function abrirDetalhe(l){
   var kgF=d.lotes._kg?Number(d.lotes._kg[kgKey]||0):0;
   var pct=l.kgPorCor>0?Math.min(100,Math.round(kgF/l.kgPorCor*100)):0;
   var sumEl=document.createElement('div');
-  sumEl.style.cssText='margin-top:10px;padding:10px 12px;background:var(--pl);border-radius:8px;font-size:12px';
-  sumEl.innerHTML=
-    '<div style="display:flex;justify-content:space-between;font-weight:700;margin-bottom:4px">'+
-      '<span>Progresso na Máquina</span><span style="color:var(--purple)">'+kgF.toFixed(2)+'/'+l.kgPorCor.toFixed(2)+'kg ('+pct+'%)</span>'+
-    '</div>'+
-    '<div style="background:#e2e8f0;border-radius:20px;height:6px;overflow:hidden">'+
-      '<div style="height:100%;background:var(--purple);width:'+pct+'%;border-radius:20px"></div>'+
-    '</div>';
+  sumEl.style.cssText='margin-top:10px;display:flex;flex-direction:column;gap:6px';
+  // Maquina progress
+  if(kgF>0||l.status==='maquina'){
+    var maqProg=document.createElement('div');
+    maqProg.style.cssText='padding:10px 12px;background:var(--pl);border-radius:8px;font-size:12px';
+    maqProg.innerHTML=
+      '<div style="display:flex;justify-content:space-between;font-weight:700;margin-bottom:4px">'+
+        '<span>🏭 Máquina</span><span style="color:var(--purple)">'+kgF.toFixed(2)+'/'+l.kgPorCor.toFixed(2)+'kg ('+pct+'%)</span>'+
+      '</div>'+
+      '<div style="background:#e2e8f0;border-radius:20px;height:5px;overflow:hidden">'+
+        '<div style="height:100%;background:var(--purple);width:'+pct+'%;border-radius:20px"></div>'+
+      '</div>';
+    sumEl.appendChild(maqProg);
+  }
+  // Embalagem progress in pacotes
+  if(kgEmb>0||l.status==='virado'){
+    var pctEmb2=pctEmbMeta>0?Math.min(100,Math.round(pctEmbFeito/pctEmbMeta*100)):0;
+    var embProg=document.createElement('div');
+    embProg.style.cssText='padding:10px 12px;background:var(--gl);border-radius:8px;font-size:12px';
+    embProg.innerHTML=
+      '<div style="display:flex;justify-content:space-between;font-weight:700;margin-bottom:4px">'+
+        '<span>📦 Embalagem</span><span style="color:var(--green)">'+pctEmbFeito+'/'+pctEmbMeta+' pct ('+pctEmb2+'%)</span>'+
+      '</div>'+
+      '<div style="background:#e2e8f0;border-radius:20px;height:5px;overflow:hidden">'+
+        '<div style="height:100%;background:var(--green);width:'+pctEmb2+'%;border-radius:20px"></div>'+
+      '</div>';
+    sumEl.appendChild(embProg);
+  }
   tl.appendChild(sumEl);
 
   body.appendChild(tl);
@@ -767,7 +792,9 @@ function rKanban(){
         var falta=Math.max(0,meta-kgFeito);
         var pct=meta>0?Math.min(100,Math.round(kgFeito/meta*100)):0;
         var hasProgress=kgFeito>0&&l.status==='maquina';
-        pedDiv.innerHTML='<strong>'+meta.toFixed(2)+'kg</strong> · '+l.pedNum+(l.atrasado?' <span style="color:#ef4444;font-weight:700">🔴 atrasado</span>':l.urgente?' <span style="color:#f59e0b;font-weight:700">⚡'+l.dias+'d</span>':'');
+        var prod3=l.status==='virado'?d.produtos.find(function(p){return p.id===l.prodId;}):null;
+        var pctLabel=prod3?'<strong>'+l.pctTotal+' pct</strong>':'<strong>'+meta.toFixed(2)+'kg</strong>';
+        pedDiv.innerHTML=pctLabel+' · '+l.pedNum+(l.atrasado?' <span style="color:#ef4444;font-weight:700">🔴 atrasado</span>':l.urgente?' <span style="color:#f59e0b;font-weight:700">⚡'+l.dias+'d</span>':'');
         card.appendChild(pedDiv);
 
         // Progress bar for maquina AND embalagem
@@ -775,12 +802,18 @@ function rKanban(){
           var kgKey2=l.id+'_kg';
           var isEmb=l.status==='virado';
           var kgF=d.lotes._kg?Number(d.lotes._kg[kgKey2]||0):0;
-          var embDone=isEmb?(Number(d.lotes['_emb_'+l.id]||0)):0;
-          var embMeta=isEmb?l.kgPorCor:0;
+          // For embalagem: track in pacotes not kg
+          var prod2=d.produtos.find(function(p){return p.id===l.prodId;});
+          var unid2=prod2?prod2['unid-pacote']||12:12;
+          var rend2=prod2?prod2.rendimento||1000:1000;
+          var pctMeta=l.pctTotal; // total packets ordered
+          var kgEmb=Number(d.lotes['_emb_'+l.id]||0);
+          var pctFeito=Math.round(kgEmb*rend2/unid2);
+          var pctFalta=Math.max(0,pctMeta-pctFeito);
           var meta2=l.kgPorCor;
-          var pct2=isEmb?(embMeta>0?Math.min(100,Math.round(embDone/embMeta*100)):0):(meta2>0?Math.min(100,Math.round(kgF/meta2*100)):0);
-          var falta2=isEmb?Math.max(0,embMeta-embDone).toFixed(2):Math.max(0,meta2-kgF).toFixed(2);
-          var feito2=isEmb?embDone.toFixed(2):kgF.toFixed(2);
+          var pct2=isEmb?(pctMeta>0?Math.min(100,Math.round(pctFeito/pctMeta*100)):0):(meta2>0?Math.min(100,Math.round(kgF/meta2*100)):0);
+          var falta2=isEmb?pctFalta+' pct':Math.max(0,meta2-kgF).toFixed(2)+'kg';
+          var feito2=isEmb?pctFeito+' pct':kgF.toFixed(2)+'kg';
           var progWrap=document.createElement('div');
           progWrap.style.cssText='margin:4px 0';
                     progWrap.innerHTML=
