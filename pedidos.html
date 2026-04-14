@@ -4157,14 +4157,14 @@ main { padding: 24px 28px; }
     const q=(document.getElementById('search-kanban').value||'').toLowerCase();
     const filtered=pedidos.filter(p=>!q||p.clienteNome.toLowerCase().includes(q)||(p.numero||'').toLowerCase().includes(q));
 
-    document.getElementById('tc-kanban').textContent=pedidos.length;
-    document.getElementById('tc-lista').textContent=pedidos.length;
-    document.getElementById('st-total').textContent=pedidos.length;
-    document.getElementById('st-recebido').textContent=pedidos.filter(p=>p.status==='recebido').length;
-    document.getElementById('st-producao').textContent=pedidos.filter(p=>p.status==='producao').length;
+    var _el=document.getElementById('tc-kanban');if(_el)_el.textContent=pedidos.length;
+    var _el2=document.getElementById('tc-lista');if(_el2)_el2.textContent=pedidos.length;
+    var _el3=document.getElementById('st-total');if(_el3)_el3.textContent=pedidos.length;
+    var _el4=document.getElementById('st-recebido');if(_el4)_el4.textContent=pedidos.filter(p=>p.status==='recebido').length;
+    var _el5=document.getElementById('st-producao');if(_el5)_el5.textContent=pedidos.filter(p=>p.status==='producao').length;
     document.getElementById('st-pronto')&&(document.getElementById('st-pronto').textContent=pedidos.filter(p=>p.status==='pronto').length);
     const aReceber=pedidos.filter(p=>p.status!=='finalizado').reduce((s,p)=>s+getSaldo(p),0);
-    document.getElementById('st-receber').textContent=fmt(aReceber);
+    var _el6=document.getElementById('st-receber');if(_el6)_el6.textContent=fmt(aReceber);
 
     const colunas=STATUS_ORDER.map(status=>{
       const cards=filtered.filter(p=>p.status===status).sort((a,b)=>new Date(a.data)-new Date(b.data));
