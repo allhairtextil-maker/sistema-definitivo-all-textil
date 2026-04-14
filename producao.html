@@ -30,7 +30,7 @@ a.sl:hover,a.sl.on{background:rgba(255,255,255,.1);color:#fff;}
 .tabs{display:flex;padding:0 20px;background:var(--white);border-bottom:1px solid var(--border);overflow-x:auto;}
 .tab{padding:12px 16px;font-size:13px;font-weight:600;color:var(--t2);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;}
 .tab.on{color:var(--purple);border-color:var(--purple);}
-.tc{display:none;padding:20px;overflow-y:auto;}
+.tc{display:none;padding:12px 16px;overflow-y:auto;}.tc#tc-hoje{overflow:hidden;}
 .tc.on{display:block;}
 /* KANBAN */
 .kb{display:flex;gap:14px;overflow-x:auto;padding-bottom:16px;align-items:flex-start;}
@@ -124,7 +124,7 @@ td{padding:10px 14px;font-size:13px;border-bottom:1px solid var(--border);}
   </div>
 
   <div class="tabs">
-    <div class="tab on" onclick="aba('hoje')">🎯 Hoje</div>
+    <div class="tab on" onclick="aba('hoje')">📊 Dashboard</div>
     <div class="tab" onclick="aba('kanban')">🔄 Kanban</div>
     <div class="tab" onclick="aba('agenda')">📅 Agenda</div>
     <div class="tab" onclick="aba('capacidade')">📊 Capacidade</div>
@@ -132,8 +132,7 @@ td{padding:10px 14px;font-size:13px;border-bottom:1px solid var(--border);}
   </div>
 
   <div class="tc on" id="tc-hoje">
-    <div id="hoje-alertas" style="margin-bottom:12px"></div>
-    <div id="hoje-wrap"></div>
+    <div id="dash-wrap"></div>
   </div>
   <div class="tc" id="tc-kanban">
     <div class="kb" id="kb-board"></div>
@@ -307,6 +306,7 @@ function buildLotes(d){
           entrega:ped.entrega,
           dias:dias,urgente:dias>=0&&dias<=3,atrasado:dias<0,
           status:status,
+          fluxo:fluxo,
         });
       });
     });
@@ -347,139 +347,138 @@ function R(id){
 function rHoje(){
   var d=D();
   var lotes=buildLotes(d);
-  var cap=getCap();
-  var wrap=document.getElementById('hoje-wrap');
-  var alertasEl=document.getElementById('hoje-alertas');
-  wrap.innerHTML='';alertasEl.innerHTML='';
+  var wrap=document.getElementById('dash-wrap');
+  if(!wrap)return;
+  wrap.innerHTML='';
 
-  // Alertas
   var atrasados=lotes.filter(function(l){return l.atrasado&&l.status!=='pronto';});
   var urgentes=lotes.filter(function(l){return l.urgente&&!l.atrasado&&l.status!=='pronto';});
-  var emFacc=d.envios.filter(function(e){return e.status==='enviado';}).length;
-  [
-    atrasados.length?{c:'#ef4444',m:'🚨 '+atrasados.length+' lote(s) em atraso — prioridade máxima!'}:null,
-    urgentes.length?{c:'#f59e0b',m:'⚡ '+urgentes.length+' lote(s) com entrega em 3 dias ou menos'}:null,
-    emFacc?{c:'#3b82f6',m:'📬 '+emFacc+' lote(s) no faccionista aguardando retorno'}:null,
-  ].filter(Boolean).forEach(function(a){
-    var div=document.createElement('div');
-    div.style.cssText='background:'+a.c+'15;border-left:4px solid '+a.c+';border-radius:8px;padding:10px 16px;margin-bottom:6px;font-size:13px;font-weight:700;color:'+a.c;
-    div.textContent=a.m;
-    alertasEl.appendChild(div);
-  });
+  var emFacc=d.envios.filter(function(e){return e.status==='enviado';});
+  var prontos=lotes.filter(function(l){return l.status==='pronto';});
+  var aguardando=lotes.filter(function(l){return l.status==='aguardando';});
+  var rodando=lotes.filter(function(l){return l.status==='maquina';});
+  var virado=lotes.filter(function(l){return l.status==='virado';});
+  var emOrdem=atrasados.length===0&&urgentes.length===0;
 
-  // Lotes para rodar hoje = aguardando ou maquina, por prioridade
-  var paraHoje=lotes.filter(function(l){return['aguardando','maquina'].includes(l.status);});
-  paraHoje.sort(function(a,b){
-    var pa=a.atrasado?0:a.urgente?1:2;
-    var pb=b.atrasado?0:b.urgente?1:2;
-    if(pa!==pb)return pa-pb;
-    return new Date(a.entrega||'9999')-new Date(b.entrega||'9999');
-  });
+  // Layout: 2 colunas — esquerda status+kpis+alertas | direita fila
+  var outer=document.createElement('div');
+  outer.style.cssText='display:grid;grid-template-columns:300px 1fr;gap:12px;height:calc(100vh - 110px)';
 
-  if(!paraHoje.length){
-    // Show cru ready for facc
-    var cruProntos=lotes.filter(function(l){return l.status==='cru';});
-    if(cruProntos.length){
-      var div=document.createElement('div');
-      div.style.cssText='background:var(--ol);border:1px solid var(--orange);border-radius:var(--r);padding:20px;text-align:center;margin-bottom:16px';
-      div.innerHTML='<div style="font-size:32px;margin-bottom:8px">📦</div><div style="font-size:15px;font-weight:800;color:var(--orange)">'+cruProntos.length+' lote(s) no estoque cru</div><div style="font-size:13px;color:var(--t2);margin-top:4px">Pronto para enviar ao faccionista</div>';
-      wrap.appendChild(div);
-    } else {
-      wrap.innerHTML='<div style="text-align:center;padding:60px;color:var(--t2)"><div style="font-size:48px;margin-bottom:12px">✅</div><div style="font-size:16px;font-weight:700">Nada para produzir hoje</div></div>';
-      return;
-    }
+  // ── COLUNA ESQUERDA ──
+  var left=document.createElement('div');
+  left.style.cssText='display:flex;flex-direction:column;gap:8px;overflow:hidden';
+
+  // Status badge
+  var badge=document.createElement('div');
+  badge.style.cssText='background:'+(emOrdem?'#d1fae5':'#fee2e2')+';border:2px solid '+(emOrdem?'#10b981':'#ef4444')+';border-radius:var(--r);padding:10px 14px;display:flex;align-items:center;gap:10px;flex-shrink:0';
+  badge.innerHTML='<div style="font-size:24px">'+(emOrdem?'✅':'🚨')+'</div>'+
+    '<div><div style="font-size:14px;font-weight:900;color:'+(emOrdem?'#065f46':'#991b1b')+'">'+(emOrdem?'Tudo em ordem':'Atenção necessária')+'</div>'+
+    '<div style="font-size:11px;color:'+(emOrdem?'#065f46':'#991b1b')+'">'+(emOrdem?lotes.length+' lote(s) em andamento':atrasados.length+' atrasado(s)'+(urgentes.length?' · '+urgentes.length+' urgente(s)':''))+'</div></div>';
+  left.appendChild(badge);
+
+  // KPIs 3x2
+  var kpiData=[
+    {icon:'📋',l:'Aguardando',v:aguardando.length,c:aguardando.length?'#64748b':'#10b981'},
+    {icon:'🏭',l:'Máquina',v:rodando.length,c:rodando.length?'#8b5cf6':'#64748b'},
+    {icon:'🤝',l:'Faccionista',v:emFacc.length,c:emFacc.length?'#f59e0b':'#64748b'},
+    {icon:'📦',l:'P/ Embalar',v:virado.length,c:virado.length?'#3b82f6':'#64748b',alert:virado.length>0},
+    {icon:'🔴',l:'Atrasados',v:atrasados.length,c:atrasados.length?'#ef4444':'#10b981'},
+    {icon:'🚚',l:'Prontos',v:prontos.length,c:'#10b981'},
+  ];
+  var kgrid=document.createElement('div');
+  kgrid.style.cssText='display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;flex-shrink:0';
+  kpiData.forEach(function(k){
+    var kEl=document.createElement('div');
+    kEl.style.cssText='background:var(--white);border:1.5px solid '+(k.alert?k.c:'var(--border)')+';border-radius:9px;padding:8px 6px;text-align:center';
+    kEl.innerHTML='<div style="font-size:16px">'+k.icon+'</div>'+
+      '<div style="font-size:22px;font-weight:900;color:'+k.c+';line-height:1.1">'+k.v+'</div>'+
+      '<div style="font-size:9px;font-weight:700;color:var(--t2);text-transform:uppercase">'+k.l+'</div>';
+    kgrid.appendChild(kEl);
+  });
+  left.appendChild(kgrid);
+
+  // Alertas compactos
+  var alerts=[];
+  atrasados.forEach(function(l){alerts.push({c:'#ef4444',m:'🔴 '+l.corNome+' '+l.prodNome+' · Ped.'+l.pedNum+' ('+Math.abs(l.dias)+'d atraso)'});});
+  virado.forEach(function(l){alerts.push({c:'#3b82f6',m:'📦 '+l.corNome+' '+l.prodNome+' · pronto p/ embalar'});});
+  emFacc.forEach(function(e){
+    var dr=diasAte(e.previsao);
+    if(dr<=1)alerts.push({c:dr<0?'#ef4444':'#f59e0b',m:'🤝 Retorno '+(dr<0?'atrasado':'hoje')+' · '+e.corNome});
+  });
+  urgentes.forEach(function(l){alerts.push({c:'#f59e0b',m:'⚡ '+l.corNome+' '+l.prodNome+' · '+l.dias+'d p/ entregar'});});
+
+  if(alerts.length){
+    var aBox=document.createElement('div');
+    aBox.style.cssText='overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:4px';
+    alerts.forEach(function(a){
+      var aEl=document.createElement('div');
+      aEl.style.cssText='background:'+a.c+'15;border-left:3px solid '+a.c+';border-radius:6px;padding:6px 10px;font-size:11px;font-weight:700;color:'+a.c;
+      aEl.textContent=a.m;
+      aBox.appendChild(aEl);
+    });
+    left.appendChild(aBox);
+  } else {
+    var ok=document.createElement('div');
+    ok.style.cssText='background:#f0fdf4;border-radius:8px;padding:12px;text-align:center;color:#065f46;font-size:12px;font-weight:700';
+    ok.textContent='✅ Sem alertas';
+    left.appendChild(ok);
   }
 
-  // Header
-  var total=paraHoje.reduce(function(s,l){return s+l.kgPorCor;},0);
-  var hdr=document.createElement('div');
-  hdr.style.cssText='background:var(--navy);border-radius:var(--r);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;margin-bottom:16px';
-  hdr.innerHTML='<div><div style="color:rgba(255,255,255,.4);font-size:11px;font-weight:700;text-transform:uppercase">'+new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'})+'</div><div style="color:#fff;font-size:15px;font-weight:900;margin-top:2px">'+paraHoje.length+' lote(s) para rodar hoje</div></div>'+
-    '<div style="text-align:right"><div style="color:var(--purple);font-size:20px;font-weight:900">'+total.toFixed(1)+'kg</div><div style="color:rgba(255,255,255,.4);font-size:11px">total a produzir</div></div>';
-  wrap.appendChild(hdr);
+  outer.appendChild(left);
 
-  paraHoje.forEach(function(l){
+  // ── COLUNA DIREITA — Fila por pedido ──
+  var right=document.createElement('div');
+  right.style.cssText='overflow-y:auto;display:flex;flex-direction:column;gap:8px';
+
+  var pedidos_prod=d.pedidos.filter(function(p){return['recebido','producao','pronto'].includes(p.status);});
+  pedidos_prod.sort(function(a,b){return new Date(a.entrega||'9999')-new Date(b.entrega||'9999');});
+
+  if(!pedidos_prod.length){
+    var empty=document.createElement('div');
+    empty.style.cssText='text-align:center;padding:40px;color:var(--t2)';
+    empty.innerHTML='<div style="font-size:36px;margin-bottom:8px">📋</div><div style="font-size:14px;font-weight:700">Nenhum pedido em produção</div>';
+    right.appendChild(empty);
+  }
+
+  pedidos_prod.forEach(function(ped){
+    var pedLotes=lotes.filter(function(l){return l.pedId===ped.id;});
+    if(!pedLotes.length)return;
+    var dias=diasAte(ped.entrega);
+    var cor=dias<0?'#ef4444':dias<=3?'#f59e0b':'var(--border)';
+
     var card=document.createElement('div');
-    card.className='hoje-card'+(l.atrasado?' atrasado':l.urgente?' urgente':'');
-    if(l.atrasado)card.style.borderColor='#ef4444';
-    else if(l.urgente)card.style.borderColor='#f59e0b';
+    card.style.cssText='background:var(--white);border:1.5px solid '+cor+';border-radius:var(--r);padding:10px 14px;flex-shrink:0';
 
-    var tc=tipoCor(l.tipo);
-    var tipoDiv=document.createElement('div');
-    tipoDiv.className='hoje-tipo';
-    tipoDiv.style.cssText='padding:8px 12px;border-radius:8px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:1px;text-align:center;min-width:60px;background:'+tc.bg+';color:'+tc.c;
-    tipoDiv.textContent=l.tipo.toUpperCase();
-    card.appendChild(tipoDiv);
+    // Header do pedido
+    var ph=document.createElement('div');
+    ph.style.cssText='display:flex;align-items:center;justify-content:space-between;margin-bottom:8px';
+    ph.innerHTML='<div><span style="font-size:14px;font-weight:800">'+ped.clienteNome+'</span> <span style="font-size:11px;color:var(--t2)">'+( ped.numero||'')+'</span></div>'+
+      '<div style="font-size:11px;font-weight:700;color:'+cor+'">'+(dias<0?Math.abs(dias)+'d atraso':dias===0?'Hoje!':dias<999?dias+'d':'Sem prazo')+'</div>';
+    card.appendChild(ph);
 
-    var info=document.createElement('div');
-    info.className='hoje-info';
-    info.innerHTML=
-      '<div class="hoje-cor">'+l.corNome+'</div>'+
-      '<div class="hoje-prod">'+l.prodNome+(l.prodRef?' ('+l.prodRef+')':'')+'</div>'+
-      '<div class="hoje-meta">'+l.kgPorCor.toFixed(2)+'kg &nbsp;·&nbsp; Ped. '+l.pedNum+' — '+l.cliente+'</div>'+
-      '<div style="font-size:12px;font-weight:700;color:'+(l.atrasado?'#ef4444':l.urgente?'#f59e0b':'var(--t3)')+'">'+
-        (l.atrasado?'🔴 '+Math.abs(l.dias)+'d atrasado':l.dias===0?'⚡ Entrega hoje!':l.dias<999?'📅 '+l.dias+'d para entregar':'')+'</div>';
-    card.appendChild(info);
-
-    // Status + Action
-    var right=document.createElement('div');
-    right.style.cssText='display:flex;flex-direction:column;gap:6px;align-items:flex-end;flex-shrink:0';
-
-    if(l.status==='aguardando'){
-      var b=document.createElement('button');
-      b.className='btn bp';b.style.whiteSpace='nowrap';
-      b.textContent='▶ Colocar na Máquina';
-      b.onclick=(function(lid){return function(){setLoteStatus(lid,'maquina');R('hoje');};})(l.id);
-      right.appendChild(b);
-    } else {
-      var kgKeyH=l.id+'_kg';
-      var d2=D();
-      var kgFH=d2.lotes._kg?Number(d2.lotes._kg[kgKeyH]||0):0;
-      var metaH=l.kgPorCor;
-      var pctH=metaH>0?Math.min(100,Math.round(kgFH/metaH*100)):0;
-      var faltaH=Math.max(0,metaH-kgFH).toFixed(2);
-      var badge=document.createElement('div');
-      badge.style.cssText='background:#faf5ff;border:1.5px solid var(--purple);border-radius:8px;padding:8px 12px;min-width:140px';
-      badge.innerHTML='<div style="font-size:11px;font-weight:800;color:var(--purple);margin-bottom:4px">🔴 RODANDO</div>'+
-        '<div style="display:flex;justify-content:space-between;font-size:10px;color:var(--t2);margin-bottom:3px">'+
-          '<span>'+kgFH.toFixed(2)+'kg feitos</span>'+
-          '<span style="font-weight:700;color:var(--orange)">Falta '+faltaH+'kg</span>'+
-        '</div>'+
-        '<div style="background:var(--border);border-radius:20px;height:6px;overflow:hidden">'+
-          '<div style="height:100%;border-radius:20px;background:var(--purple);width:'+pctH+'%;transition:width .5s"></div>'+
-        '</div>'+
-        '<div style="font-size:10px;color:var(--purple);font-weight:700;margin-top:3px;text-align:right">'+pctH+'%</div>';
-      right.appendChild(badge);
-      var b2=document.createElement('button');
-      b2.className='btn bp';b2.style.fontSize='12px';
-      b2.textContent='🏭 Lançar Produção';
-      b2.onclick=(function(l2){return function(){
-        document.getElementById('mq-tipo').value=l2.tipo;
-        maqFillCores();
-        setTimeout(function(){
-          var s=document.getElementById('mq-cor');
-          for(var i=0;i<s.options.length;i++){if(s.options[i].value===l2.corId){s.selectedIndex=i;break;}}
-          document.getElementById('mq-kg').value=l2.kgPorCor.toFixed(2);
-          maqPrev();
-        },30);
-        document.getElementById('mq-data').value=hoje();
-        document.getElementById('ov-maq').classList.add('on');
-      };})(l);
-      right.appendChild(b2);
-      var b3=document.createElement('button');
-      b3.className='btn bg2';b3.style.fontSize='11px';
-      b3.textContent='⏸ Pausar';
-      b3.onclick=(function(lid){return function(){setLoteStatus(lid,'aguardando');R('hoje');};})(l.id);
-      right.appendChild(b3);
-    }
-    card.appendChild(right);
-    wrap.appendChild(card);
+    // Lotes em linha
+    var ll=document.createElement('div');
+    ll.style.cssText='display:flex;flex-wrap:wrap;gap:4px';
+    pedLotes.forEach(function(l){
+      var stCor={aguardando:'#94a3b8',maquina:'#8b5cf6',cru:'#f59e0b',facc:'#ef4444',virado:'#3b82f6',pronto:'#10b981'}[l.status]||'#94a3b8';
+      var stLbl={aguardando:'Aguard.',maquina:'Máquina',cru:'Cru',facc:'Facc.',virado:'Embalar',pronto:'Pronto'}[l.status]||l.status;
+      var tc=tipoCor(l.tipo);
+      var chip=document.createElement('div');
+      chip.style.cssText='display:flex;align-items:center;gap:4px;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:4px 8px';
+      chip.innerHTML='<span style="font-size:9px;font-weight:900;background:'+tc.bg+';color:'+tc.c+';padding:1px 5px;border-radius:3px">'+l.tipo.toUpperCase()+'</span>'+
+        '<span style="font-size:12px;font-weight:700">'+l.corNome+'</span>'+
+        '<span style="background:'+stCor+'22;color:'+stCor+';padding:1px 6px;border-radius:10px;font-size:10px;font-weight:700">'+stLbl+'</span>';
+      ll.appendChild(chip);
+    });
+    card.appendChild(ll);
+    right.appendChild(card);
   });
+
+  outer.appendChild(right);
+  wrap.appendChild(outer);
 }
 
-// ──────────────────────────────────────────────
-// KANBAN
-// ──────────────────────────────────────────────
+
 function rKanban(){
   var d=D();
   var lotes=buildLotes(d);
@@ -488,8 +487,8 @@ function rKanban(){
 
   var COLS=[
     {s:'aguardando',label:'📋 Aguardando',cor:'#64748b',btn:{l:'▶ Colocar na Máquina',c:'#8b5cf6',fn:function(l){setLoteStatus(l.id,'maquina');R('kanban');}}},
-    {s:'maquina',   label:'🏭 Máquina',    cor:'#8b5cf6',btn:{l:'🏭 Lançar Produção',c:'#8b5cf6',fn:function(l){prefillMaquina(l);}}},
-    {s:'cru',       label:'📦 Estoque Cru', cor:'#f59e0b',btn:{l:'🤝 Enviar Facc.',c:'#f59e0b',fn:function(l){prefillFacc(l);}}},
+    {s:'maquina',   label:'🏭 Máquina / Corte',cor:'#8b5cf6',btn:{l:'🏭 Lançar',c:'#8b5cf6',fn:function(l){prefillMaquina(l);}}},
+    {s:'cru',       label:'📦 Estoque Cru', cor:'#f59e0b',btn:{l:'🤝 Enviar Facc.',c:'#f59e0b',fn:function(l){if(l.fluxo==='corte'){d.lotes[l.id]='virado';S('allhair_lotes',d.lotes);R(_aba);}else prefillFacc(l);}}},
     {s:'facc',      label:'🤝 Faccionista', cor:'#ef4444',btn:{l:'📦 Reg. Retorno',c:'#3b82f6',fn:function(l){prefillRetorno(l);}}},
     {s:'virado',    label:'✅ Pronto p/ Embalar',cor:'#3b82f6',btn:{l:'📦 Embalar',c:'#10b981',fn:function(l){abrirEmbalar();}}},
     {s:'pronto',    label:'🚚 Pronto p/ Expedir',cor:'#10b981',btn:null},
@@ -704,9 +703,12 @@ function maqFillCores(){
   if(coresAtivas.length){
     coresAtivas.forEach(function(c){var o=document.createElement('option');o.value=c.id;o.textContent=c.nome;sel.appendChild(o);});
   } else {
-    // fallback: all cores
     d.cores.forEach(function(c){var o=document.createElement('option');o.value=c.id;o.textContent=c.nome;sel.appendChild(o);});
   }
+  // Update label based on fluxo
+  var h2=document.querySelector('#ov-maq .mh h2');
+  var hasCorte=buildLotes(d).some(function(l){return l.fluxo==='corte'&&['aguardando','maquina'].includes(l.status);});
+  if(h2)h2.textContent=hasCorte?'✂️ Corte / 🏭 Lançar Produção':'🏭 Lançar Produção da Máquina';
   maqPrev();
 }
 function maqPrev(){
@@ -758,7 +760,8 @@ function salvarMaquina(){
     var meta=match.kgPorCor;
     if(kgTotal>=meta*0.95){
       // Meta atingida (tolerância 5%) → avança
-      d.lotes[match.id]='cru';
+      // Se corte: vai direto pro virado (sem facc)
+      d.lotes[match.id]=(match.fluxo==='corte'||match.fluxo==='maquina')?'virado':'cru';
       delete d.lotes._kg[kgKey];
     } else {
       // Parcial → mantém em maquina

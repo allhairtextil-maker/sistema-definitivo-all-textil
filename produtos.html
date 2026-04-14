@@ -2351,6 +2351,13 @@ main { padding: 24px 28px; }
             <option value="outro">Outro</option>
           </select>
         </div>
+        <div class="field"><label>Fluxo de Produção *</label>
+          <select id="p-fluxo">
+            <option value="maquina_facc">🏭 Máquina + Faccionista (elásticos padrão)</option>
+            <option value="maquina">🏭 Máquina sem Faccionista</option>
+            <option value="corte">✂️ Corte Manual (calcinhas e similares)</option>
+          </select>
+        </div>
         <div class="field"><label>Código de referência</label>
           <input type="text" id="p-ref" placeholder="Ex: EX-12, 0011, XP-P">
           <div class="field-hint">Código que você usa no dia a dia</div>
@@ -3229,6 +3236,7 @@ main { padding: 24px 28px; }
         populatePaiSelect(p.produtoPai||'');
         onProdTipo();
         document.getElementById('p-tecido-tipo').value=p.tecido||'';
+        if(document.getElementById('p-fluxo'))document.getElementById('p-fluxo').value=p.fluxo||'maquina_facc';
         document.getElementById('p-poliester').value=p.poliester||80;
         document.getElementById('p-elastano').value=p.elastano||20;
         document.getElementById('p-unid-trib').value=p.unidTrib||'UN';
@@ -3293,6 +3301,7 @@ main { padding: 24px 28px; }
       embalagem:document.getElementById('p-embalagem').value,
       etiqueta:document.getElementById('p-etiqueta').value,
       obs:document.getElementById('p-obs').value,
+      fluxo:document.getElementById('p-fluxo')?.value||'maquina_facc',
       cores:getSelectedCores()
     };
     if(editingProdId){const idx=produtos.findIndex(x=>x.id===editingProdId);data.id=editingProdId;data.criadoEm=produtos[idx].criadoEm;produtos[idx]=data;}
