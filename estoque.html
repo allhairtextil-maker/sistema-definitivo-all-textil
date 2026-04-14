@@ -2122,7 +2122,7 @@ main { padding: 24px 28px; }
 </div>
 <div class="page-content">
 <div class="tabs-bar">
-  <div class="tab active" onclick="switchTab('geral')">📊 Visão Geral</div>
+  
   <div class="tab" onclick="switchTab('mp')">🧶 Matéria-Prima</div>
   <div class="tab" onclick="switchTab('processo')">⚙️ Em Processo</div>
   <div class="tab" onclick="switchTab('virado')">🧺 Pronto para Embalar</div>
@@ -2131,20 +2131,7 @@ main { padding: 24px 28px; }
   <div class="tab" onclick="switchTab('historico')">📋 Movimentações</div>
 </div>
 
-<!-- GERAL -->
-<div class="tab-content active" id="tab-geral">
-<main>
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-    <h1 class="page-title">Visão Geral do Estoque</h1>
-    
-  </div>
-  <div id="alertas-estoque" style="margin-bottom:16px"></div>
-  <div id="fluxo-visual" style="margin-bottom:20px"></div>
-  <div id="cards-geral"></div>
-</main>
-</div>
-
-<div class="tab-content" id="tab-mp">
+<div class="tab-content" id="tab-mp" class="tab-content active">
 <main>
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
     <h1 class="page-title">Matéria Prima</h1>
@@ -3014,7 +3001,8 @@ main { padding: 24px 28px; }
     var proj15Fio=proj15*0.80;
 
     // Build materials list
-    var cap=getCap?getCap():{meia:4,liso:10,mini:5};
+    var cfgP=JSON.parse(localStorage.getItem('allhair_config')||'{}').producao||{};
+    var cap={meia:(+cfgP.maqMeia||2)*(+cfgP.prodMeia||2),liso:(+cfgP.maqLiso||4)*(+cfgP.prodLiso||2.5),mini:(+cfgP.maqMini||4)*(+cfgP.prodMini||1.2)};
     var mats=[];
     mats.push({nome:'Fio PES Branco', grupo:'Fios Base',  key:'PES_BRANCO', qty:parseFloat(estoque.mp&&estoque.mp.PES_BRANCO||estoque.mp&&estoque.mp.PES||0), pm:pmPESB, hex:'#e2e8f0', necPed:necPedidos.PES_BRANCO, necProj:proj15Fio*0.7});
     mats.push({nome:'Fio PES Preto',  grupo:'Fios Base',  key:'PES_PRETO',  qty:parseFloat(estoque.mp&&estoque.mp.PES_PRETO||0), pm:pmPESP, hex:'#334155', necPed:0, necProj:proj15Fio*0.3});
