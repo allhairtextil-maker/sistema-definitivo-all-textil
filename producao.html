@@ -500,77 +500,106 @@ function renderKanban(d){
   // Build lotes from producoes + envios
   // Etapas: fila, maquina, facc, embalar, pronto
   var cols=[
-    {id:'fila',label:'📋 Aguardando',cor:'#64748b',items:[]},
-    {id:'maquina',label:'🏭 Máquina',cor:'var(--purple)',items:[]},
-    {id:'facc',label:'🤝 Faccionista',cor:'var(--orange)',items:[]},
-    {id:'embalar',label:'📦 Embalar',cor:'var(--blue)',items:[]},
-    {id:'pronto',label:'✅ Pronto',cor:'var(--green)',items:[]},
+    {id:'fila',     label:'📋 Fila',              cor:'#64748b', items:[]},
+    {id:'maquina',  label:'🏭 Máquina',            cor:'#8b5cf6', items:[]},
+    {id:'pfacc',    label:'📦 Pronto p/ Facc.',    cor:'#f59e0b', items:[]},
+    {id:'facc',     label:'🤝 Faccionista',         cor:'#ef4444', items:[]},
+    {id:'pembalar', label:'✅ Pronto p/ Embalar',  cor:'#3b82f6', items:[]},
+    {id:'embalar',  label:'📦 Embalando',           cor:'#0ea5e9', items:[]},
+    {id:'pronto',   label:'🚚 Pronto p/ Expedir',  cor:'#10b981', items:[]},
   ];
 
-  // Pedidos abertos → fila
-  var pedAbertos=d.pedidos.filter(function(p){return['recebido','producao'].includes(p.status);});
+  // COL 0 — Fila: pedidos recebidos ainda não iniciados
+  var pedAbertos=d.pedidos.filter(function(p){return p.status==='recebido';});
   pedAbertos.sort(function(a,b){return new Date(a.entrega||'9999')-new Date(b.entrega||'9999');});
   pedAbertos.forEach(function(p){
     var total=(p.itens||[]).reduce(function(s,i){return s+Number(i.total||0);},0);
     var dias=diasAte(p.entrega);
     cols[0].items.push({
-      id:'ped_'+p.id, tipo:'pedido', pedId:p.id,
+      id:'ped_'+p.id,tipo:'pedido',pedId:p.id,
       titulo:p.clienteNome||'—',
-      sub:(p.itens||[]).length+' item(s) · '+p.numero,
+      sub:(p.itens||[]).length+' item(s) · '+(p.numero||''),
       info:'Entrega: '+fmtD(p.entrega),
-      valor:total, dias:dias,
-      urgente:dias>=0&&dias<=3, atrasado:dias<0,
+      valor:total,dias:dias,
+      urgente:dias>=0&&dias<=3,atrasado:dias<0,
     });
   });
 
-  // Estoque cru → máquina (já passou pela máquina, aguarda facc)
-  Object.entries(d.estoque.cru||{}).filter(function(e){return Number(e[1].kg||0)>0;}).forEach(function(e){
-    var v=e[1];
+  // COL 1 — Máquina: pedidos em producao sem cru gerado
+  d.pedidos.filter(function(p){return p.status==='producao';}).forEach(function(p){
+    var total=(p.itens||[]).reduce(function(s,i){return s+Number(i.total||0);},0);
+    var dias=diasAte(p.entrega);
     cols[1].items.push({
-      id:'cru_'+e[0], tipo:'cru',
-      titulo:(v.tecido||'').toUpperCase()+' — '+(v.corNome||''),
-      sub:'Pronto para faccionista',
-      info:Number(v.kg||0).toFixed(2)+'kg cru',
-      kg:v.kg,
+      id:'maq_'+p.id,tipo:'maquina',pedId:p.id,
+      titulo:p.clienteNome||'—',
+      sub:(p.itens||[]).length+' item(s) · '+(p.numero||''),
+      info:'Entrega: '+fmtD(p.entrega),
+      valor:total,dias:dias,
+      urgente:dias>=0&&dias<=3,atrasado:dias<0,
     });
   });
 
-  // Envios em andamento → facc
-  d.envios.filter(function(e){return e.status==='enviado';}).forEach(function(e){
-    var facc=d.faccionistas.find(function(f){return f.id===e.faccId;})||{nome:'—'};
-    var prod=d.produtos.find(function(p){return p.id===e.prodId;})||{};
-    var cor=d.cores.find(function(c){return c.id===e.corId;})||{};
-    var diasRet=diasAte(e.previsao);
-    cols[2].items.push({
-      id:'env_'+e.id, tipo:'envio', envId:e.id,
-      titulo:facc.nome,
-      sub:(prod.nome||e.faccId)+(cor.nome?' — '+cor.nome:''),
-      info:'Retorno: '+fmtD(e.previsao)+(diasRet<0?' 🔴 ATRASADO':diasRet===0?' Hoje!':' em '+diasRet+'d'),
-      kg:e.kg,
-      atrasado:diasRet<0, urgente:diasRet>=0&&diasRet<=2,
-    });
-  });
-
-  // Estoque virado → embalar
-  Object.entries(d.estoque.virado||{}).filter(function(e){return Number(e[1].kg||0)>0;}).forEach(function(e){
+  // COL 2 — Pronto p/ Facc: estoque cru acumulado
+  Object.entries(d.estoque.cru||{}).filter(function(e){return Number(e[1].kg||0)>0.001;}).forEach(function(e){
     var v=e[1];
-    cols[3].items.push({
-      id:'vir_'+e[0], tipo:'virado',
+    cols[2].items.push({
+      id:'cru_'+e[0],tipo:'cru',
       titulo:(v.tecido||'').toUpperCase()+' — '+(v.corNome||''),
-      sub:'Virado, pronto para embalar',
-      info:Number(v.kg||0).toFixed(2)+'kg',
+      sub:'Cru no estoque',
+      info:Number(v.kg||0).toFixed(2)+'kg prontos',
       kg:v.kg,
     });
   });
 
-  // Pedidos prontos → pronto
+  // COL 3 — Faccionista: envios em andamento
+  d.envios.filter(function(e){return e.status==='enviado';}).forEach(function(e){
+    var facc=d.faccionistas.find(function(f){return f.id===e.faccId;})||{nome:e.faccNome||'—'};
+    var diasRet=diasAte(e.previsao);
+    cols[3].items.push({
+      id:'env_'+e.id,tipo:'envio',envId:e.id,
+      titulo:facc.nome,
+      sub:(e.tipo||'').toUpperCase()+(e.corNome?' — '+e.corNome:''),
+      info:'Retorno: '+fmtD(e.previsao)+(diasRet<0?' 🔴 ATRASADO':diasRet===0?' ⚡ Hoje!':' em '+diasRet+'d'),
+      kg:e.kg,
+      atrasado:diasRet<0,urgente:diasRet>=0&&diasRet<=1,
+    });
+  });
+
+  // COL 4 — Pronto p/ Embalar: estoque virado
+  Object.entries(d.estoque.virado||{}).filter(function(e){return Number(e[1].kg||0)>0.001;}).forEach(function(e){
+    var v=e[1];
+    var rend=1000; var pcts=Math.floor(Number(v.kg||0)*rend/12);
+    cols[4].items.push({
+      id:'vir_'+e[0],tipo:'virado',
+      titulo:(v.tecido||'').toUpperCase()+' — '+(v.corNome||''),
+      sub:'Virado, aguardando embalagem',
+      info:Number(v.kg||0).toFixed(2)+'kg ≈ '+pcts+' pacotes',
+      kg:v.kg,
+    });
+  });
+
+  // COL 5 — Embalando: producoes de embalagem do dia
+  var hoje2=hoje();
+  d.producoes.filter(function(p){return p.etapa==='embalagem'&&p.data===hoje2;}).forEach(function(p){
+    cols[5].items.push({
+      id:'emb_'+p.id,tipo:'embalagem',
+      titulo:p.prodNome||'—',
+      sub:'Embalado hoje',
+      info:(p.pacotes||0)+' pacotes · '+(p.pecas||0)+' pçs',
+      kg:p.kg,
+    });
+  });
+
+  // COL 6 — Pronto p/ Expedir
   d.pedidos.filter(function(p){return p.status==='pronto';}).forEach(function(p){
     var total=(p.itens||[]).reduce(function(s,i){return s+Number(i.total||0);},0);
-    cols[4].items.push({
-      id:'pronto_'+p.id, tipo:'pronto', pedId:p.id,
+    var dias=diasAte(p.entrega);
+    cols[6].items.push({
+      id:'exp_'+p.id,tipo:'pronto',pedId:p.id,
       titulo:p.clienteNome||'—',
-      sub:p.numero, info:'Pronto para expedição',
-      valor:total,
+      sub:(p.numero||''),
+      info:'Pronto para expedição',
+      valor:total,dias:dias,atrasado:dias<0,
     });
   });
 
