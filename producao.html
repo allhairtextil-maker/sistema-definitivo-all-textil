@@ -33,20 +33,20 @@ a.sl:hover,a.sl.on{background:rgba(255,255,255,.1);color:#fff;}
 .tc{display:none;padding:12px 16px;overflow-y:auto;}.tc#tc-hoje{overflow:hidden;}
 .tc.on{display:block;}
 /* KANBAN */
-.kb{display:flex;gap:14px;overflow-x:auto;padding-bottom:16px;align-items:flex-start;}
-.kc{flex-shrink:0;width:220px;background:var(--white);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;}
-.kc-head{padding:10px 14px;font-size:12px;font-weight:800;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
-.kc-body{padding:8px;display:flex;flex-direction:column;gap:6px;min-height:50px;}
+.kb{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;align-items:flex-start;width:100%;}
+.kc{width:100%;min-width:0;background:var(--white);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;}
+.kc-head{padding:7px 10px;font-size:11px;font-weight:800;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
+.kc-body{padding:6px;display:flex;flex-direction:column;gap:4px;min-height:40px;}
 /* LOTE CARD */
-.lcard{background:var(--bg);border:1.5px solid var(--border);border-radius:9px;padding:10px 12px;transition:box-shadow .15s;}
+.lcard{background:var(--bg);border:1.5px solid var(--border);border-radius:7px;padding:7px 9px;transition:box-shadow .15s;}
 .lcard:hover{box-shadow:0 4px 12px rgba(0,0,0,.08);}
 .lcard.urgente{border-left:3px solid var(--orange);}
 .lcard.atrasado{border-left:3px solid var(--red);}
-.lc-tipo{font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;}
-.lc-cor{font-size:14px;font-weight:800;margin-bottom:2px;}
-.lc-prod{font-size:11px;color:var(--t2);margin-bottom:2px;}
-.lc-ped{font-size:11px;color:var(--t3);margin-bottom:6px;}
-.lc-btn{width:100%;padding:7px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;border:none;font-family:inherit;}
+.lc-tipo{font-size:8px;font-weight:900;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;}
+.lc-cor{font-size:12px;font-weight:800;margin-bottom:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.lc-prod{font-size:10px;color:var(--t2);margin-bottom:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.lc-ped{font-size:10px;color:var(--t3);margin-bottom:4px;}
+.lc-btn{width:100%;padding:5px;border-radius:6px;font-size:10px;font-weight:700;cursor:pointer;border:none;font-family:inherit;}
 /* HOJE */
 .hoje-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:10px;display:flex;align-items:center;gap:16px;}
 .hoje-tipo{padding:8px 12px;border-radius:8px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:1px;text-align:center;min-width:56px;}
@@ -480,6 +480,58 @@ function rHoje(){
 }
 
 
+function imprimirEtapa(col, items){
+  var dataHoje=new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  var etapaLabel=col.label.replace(/[📋🏭📦🤝✂️✅🚚]/g,'').trim();
+  var html='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>'+etapaLabel+'</title>'+
+    '<style>'+
+      '*{margin:0;padding:0;box-sizing:border-box;}'+
+      'body{font-family:Arial,sans-serif;padding:20px;font-size:12px;color:#1e293b;}'+
+      'h1{font-size:16px;font-weight:900;margin-bottom:2px;}'+
+      '.sub{font-size:11px;color:#64748b;margin-bottom:16px;border-bottom:2px solid '+col.cor+';padding-bottom:8px;}'+
+      'table{width:100%;border-collapse:collapse;}'+
+      'th{padding:7px 10px;background:#f1f5f9;font-size:10px;font-weight:700;text-align:left;text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid #e2e8f0;}'+
+      'td{padding:8px 10px;border-bottom:1px solid #e2e8f0;font-size:12px;vertical-align:middle;}'+
+      '.urgente{background:#fff7ed;}.atrasado{background:#fff5f5;}'+
+      '.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;}'+
+      '.check{width:22px;height:22px;border:2px solid #94a3b8;border-radius:4px;display:inline-block;}'+
+      '@media print{body{padding:10px}}'+
+    '</style></head><body>'+
+    '<h1>'+col.label+' — Ordem de Produção</h1>'+
+    '<div class="sub">ALL HAIR &nbsp;·&nbsp; '+dataHoje+'</div>';
+
+  if(!items.length){
+    html+='<p style="color:#94a3b8;padding:20px 0;text-align:center">Nenhum lote nesta etapa</p>';
+  } else {
+    html+='<table><thead><tr>'+
+      '<th>#</th><th>Tipo</th><th>Cor</th><th>Produto</th><th>Kg</th><th>Pedido / Cliente</th><th>Prazo</th><th>✓</th>'+
+    '</tr></thead><tbody>';
+    items.forEach(function(l,i){
+      var cls=l.atrasado?'atrasado':l.urgente?'urgente':'';
+      var prazo=l.dias<0?'🔴 '+Math.abs(l.dias)+'d atraso':l.dias===0?'⚡ Hoje':l.dias<999?l.dias+'d':'—';
+      html+='<tr class="'+cls+'">'+
+        '<td style="font-weight:700;color:#94a3b8">'+(i+1)+'</td>'+
+        '<td><span class="badge" style="background:'+(l.tipo==='meia'?'#ede9fe':l.tipo==='mini'?'#d1fae5':'#dbeafe')+';color:'+(l.tipo==='meia'?'#6d28d9':l.tipo==='mini'?'#065f46':'#1e40af')+'">'+l.tipo.toUpperCase()+'</span></td>'+
+        '<td style="font-weight:800;font-size:13px">'+l.corNome+'</td>'+
+        '<td>'+l.prodNome+(l.prodRef?' ('+l.prodRef+')':'')+'</td>'+
+        '<td style="font-weight:900;color:#8b5cf6">'+l.kgPorCor.toFixed(2)+'kg</td>'+
+        '<td><div style="font-weight:600">'+l.pedNum+'</div><div style="font-size:10px;color:#64748b">'+l.cliente+'</div></td>'+
+        '<td style="font-weight:700;color:'+(l.atrasado?'#ef4444':l.urgente?'#f59e0b':'#64748b')+'">'+prazo+'</td>'+
+        '<td><span class="check"></span></td>'+
+      '</tr>';
+    });
+    html+='</tbody></table>';
+    html+='<div style="margin-top:20px;padding:10px 14px;background:#f8fafc;border-radius:8px;font-size:11px;color:#64748b">'+
+      'Total: <strong>'+items.length+' lote(s)</strong> &nbsp;·&nbsp; '+
+      'Kg total: <strong>'+items.reduce(function(s,l){return s+l.kgPorCor;},0).toFixed(2)+'kg</strong>'+
+    '</div>';
+  }
+  html+='</body></html>';
+  var w=window.open('','_blank','width=750,height=900');
+  w.document.write(html);w.document.close();
+  setTimeout(function(){w.print();},400);
+}
+
 function rKanban(){
   var d=D();
   var lotes=buildLotes(d);
@@ -488,22 +540,22 @@ function rKanban(){
 
   var COLS=[
     {s:'aguardando',label:'📋 Aguardando',       cor:'#64748b',
-     btn:{l:'▶ Colocar na Máquina',c:'#8b5cf6',fn:function(l){setLoteStatus(l.id,'maquina');R('kanban');}}},
+     btn:{l:'▶ Na Máquina',c:'#8b5cf6',fn:function(l){setLoteStatus(l.id,'maquina');R('kanban');}}},
     {s:'maquina',   label:'🏭 Máquina',           cor:'#8b5cf6',
-     btn:{l:'🏭 Lançar Produção',c:'#8b5cf6',fn:function(l){prefillMaquina(l);}}},
-    {s:'cru',       label:'📦 Estoque Cru',        cor:'#f59e0b',
-     btn:{l:'🤝 Enviar Facc.',c:'#f59e0b',fn:function(l){prefillFacc(l);}},
+     btn:{l:'🏭 Lançar',c:'#8b5cf6',fn:function(l){prefillMaquina(l);}}},
+    {s:'cru',       label:'📦 Cru',        cor:'#f59e0b',
+     btn:{l:'🤝 Enviar',c:'#f59e0b',fn:function(l){prefillFacc(l);}},
      filter:function(l){return l.fluxo!=='corte';}},
-    {s:'facc',      label:'🤝 Faccionista',         cor:'#ef4444',
-     btn:{l:'📦 Reg. Retorno',c:'#3b82f6',fn:function(l){prefillRetorno(l);}},
+    {s:'facc',      label:'🤝 Facc.',         cor:'#ef4444',
+     btn:{l:'📦 Retorno',c:'#3b82f6',fn:function(l){prefillRetorno(l);}},
      filter:function(l){return l.fluxo!=='corte';}},
-    {s:'corte',     label:'✂️ Corte Manual',        cor:'#7c3aed',
-     btn:{l:'✅ Corte Concluído',c:'#10b981',fn:function(l){setLoteStatus(l.id,'pronto');R('kanban');}},
+    {s:'corte',     label:'✂️ Corte',        cor:'#7c3aed',
+     btn:{l:'✅ Concluído',c:'#10b981',fn:function(l){setLoteStatus(l.id,'pronto');R('kanban');}},
      filter:function(l){return l.fluxo==='corte';}},
-    {s:'virado',    label:'✅ Pronto p/ Embalar',   cor:'#3b82f6',
+    {s:'virado',    label:'✅ P/ Embalar',   cor:'#3b82f6',
      btn:{l:'📦 Embalar',c:'#10b981',fn:function(l){abrirEmbalar();}},
      filter:function(l){return l.fluxo!=='corte';}},
-    {s:'pronto',    label:'🚚 Pronto p/ Expedir',   cor:'#10b981',btn:null}
+    {s:'pronto',    label:'🚚 Expedir',   cor:'#10b981',btn:null}
   ];
 
   COLS.forEach(function(col){
@@ -522,8 +574,26 @@ function rKanban(){
     var kc=document.createElement('div');kc.className='kc';
     var head=document.createElement('div');head.className='kc-head';
     head.style.borderLeft='3px solid '+col.cor;
-    head.innerHTML='<span style="color:'+col.cor+'">'+col.label+'</span>'+
-      '<span style="background:'+col.cor+'22;color:'+col.cor+';padding:2px 8px;border-radius:20px;font-size:11px">'+items.length+'</span>';
+    head.style.cssText='padding:6px 8px;font-size:11px;font-weight:800;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;border-left:3px solid '+col.cor;
+    var labelSpan=document.createElement('span');
+    labelSpan.style.color=col.cor;
+    labelSpan.textContent=col.label;
+    var rightSide=document.createElement('div');
+    rightSide.style.cssText='display:flex;align-items:center;gap:4px';
+    var countBadge=document.createElement('span');
+    countBadge.style.cssText='background:'+col.cor+'22;color:'+col.cor+';padding:1px 6px;border-radius:20px;font-size:10px';
+    countBadge.textContent=items.length;
+    var printBtn=document.createElement('button');
+    printBtn.title='Imprimir esta etapa';
+    printBtn.textContent='🖨️';
+    printBtn.style.cssText='background:none;border:none;cursor:pointer;font-size:11px;padding:1px 3px;opacity:.6;';
+    printBtn.onmouseover=function(){this.style.opacity='1';};
+    printBtn.onmouseout=function(){this.style.opacity='.6';};
+    printBtn.onclick=(function(c2,it2){return function(){imprimirEtapa(c2,it2);};})(col,items);
+    rightSide.appendChild(countBadge);
+    rightSide.appendChild(printBtn);
+    head.appendChild(labelSpan);
+    head.appendChild(rightSide);
     kc.appendChild(head);
 
     var body=document.createElement('div');body.className='kc-body';
