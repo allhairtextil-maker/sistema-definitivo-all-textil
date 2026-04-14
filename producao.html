@@ -7,16 +7,14 @@
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="favicon.ico">
 <style>
-:root{--bg:#f8fafc;--white:#fff;--border:#e2e8f0;--border2:#cbd5e1;--text:#1e293b;--text2:#64748b;--text3:#94a3b8;--purple:#8b5cf6;--pl:#ede9fe;--green:#10b981;--gl:#d1fae5;--red:#ef4444;--rl:#fee2e2;--orange:#f59e0b;--ol:#fff7ed;--blue:#3b82f6;--navy:#0f172a;--r:12px;--sh:0 2px 8px rgba(0,0,0,.06);}
+:root{--bg:#f8fafc;--white:#fff;--border:#e2e8f0;--b2:#cbd5e1;--text:#1e293b;--t2:#64748b;--t3:#94a3b8;--purple:#8b5cf6;--pl:#ede9fe;--green:#10b981;--gl:#d1fae5;--red:#ef4444;--rl:#fee2e2;--orange:#f59e0b;--ol:#fff7ed;--blue:#3b82f6;--navy:#0f172a;--r:12px;}
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh;}
-/* SIDEBAR */
-.sidebar{width:220px;background:var(--navy);color:#fff;display:flex;flex-direction:column;flex-shrink:0;height:100vh;position:sticky;top:0;overflow-y:auto;}
+.sidebar{width:220px;background:var(--navy);color:#fff;display:flex;flex-direction:column;flex-shrink:0;height:100vh;position:sticky;top:0;}
 .sb-logo{display:flex;align-items:center;gap:10px;padding:16px;border-bottom:1px solid rgba(255,255,255,.1);}
 .sb-logo img{width:36px;height:36px;border-radius:8px;}
-.sb-name{font-size:13px;font-weight:800;}
-.sb-sub{font-size:10px;color:rgba(255,255,255,.4);}
-.sb-nav{flex:1;padding:12px 8px;}
+.sb-name{font-size:13px;font-weight:800;}.sb-sub{font-size:10px;color:rgba(255,255,255,.4);}
+.sb-nav{flex:1;padding:12px 8px;overflow-y:auto;}
 .sb-sec{font-size:10px;font-weight:700;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.8px;padding:12px 8px 4px;}
 a.sl{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;color:rgba(255,255,255,.7);text-decoration:none;font-size:13px;font-weight:500;margin-bottom:2px;}
 a.sl:hover,a.sl.on{background:rgba(255,255,255,.1);color:#fff;}
@@ -26,70 +24,66 @@ a.sl:hover,a.sl.on{background:rgba(255,255,255,.1);color:#fff;}
 .sb-av{width:30px;height:30px;border-radius:50%;background:var(--purple);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;}
 #sb-time{font-size:20px;font-weight:900;color:#fff;text-align:center;}
 #sb-date{font-size:11px;color:rgba(255,255,255,.4);text-align:center;padding-bottom:4px;}
-/* LAYOUT */
 .main{flex:1;display:flex;flex-direction:column;min-height:100vh;overflow:hidden;}
-.topbar{display:flex;align-items:center;justify-content:space-between;padding:0 20px;height:52px;background:var(--white);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10;gap:8px;}
-.topbar-title{font-size:15px;font-weight:700;flex-shrink:0;}
-.tabs{display:flex;gap:0;padding:0 20px;background:var(--white);border-bottom:1px solid var(--border);overflow-x:auto;flex-shrink:0;}
-.tab{padding:12px 16px;font-size:13px;font-weight:600;color:var(--text2);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;user-select:none;}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:0 20px;height:52px;background:var(--white);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10;gap:8px;flex-wrap:wrap;}
+.topbar-title{font-size:15px;font-weight:700;}
+.tabs{display:flex;padding:0 20px;background:var(--white);border-bottom:1px solid var(--border);overflow-x:auto;}
+.tab{padding:12px 16px;font-size:13px;font-weight:600;color:var(--t2);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;}
 .tab.on{color:var(--purple);border-color:var(--purple);}
-.tc{display:none;padding:20px;overflow-y:auto;flex:1;}
+.tc{display:none;padding:20px;overflow-y:auto;}
 .tc.on{display:block;}
-/* UTILS */
-.card{background:var(--white);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--sh);}
-.btn{padding:8px 16px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;border:none;font-family:inherit;transition:opacity .15s;}
-.btn:active{opacity:.8;}
-.bpurple{background:var(--purple);color:#fff;}
-.bgreen{background:var(--green);color:#fff;}
-.borange{background:var(--orange);color:#fff;}
-.bgray{background:var(--bg);color:var(--text2);border:1.5px solid var(--border2);}
-.bred{background:var(--red);color:#fff;}
-.bblue{background:var(--blue);color:#fff;}
-.field label{display:block;font-size:12px;font-weight:700;color:var(--text2);margin-bottom:4px;}
-.field input,.field select,.field textarea{width:100%;padding:9px 12px;border:1.5px solid var(--border2);border-radius:8px;font-family:inherit;font-size:13px;background:#fff;color:var(--text);}
-.field input:focus,.field select:focus{outline:none;border-color:var(--purple);}
-/* OVERLAY */
+/* KANBAN */
+.kb{display:flex;gap:14px;overflow-x:auto;padding-bottom:16px;align-items:flex-start;}
+.kc{flex-shrink:0;width:220px;background:var(--white);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;}
+.kc-head{padding:10px 14px;font-size:12px;font-weight:800;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
+.kc-body{padding:8px;display:flex;flex-direction:column;gap:6px;min-height:50px;}
+/* LOTE CARD */
+.lcard{background:var(--bg);border:1.5px solid var(--border);border-radius:9px;padding:10px 12px;transition:box-shadow .15s;}
+.lcard:hover{box-shadow:0 4px 12px rgba(0,0,0,.08);}
+.lcard.urgente{border-left:3px solid var(--orange);}
+.lcard.atrasado{border-left:3px solid var(--red);}
+.lc-tipo{font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;}
+.lc-cor{font-size:14px;font-weight:800;margin-bottom:2px;}
+.lc-prod{font-size:11px;color:var(--t2);margin-bottom:2px;}
+.lc-ped{font-size:11px;color:var(--t3);margin-bottom:6px;}
+.lc-btn{width:100%;padding:7px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;border:none;font-family:inherit;}
+/* HOJE */
+.hoje-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:10px;display:flex;align-items:center;gap:16px;}
+.hoje-tipo{padding:8px 12px;border-radius:8px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:1px;text-align:center;min-width:56px;}
+.hoje-info{flex:1;}
+.hoje-cor{font-size:17px;font-weight:800;}
+.hoje-prod{font-size:13px;color:var(--t2);margin-top:2px;}
+.hoje-meta{font-size:13px;font-weight:700;color:var(--purple);margin-top:4px;}
+/* MODALS */
 .ov{display:none;position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:200;align-items:center;justify-content:center;}
 .ov.on{display:flex;}
-.modal{background:#fff;border-radius:16px;width:92%;max-width:460px;max-height:90vh;overflow-y:auto;box-shadow:0 24px 64px rgba(0,0,0,.25);}
+.modal{background:#fff;border-radius:16px;width:92%;max-width:440px;max-height:90vh;overflow-y:auto;box-shadow:0 24px 64px rgba(0,0,0,.25);}
 .mh{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border);}
 .mh h2{font-size:16px;font-weight:800;}
-.mc{background:none;border:none;font-size:24px;cursor:pointer;color:var(--text2);line-height:1;}
+.mx{background:none;border:none;font-size:24px;cursor:pointer;color:var(--t2);}
 .mb{padding:20px;display:flex;flex-direction:column;gap:12px;}
 .mf{padding:14px 20px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;}
-/* HOJE */
-.os-card{background:var(--white);border:2px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:12px;transition:border-color .2s;}
-.os-card.rodando{border-color:var(--purple);}
-.os-card.concluido{border-color:var(--green);opacity:.7;}
-.os-header{display:flex;align-items:center;gap:0;border-bottom:1px solid var(--border);}
-.os-tipo{padding:16px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:1px;min-width:64px;text-align:center;border-right:1px solid var(--border);}
-.os-info{padding:12px 16px;flex:1;}
-.os-modelo{font-size:16px;font-weight:800;}
-.os-cor{font-size:13px;color:var(--purple);font-weight:600;margin-top:2px;}
-.os-meta{display:flex;gap:12px;padding:12px 16px;background:var(--bg);border-bottom:1px solid var(--border);}
-.os-kpi{text-align:center;flex:1;}
-.os-kpi-val{font-size:24px;font-weight:900;color:var(--purple);}
-.os-kpi-lbl{font-size:10px;color:var(--text2);text-transform:uppercase;font-weight:700;}
-.os-actions{padding:12px 16px;display:flex;gap:8px;}
-/* KANBAN */
-.kb{display:flex;gap:12px;overflow-x:auto;padding-bottom:12px;align-items:flex-start;}
-.kc{flex-shrink:0;width:230px;background:var(--white);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;}
-.kc-head{padding:10px 14px;font-weight:800;font-size:12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
-.kc-body{padding:8px;display:flex;flex-direction:column;gap:6px;min-height:60px;}
-.kk{background:var(--bg);border:1px solid var(--border);border-radius:9px;padding:11px 12px;}
-.kk-title{font-weight:700;font-size:13px;margin-bottom:2px;}
-.kk-sub{font-size:11px;color:var(--text2);}
-.kk-kg{font-size:13px;font-weight:800;color:var(--purple);margin:4px 0;}
-.kk-btn{margin-top:6px;width:100%;padding:6px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;border:none;font-family:inherit;}
-.badge{padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;}
+.field label{display:block;font-size:12px;font-weight:700;color:var(--t2);margin-bottom:4px;}
+.field input,.field select{width:100%;padding:9px 12px;border:1.5px solid var(--b2);border-radius:8px;font-family:inherit;font-size:13px;background:#fff;color:var(--text);}
+.field input:focus,.field select:focus{outline:none;border-color:var(--purple);}
+.btn{padding:8px 16px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;border:none;font-family:inherit;}
+.bp{background:var(--purple);color:#fff;}
+.bg2{background:var(--bg);color:var(--t2);border:1.5px solid var(--b2);}
+.bo{background:var(--orange);color:#fff;}
+.bgr{background:var(--green);color:#fff;}
+.bbl{background:var(--blue);color:#fff;}
+.info-box{background:var(--bg);border-radius:8px;padding:10px 12px;font-size:13px;color:var(--t2);}
 /* AGENDA */
-.ag-week{margin-bottom:20px;}
-.ag-week-hdr{background:var(--pl);border-radius:9px;padding:10px 14px;font-weight:800;color:var(--purple);margin-bottom:8px;display:flex;justify-content:space-between;font-size:13px;}
+.ag-hdr{background:var(--pl);border-radius:9px;padding:10px 14px;font-weight:800;color:var(--purple);margin-bottom:8px;display:flex;justify-content:space-between;font-size:13px;}
 .ag-item{background:var(--white);border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:6px;display:flex;align-items:center;gap:12px;}
 /* CAP */
 .cap-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:12px;}
 .cap-bar{background:var(--bg);border-radius:20px;height:10px;overflow:hidden;margin:8px 0;}
-.cap-fill{height:100%;border-radius:20px;transition:width .8s;}
+.cap-fill{height:100%;border-radius:20px;}
+/* HIST */
+table{width:100%;border-collapse:collapse;}
+th{padding:9px 14px;text-align:left;font-size:11px;font-weight:700;color:var(--t2);background:var(--bg);border-bottom:2px solid var(--border);}
+td{padding:10px 14px;font-size:13px;border-bottom:1px solid var(--border);}
 </style>
 </head>
 <body>
@@ -120,12 +114,12 @@ a.sl:hover,a.sl.on{background:rgba(255,255,255,.1);color:#fff;}
 <div class="main">
   <div class="topbar">
     <div class="topbar-title">🏭 Produção</div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap">
-      <button class="btn bpurple" onclick="abrirMaquina()">🏭 Lançar Máquina</button>
-      <button class="btn borange" onclick="abrirFacc()">🤝 Enviar Facc.</button>
-      <button class="btn bblue" onclick="abrirRetornoLista()">📦 Retorno Facc.</button>
-      <button class="btn bgreen" onclick="abrirEmbalar()">📦 Embalar</button>
-      <button class="btn bgray" onclick="imprimirHoje()">🖨️ Imprimir</button>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      <button class="btn bp" onclick="abrirMaquina()">🏭 Lançar Máquina</button>
+      <button class="btn bo" onclick="abrirFacc()">🤝 Enviar Facc.</button>
+      <button class="btn bbl" onclick="abrirRetorno()">📦 Retorno Facc.</button>
+      <button class="btn bgr" onclick="abrirEmbalar()">📦 Embalar</button>
+      <button class="btn bg2" onclick="imprimirHoje()">🖨️ Imprimir</button>
     </div>
   </div>
 
@@ -137,224 +131,156 @@ a.sl:hover,a.sl.on{background:rgba(255,255,255,.1);color:#fff;}
     <div class="tab" onclick="aba('historico')">📋 Histórico</div>
   </div>
 
-  <!-- HOJE -->
   <div class="tc on" id="tc-hoje">
     <div id="hoje-alertas" style="margin-bottom:12px"></div>
-    <div id="hoje-header" style="margin-bottom:16px"></div>
-    <div id="hoje-lista"></div>
+    <div id="hoje-wrap"></div>
   </div>
-
-  <!-- KANBAN -->
   <div class="tc" id="tc-kanban">
     <div class="kb" id="kb-board"></div>
   </div>
-
-  <!-- AGENDA -->
-  <div class="tc" id="tc-agenda">
-    <div id="agenda-wrap"></div>
-  </div>
-
-  <!-- CAPACIDADE -->
-  <div class="tc" id="tc-capacidade">
-    <div id="cap-wrap"></div>
-  </div>
-
-  <!-- HISTORICO -->
+  <div class="tc" id="tc-agenda"><div id="agenda-wrap"></div></div>
+  <div class="tc" id="tc-capacidade"><div id="cap-wrap"></div></div>
   <div class="tc" id="tc-historico">
     <div style="display:flex;gap:6px;margin-bottom:14px" id="hist-filtros"></div>
-    <div class="card" style="overflow:hidden"><table style="width:100%;border-collapse:collapse">
-      <thead id="hist-head"><tr style="background:var(--bg)">
-        <th style="padding:9px 14px;text-align:left;font-size:11px;font-weight:700;color:var(--text2)">DATA</th>
-        <th style="padding:9px 14px;text-align:left;font-size:11px;font-weight:700;color:var(--text2)">ETAPA</th>
-        <th style="padding:9px 14px;text-align:left;font-size:11px;font-weight:700;color:var(--text2)">PRODUTO / COR</th>
-        <th style="padding:9px 14px;text-align:right;font-size:11px;font-weight:700;color:var(--text2)">QTD</th>
-      </tr></thead>
-      <tbody id="hist-body"></tbody>
-    </table></div>
+    <div style="background:var(--white);border:1px solid var(--border);border-radius:var(--r);overflow:hidden">
+      <table><thead><tr><th>DATA</th><th>ETAPA</th><th>LOTE</th><th style="text-align:right">QTD</th></tr></thead>
+      <tbody id="hist-body"></tbody></table>
+    </div>
   </div>
 </div>
 
 <!-- MODAL MÁQUINA -->
 <div class="ov" id="ov-maq">
   <div class="modal">
-    <div class="mh"><h2>🏭 Lançar Produção da Máquina</h2><button class="mc" onclick="fechar('maq')">×</button></div>
+    <div class="mh"><h2>🏭 Lançar Produção da Máquina</h2><button class="mx" onclick="X('maq')">×</button></div>
     <div class="mb">
       <div class="field"><label>Tipo de Tecido</label>
-        <select id="mq-tipo" onchange="onMqTipo()">
+        <select id="mq-tipo" onchange="maqFillCores()">
           <option value="liso">📏 Liso</option>
           <option value="meia">🧶 Meia</option>
           <option value="mini">🔹 Mini</option>
         </select></div>
-      <div class="field"><label>Cor</label><select id="mq-cor"></select></div>
-      <div class="field"><label>Kg Produzidos (útil, sem refugo)</label><input type="number" id="mq-kg" step="0.01" min="0" placeholder="0.00" oninput="calcMaqPrev()"></div>
+      <div class="field"><label>Cor Produzida</label><select id="mq-cor"></select></div>
+      <div class="field"><label>Kg Produzidos</label><input type="number" id="mq-kg" step="0.01" min="0" placeholder="Ex: 5.00" oninput="maqPrev()"></div>
+      <div id="mq-prev" style="display:none" class="info-box"></div>
       <div class="field"><label>Data</label><input type="date" id="mq-data"></div>
       <div class="field"><label>Obs (opcional)</label><input type="text" id="mq-obs" placeholder="Máquina, operador..."></div>
-      <div id="mq-prev" style="display:none;background:var(--pl);border-radius:8px;padding:12px;font-size:13px"></div>
     </div>
-    <div class="mf"><button class="btn bgray" onclick="fechar('maq')">Cancelar</button><button class="btn bpurple" onclick="salvarMaquina()">✅ Lançar</button></div>
+    <div class="mf"><button class="btn bg2" onclick="X('maq')">Cancelar</button><button class="btn bp" onclick="salvarMaquina()">✅ Lançar</button></div>
   </div>
 </div>
 
-<!-- MODAL FACCIONISTA -->
+<!-- MODAL FACC -->
 <div class="ov" id="ov-facc">
   <div class="modal">
-    <div class="mh"><h2>🤝 Enviar para Faccionista</h2><button class="mc" onclick="fechar('facc')">×</button></div>
+    <div class="mh"><h2>🤝 Enviar para Faccionista</h2><button class="mx" onclick="X('facc')">×</button></div>
     <div class="mb">
       <div class="field"><label>Faccionista</label><select id="fc-facc"></select></div>
-      <div class="field"><label>Tipo</label><select id="fc-tipo" onchange="onFcTipo()"><option value="liso">Liso</option><option value="meia">Meia</option><option value="mini">Mini</option></select></div>
-      <div class="field"><label>Cor</label><select id="fc-cor"></select></div>
+      <div class="field"><label>Tipo</label><select id="fc-tipo" onchange="faccFillCores()"><option value="liso">Liso</option><option value="meia">Meia</option><option value="mini">Mini</option></select></div>
+      <div class="field"><label>Cor</label><select id="fc-cor" onchange="faccInfo()"></select></div>
+      <div id="fc-info" class="info-box" style="display:none"></div>
       <div class="field"><label>Kg a Enviar</label><input type="number" id="fc-kg" step="0.01" min="0" placeholder="0.00"></div>
-      <div id="fc-estoque-info" style="font-size:12px;color:var(--text2);margin-top:-8px"></div>
       <div class="field"><label>Data Envio</label><input type="date" id="fc-data"></div>
       <div class="field"><label>Previsão Retorno</label><input type="date" id="fc-prev"></div>
       <div class="field"><label>Frete (R$)</label><input type="number" id="fc-frete" step="0.01" value="0"></div>
     </div>
-    <div class="mf"><button class="btn bgray" onclick="fechar('facc')">Cancelar</button><button class="btn borange" onclick="salvarFacc()">🤝 Enviar</button></div>
+    <div class="mf"><button class="btn bg2" onclick="X('facc')">Cancelar</button><button class="btn bo" onclick="salvarFacc()">🤝 Enviar</button></div>
   </div>
 </div>
 
 <!-- MODAL RETORNO -->
 <div class="ov" id="ov-ret">
   <div class="modal" style="max-width:400px">
-    <div class="mh"><h2>📦 Registrar Retorno do Faccionista</h2><button class="mc" onclick="fechar('ret')">×</button></div>
+    <div class="mh"><h2>📦 Retorno do Faccionista</h2><button class="mx" onclick="X('ret')">×</button></div>
     <div class="mb">
-      <div class="field"><label>Lote em Andamento</label><select id="ret-lote"></select></div>
-      <div id="ret-info" style="background:var(--bg);border-radius:8px;padding:10px;font-size:13px;color:var(--text2)"></div>
+      <div class="field"><label>Lote em Andamento</label><select id="ret-sel" onchange="retInfo()"></select></div>
+      <div id="ret-info" class="info-box" style="display:none"></div>
       <div class="field"><label>Kg Retornados (virado)</label><input type="number" id="ret-kg" step="0.01" min="0" placeholder="0.00"></div>
       <div class="field"><label>Data Retorno</label><input type="date" id="ret-data"></div>
     </div>
-    <div class="mf"><button class="btn bgray" onclick="fechar('ret')">Cancelar</button><button class="btn bgreen" onclick="salvarRetorno()">✅ Confirmar Retorno</button></div>
+    <div class="mf"><button class="btn bg2" onclick="X('ret')">Cancelar</button><button class="btn bgr" onclick="salvarRetorno()">✅ Confirmar</button></div>
   </div>
 </div>
 
 <!-- MODAL EMBALAR -->
 <div class="ov" id="ov-emb">
-  <div class="modal">
-    <div class="mh"><h2>📦 Lançar Embalagem</h2><button class="mc" onclick="fechar('emb')">×</button></div>
+  <div class="modal" style="max-width:400px">
+    <div class="mh"><h2>📦 Lançar Embalagem</h2><button class="mx" onclick="X('emb')">×</button></div>
     <div class="mb">
-      <div class="field"><label>Produto</label><select id="emb-prod" onchange="onEmbProd()"></select></div>
-      <div class="field"><label>Quantidade de Pacotes</label><input type="number" id="emb-pct" min="1" placeholder="0" oninput="calcEmbPrev()"></div>
+      <div class="field"><label>Produto</label><select id="emb-prod" onchange="embPrev()"></select></div>
+      <div class="field"><label>Pacotes Embalados</label><input type="number" id="emb-pct" min="1" placeholder="0" oninput="embPrev()"></div>
+      <div id="emb-info" class="info-box" style="display:none"></div>
       <div class="field"><label>Data</label><input type="date" id="emb-data"></div>
-      <div id="emb-prev" style="display:none;background:var(--gl);border-radius:8px;padding:12px;font-size:13px"></div>
     </div>
-    <div class="mf"><button class="btn bgray" onclick="fechar('emb')">Cancelar</button><button class="btn bgreen" onclick="salvarEmbalar()">📦 Salvar</button></div>
+    <div class="mf"><button class="btn bg2" onclick="X('emb')">Cancelar</button><button class="btn bgr" onclick="salvarEmbalar()">📦 Salvar</button></div>
   </div>
 </div>
 
 <script>
-// ─────────────────────────────────────────────
+// ──────────────────────────────────────────────
 // DATA
-// ─────────────────────────────────────────────
-function load(k,d){try{return JSON.parse(localStorage.getItem(k)||'null')||d;}catch(e){return d;}}
-function save(k,v){localStorage.setItem(k,JSON.stringify(v));}
-
+// ──────────────────────────────────────────────
+function L(k,d){try{return JSON.parse(localStorage.getItem(k)||'null')||d;}catch(e){return d;}}
+function S(k,v){localStorage.setItem(k,JSON.stringify(v));}
 function D(){
-  var est=load('allhair_estoque_v2',{});
-  if(!est.mp)est.mp={};if(!est.cru)est.cru={};if(!est.virado)est.virado={};if(!est.embalado)est.embalado={};
-  return {
-    pedidos:load('allhair_pedidos',[]),
-    produtos:load('allhair_produtos',[]),
-    cores:load('allhair_cores',[]),
-    estoque:est,
-    producoes:load('allhair_producoes2',[]),
-    envios:load('allhair_envios_v2',[]),
-    faccionistas:load('allhair_faccionistas',[]),
-    cfg:load('allhair_config',{}),
+  var e=L('allhair_estoque_v2',{});
+  if(!e.cru)e.cru={};if(!e.virado)e.virado={};if(!e.embalado)e.embalado={};
+  return{
+    pedidos:L('allhair_pedidos',[]),
+    produtos:L('allhair_produtos',[]),
+    cores:L('allhair_cores',[]),
+    estoque:e,
+    producoes:L('allhair_producoes2',[]),
+    envios:L('allhair_envios_v2',[]),
+    faccionistas:L('allhair_faccionistas',[]),
+    lotes:L('allhair_lotes',{}),  // loteId → status
+    cfg:L('allhair_config',{}).producao||{},
   };
 }
-
-function saveAll(d){
-  save('allhair_pedidos',d.pedidos);
-  save('allhair_estoque_v2',d.estoque);
-  save('allhair_producoes2',d.producoes);
-  save('allhair_envios_v2',d.envios);
+function saveD(d){
+  S('allhair_pedidos',d.pedidos);
+  S('allhair_estoque_v2',d.estoque);
+  S('allhair_producoes2',d.producoes);
+  S('allhair_envios_v2',d.envios);
+  S('allhair_lotes',d.lotes);
 }
 
-// ─────────────────────────────────────────────
-// CONFIG / CAPACIDADE
-// ─────────────────────────────────────────────
-function getCfg(){
-  var p=load('allhair_config',{}).producao||{};
-  return {
-    maqMeia:+p.maqMeia||2,maqLiso:+p.maqLiso||4,maqMini:+p.maqMini||4,
-    prodMeia:+p.prodMeia||2,prodLiso:+p.prodLiso||2.5,prodMini:+p.prodMini||1.2,
-    faccDias:+p.faccDias||7,
-    embPessoas:+p.embPessoas||1,embPctHora:+p.embPctHora||100,embHoras:+p.embHoras||8,
-  };
-}
-function getCap(cfg){
-  cfg=cfg||getCfg();
-  return {
-    meia:cfg.maqMeia*cfg.prodMeia,
-    liso:cfg.maqLiso*cfg.prodLiso,
-    mini:cfg.maqMini*cfg.prodMini,
-    embDia:cfg.embPessoas*cfg.embPctHora*cfg.embHoras,
-  };
-}
-
-// ─────────────────────────────────────────────
+// ──────────────────────────────────────────────
 // UTILS
-// ─────────────────────────────────────────────
-function fmt(v){return 'R$ '+Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2});}
+// ──────────────────────────────────────────────
 function fmtD(d){return d?new Date(d+'T00:00').toLocaleDateString('pt-BR'):'—';}
 function hoje(){return new Date().toISOString().split('T')[0];}
 function diasAte(d){if(!d)return 999;return Math.ceil((new Date(d+'T00:00')-new Date())/864e5);}
-function cruKey(tipo,corId){return tipo+'_'+corId;}
-
-// ─────────────────────────────────────────────
-// PREVISÃO DE ENTREGA — recalcula por pedido
-// ─────────────────────────────────────────────
-function recalcPrevisoes(d){
-  var cfg=getCfg();var cap=getCap(cfg);
-  var capRest={meia:cap.meia,liso:cap.liso,mini:cap.mini};
-  var hoje2=new Date();
-
-  d.pedidos.filter(function(p){return['recebido','producao'].includes(p.status);})
-    .sort(function(a,b){return new Date(a.data||'9999')-new Date(b.data||'9999');})
-    .forEach(function(ped){
-      var diasProd=0;
-      (ped.itens||[]).forEach(function(it){
-        var prod=d.produtos.find(function(p){return p.id===it.prodId;});
-        if(!prod)return;
-        var tipo=(prod.tecidoTipo||'liso');
-        var unid=prod['unid-pacote']||12;
-        var rend=prod.rendimento||1000;
-        var kg=Number(it.qtd||0)*unid/rend;
-        var capD=cap[tipo]||cap.liso;
-        var dProd=capD>0?Math.ceil(kg/capD):7;
-        // facc + emb
-        var dFacc=cfg.faccDias;
-        var pcts=Number(it.qtd||0);
-        var dEmb=cap.embDia>0?Math.ceil(pcts/cap.embDia):1;
-        diasProd=Math.max(diasProd,dProd+dFacc+dEmb+1);
-        capRest[tipo]=Math.max(0,(capRest[tipo]||capD)-kg);
-      });
-      // Set previsao if not manually set
-      if(!ped.entregaManual){
-        var prev=new Date(hoje2);
-        prev.setDate(prev.getDate()+diasProd);
-        ped.previsaoEntrega=prev.toISOString().split('T')[0];
-      }
-    });
+function getCap(){
+  var c=D().cfg;
+  return{
+    meia:(+c.maqMeia||2)*(+c.prodMeia||2),
+    liso:(+c.maqLiso||4)*(+c.prodLiso||2.5),
+    mini:(+c.maqMini||4)*(+c.prodMini||1.2),
+    faccDias:+c.faccDias||7,
+    embDia:(+c.embPessoas||1)*(+c.embPctHora||100)*(+c.embHoras||8),
+  };
+}
+function tipoCor(tipo){
+  if(tipo==='meia')return{bg:'#ede9fe',c:'#8b5cf6'};
+  if(tipo==='mini')return{bg:'#d1fae5',c:'#10b981'};
+  return{bg:'#dbeafe',c:'#3b82f6'};
 }
 
-// ─────────────────────────────────────────────
-// ORDEM DO DIA — o que produzir
-// ─────────────────────────────────────────────
-function buildOrdens(d){
-  var cfg=getCfg();var cap=getCap(cfg);
-  var capRest={meia:cap.meia,liso:cap.liso,mini:cap.mini};
-  var ordens=[];
-
-  var pedAbertos=d.pedidos.filter(function(p){return['recebido','producao'].includes(p.status);});
-  pedAbertos.sort(function(a,b){
-    // Prioridade: atrasados primeiro, depois por data de entrega
-    var da=new Date(a.entrega||'9999');var db=new Date(b.entrega||'9999');
-    return da-db;
+// ──────────────────────────────────────────────
+// LOTES — geração automática por pedido×produto×cor
+// ──────────────────────────────────────────────
+// loteId = pedidoId + '_' + prodId + '_' + corId
+// Status: aguardando | maquina | cru | facc | virado | pronto
+function buildLotes(d){
+  var lotes=[];
+  var pedAbertos=d.pedidos.filter(function(p){
+    return['recebido','producao','pronto'].includes(p.status);
   });
-
-  pedAbertos.forEach(function(ped){
-    var dias=diasAte(ped.entrega);
+  pedAbertos.sort(function(a,b){
+    return new Date(a.data||'9999')-new Date(b.data||'9999');
+  });
+  pedAbertos.forEach(function(ped,pedIdx){
     (ped.itens||[]).forEach(function(it){
       var prod=d.produtos.find(function(p){return p.id===it.prodId;});
       if(!prod)return;
@@ -363,257 +289,264 @@ function buildOrdens(d){
       var rend=prod.rendimento||1000;
       var qtdPct=Number(it.qtd||0);
       var kgTotal=qtdPct*unid/rend;
-
-      // Desconta o que já foi produzido (estoque cru + virado + embalado deste pedido)
-      // Simplified: use full qty for now
-      var capD=capRest[tipo]||0;
-      var kgHoje=Math.min(kgTotal,capD);
-      if(kgHoje<0.001)return;
-      capRest[tipo]=Math.max(0,capD-kgHoje);
-
-      var pctHoje=Math.max(1,Math.round(kgHoje*rend/unid));
-
-      // Get cores for this product
-      var coresProd=(prod.cores||[]);
-      var corObjs=coresProd.map(function(cid){
-        return d.cores.find(function(c){return c.id===cid;})||{id:cid,nome:cid};
-      });
-      if(!corObjs.length)corObjs=[{id:'',nome:'Cor padrão'}];
-
-      // One order per color
-      corObjs.forEach(function(cor){
-        var kgPorCor=kgHoje/corObjs.length;
-        var pctPorCor=Math.max(1,Math.round(kgPorCor*rend/unid));
-        ordens.push({
-          pedId:ped.id,prodId:prod.id,corId:cor.id,
-          modelo:prod.nome,ref:prod.ref||'',tipo:tipo.toUpperCase(),
-          cor:cor.nome,
-          pct:pctPorCor,kg:kgPorCor,unid:unid,
-          cliente:ped.clienteNome,entrega:ped.entrega,
-          previsao:ped.previsaoEntrega,
+      var coresProd=prod.cores||[];
+      if(!coresProd.length)coresProd=[''];
+      var kgPorCor=kgTotal/coresProd.length;
+      coresProd.forEach(function(corId){
+        var cor=d.cores.find(function(c){return c.id===corId;})||{id:corId,nome:'Padrão'};
+        var loteId=ped.id+'_'+prod.id+'_'+corId;
+        var status=d.lotes[loteId]||'aguardando';
+        var dias=diasAte(ped.entrega);
+        lotes.push({
+          id:loteId,
+          pedId:ped.id,pedNum:ped.numero||('Ped.'+(pedIdx+1)),
+          cliente:ped.clienteNome||'—',
+          prodId:prod.id,prodNome:prod.nome,prodRef:prod.ref||'',
+          corId:corId,corNome:cor.nome,
+          tipo:tipo,
+          kgTotal:kgTotal,kgPorCor:kgPorCor,
+          pctTotal:qtdPct,
+          entrega:ped.entrega,
           dias:dias,urgente:dias>=0&&dias<=3,atrasado:dias<0,
+          status:status,
         });
       });
     });
   });
-  return ordens;
+  return lotes;
 }
 
-// ─────────────────────────────────────────────
-// RENDER HOJE
-// ─────────────────────────────────────────────
-function renderHoje(){
+function setLoteStatus(loteId,status){
   var d=D();
-  recalcPrevisoes(d);
-  var ordens=buildOrdens(d);
-  var lista=document.getElementById('hoje-lista');
-  var header=document.getElementById('hoje-header');
+  d.lotes[loteId]=status;
+  S('allhair_lotes',d.lotes);
+}
+
+// ──────────────────────────────────────────────
+// ABA SYSTEM
+// ──────────────────────────────────────────────
+var _aba='hoje';
+function aba(id){
+  _aba=id;
+  document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('on');});
+  document.querySelectorAll('.tc').forEach(function(t){t.classList.remove('on');});
+  var tabs=['hoje','kanban','agenda','capacidade','historico'];
+  document.querySelectorAll('.tab')[tabs.indexOf(id)].classList.add('on');
+  document.getElementById('tc-'+id).classList.add('on');
+  R(id);
+}
+function R(id){
+  if(id==='hoje')rHoje();
+  else if(id==='kanban')rKanban();
+  else if(id==='agenda')rAgenda();
+  else if(id==='capacidade')rCap();
+  else if(id==='historico')rHist();
+}
+
+// ──────────────────────────────────────────────
+// HOJE — ordem clara por prioridade
+// ──────────────────────────────────────────────
+function rHoje(){
+  var d=D();
+  var lotes=buildLotes(d);
+  var cap=getCap();
+  var wrap=document.getElementById('hoje-wrap');
   var alertasEl=document.getElementById('hoje-alertas');
-  lista.innerHTML='';header.innerHTML='';alertasEl.innerHTML='';
+  wrap.innerHTML='';alertasEl.innerHTML='';
 
   // Alertas
-  var pedAtrasados=d.pedidos.filter(function(p){return['recebido','producao'].includes(p.status)&&p.entrega&&diasAte(p.entrega)<0;});
-  var pedUrgentes=d.pedidos.filter(function(p){return['recebido','producao'].includes(p.status)&&p.entrega&&diasAte(p.entrega)>=0&&diasAte(p.entrega)<=3;});
+  var atrasados=lotes.filter(function(l){return l.atrasado&&l.status!=='pronto';});
+  var urgentes=lotes.filter(function(l){return l.urgente&&!l.atrasado&&l.status!=='pronto';});
   var emFacc=d.envios.filter(function(e){return e.status==='enviado';}).length;
-  var alertas=[];
-  if(pedAtrasados.length)alertas.push({c:'#ef4444',m:'🚨 '+pedAtrasados.length+' pedido(s) em atraso — prioridade máxima!'});
-  if(pedUrgentes.length)alertas.push({c:'#f59e0b',m:'⚠️ '+pedUrgentes.length+' entrega(s) nos próximos 3 dias'});
-  if(emFacc>0)alertas.push({c:'#3b82f6',m:'📬 '+emFacc+' lote(s) no faccionista aguardando retorno'});
-  alertasEl.innerHTML=alertas.map(function(a){return '<div style="background:'+a.c+'15;border-left:4px solid '+a.c+';border-radius:8px;padding:10px 16px;margin-bottom:6px;font-size:13px;font-weight:700;color:'+a.c+'">'+a.m+'</div>';}).join('');
+  [
+    atrasados.length?{c:'#ef4444',m:'🚨 '+atrasados.length+' lote(s) em atraso — prioridade máxima!'}:null,
+    urgentes.length?{c:'#f59e0b',m:'⚡ '+urgentes.length+' lote(s) com entrega em 3 dias ou menos'}:null,
+    emFacc?{c:'#3b82f6',m:'📬 '+emFacc+' lote(s) no faccionista aguardando retorno'}:null,
+  ].filter(Boolean).forEach(function(a){
+    var div=document.createElement('div');
+    div.style.cssText='background:'+a.c+'15;border-left:4px solid '+a.c+';border-radius:8px;padding:10px 16px;margin-bottom:6px;font-size:13px;font-weight:700;color:'+a.c;
+    div.textContent=a.m;
+    alertasEl.appendChild(div);
+  });
 
-  if(!ordens.length){
-    lista.innerHTML='<div style="text-align:center;padding:60px;color:var(--text2)"><div style="font-size:48px;margin-bottom:12px">✅</div><div style="font-size:16px;font-weight:700">Nenhum pedido em produção</div><div style="font-size:13px;margin-top:6px">Vá em Pedidos e mude o status para "Em Produção"</div></div>';
-    return;
+  // Lotes para rodar hoje = aguardando ou maquina, por prioridade
+  var paraHoje=lotes.filter(function(l){return['aguardando','maquina'].includes(l.status);});
+  paraHoje.sort(function(a,b){
+    var pa=a.atrasado?0:a.urgente?1:2;
+    var pb=b.atrasado?0:b.urgente?1:2;
+    if(pa!==pb)return pa-pb;
+    return new Date(a.entrega||'9999')-new Date(b.entrega||'9999');
+  });
+
+  if(!paraHoje.length){
+    // Show cru ready for facc
+    var cruProntos=lotes.filter(function(l){return l.status==='cru';});
+    if(cruProntos.length){
+      var div=document.createElement('div');
+      div.style.cssText='background:var(--ol);border:1px solid var(--orange);border-radius:var(--r);padding:20px;text-align:center;margin-bottom:16px';
+      div.innerHTML='<div style="font-size:32px;margin-bottom:8px">📦</div><div style="font-size:15px;font-weight:800;color:var(--orange)">'+cruProntos.length+' lote(s) no estoque cru</div><div style="font-size:13px;color:var(--t2);margin-top:4px">Pronto para enviar ao faccionista</div>';
+      wrap.appendChild(div);
+    } else {
+      wrap.innerHTML='<div style="text-align:center;padding:60px;color:var(--t2)"><div style="font-size:48px;margin-bottom:12px">✅</div><div style="font-size:16px;font-weight:700">Nada para produzir hoje</div></div>';
+      return;
+    }
   }
 
   // Header
-  var cfg=getCfg();var cap=getCap(cfg);
-  var hEl=document.createElement('div');
-  hEl.style.cssText='background:var(--navy);border-radius:var(--r);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;color:#fff';
-  hEl.innerHTML='<div><div style="font-size:11px;color:rgba(255,255,255,.4);text-transform:uppercase;font-weight:700;letter-spacing:1px">'+new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'})+'</div><div style="font-size:16px;font-weight:900;margin-top:2px">'+ordens.length+' lote(s) para hoje</div></div>'+
-    '<div style="font-size:12px;color:rgba(255,255,255,.5)">Cap: Liso '+cap.liso.toFixed(1)+'kg · Meia '+cap.meia.toFixed(1)+'kg · Mini '+cap.mini.toFixed(1)+'kg</div>';
-  header.appendChild(hEl);
+  var total=paraHoje.reduce(function(s,l){return s+l.kgPorCor;},0);
+  var hdr=document.createElement('div');
+  hdr.style.cssText='background:var(--navy);border-radius:var(--r);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;margin-bottom:16px';
+  hdr.innerHTML='<div><div style="color:rgba(255,255,255,.4);font-size:11px;font-weight:700;text-transform:uppercase">'+new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'})+'</div><div style="color:#fff;font-size:15px;font-weight:900;margin-top:2px">'+paraHoje.length+' lote(s) para rodar hoje</div></div>'+
+    '<div style="text-align:right"><div style="color:var(--purple);font-size:20px;font-weight:900">'+total.toFixed(1)+'kg</div><div style="color:rgba(255,255,255,.4);font-size:11px">total a produzir</div></div>';
+  wrap.appendChild(hdr);
 
-  // Cards
-  ordens.forEach(function(o){
+  paraHoje.forEach(function(l){
     var card=document.createElement('div');
-    card.className='os-card';
-    if(o.atrasado)card.style.borderColor='#ef4444';
-    else if(o.urgente)card.style.borderColor='#f59e0b';
+    card.className='hoje-card'+(l.atrasado?' atrasado':l.urgente?' urgente':'');
+    if(l.atrasado)card.style.borderColor='#ef4444';
+    else if(l.urgente)card.style.borderColor='#f59e0b';
 
-    // Header do card
-    var tipoCores={meia:'#8b5cf6',liso:'#3b82f6',mini:'#10b981'};
-    var tipoBg={meia:'#ede9fe',liso:'#dbeafe',mini:'#d1fae5'};
-    var tipoLC=o.tipo.toLowerCase();
-
-    var ch=document.createElement('div');
-    ch.className='os-header';
+    var tc=tipoCor(l.tipo);
     var tipoDiv=document.createElement('div');
-    tipoDiv.className='os-tipo';
-    tipoDiv.style.cssText='padding:16px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:1px;min-width:64px;text-align:center;border-right:1px solid var(--border);background:'+(tipoBg[tipoLC]||'var(--bg)')+';color:'+(tipoCores[tipoLC]||'var(--text2)');
-    tipoDiv.textContent=o.tipo;
-    ch.appendChild(tipoDiv);
+    tipoDiv.className='hoje-tipo';
+    tipoDiv.style.cssText='padding:8px 12px;border-radius:8px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:1px;text-align:center;min-width:60px;background:'+tc.bg+';color:'+tc.c;
+    tipoDiv.textContent=l.tipo.toUpperCase();
+    card.appendChild(tipoDiv);
 
-    var infoDiv=document.createElement('div');
-    infoDiv.className='os-info';
-    infoDiv.style.flex='1;padding:12px 16px';
-    infoDiv.style.padding='12px 16px';
-    infoDiv.innerHTML='<div class="os-modelo">'+o.modelo+(o.ref?' <span style="font-size:12px;color:var(--text2)">('+o.ref+')</span>':'')+'</div>'+
-      '<div class="os-cor">🎨 '+o.cor+'</div>'+
-      '<div style="font-size:12px;color:var(--text2);margin-top:4px">'+o.cliente+' &nbsp;·&nbsp; <span style="color:'+(o.atrasado?'#ef4444':o.urgente?'#f59e0b':'var(--text2)')+';font-weight:700">'+(o.atrasado?'🔴 '+Math.abs(o.dias)+'d atrasado':o.dias===0?'⚡ Hoje!':o.dias<99?'📅 '+o.dias+'d para entregar':'Sem prazo')+'</span></div>';
-    ch.appendChild(infoDiv);
-    card.appendChild(ch);
+    var info=document.createElement('div');
+    info.className='hoje-info';
+    info.innerHTML=
+      '<div class="hoje-cor">'+l.corNome+'</div>'+
+      '<div class="hoje-prod">'+l.prodNome+(l.prodRef?' ('+l.prodRef+')':'')+'</div>'+
+      '<div class="hoje-meta">'+l.kgPorCor.toFixed(2)+'kg &nbsp;·&nbsp; Ped. '+l.pedNum+' — '+l.cliente+'</div>'+
+      '<div style="font-size:12px;font-weight:700;color:'+(l.atrasado?'#ef4444':l.urgente?'#f59e0b':'var(--t3)')+'">'+
+        (l.atrasado?'🔴 '+Math.abs(l.dias)+'d atrasado':l.dias===0?'⚡ Entrega hoje!':l.dias<999?'📅 '+l.dias+'d para entregar':'')+'</div>';
+    card.appendChild(info);
 
-    // Meta
-    var meta=document.createElement('div');
-    meta.className='os-meta';
-    meta.style.cssText='display:flex;gap:0;padding:0;border-bottom:1px solid var(--border);';
-    [
-      {v:o.pct,l:'pacotes',big:true},
-      {v:o.kg.toFixed(2)+'kg',l:'a produzir'},
-      {v:o.unid+' pçs',l:'por pacote'},
-      {v:(o.pct*o.unid)+'',l:'peças total'},
-    ].forEach(function(k,i){
-      var kpi=document.createElement('div');
-      kpi.style.cssText='text-align:center;flex:1;padding:12px 8px'+(i<3?';border-right:1px solid var(--border)':'');
-      kpi.innerHTML='<div style="font-size:'+(k.big?'28':'18')+'px;font-weight:900;color:'+(k.big?'var(--purple)':'var(--text)')+'">'+k.v+'</div><div style="font-size:10px;color:var(--text2);text-transform:uppercase;font-weight:700;margin-top:2px">'+k.l+'</div>';
-      meta.appendChild(kpi);
-    });
-    card.appendChild(meta);
+    // Status + Action
+    var right=document.createElement('div');
+    right.style.cssText='display:flex;flex-direction:column;gap:6px;align-items:flex-end;flex-shrink:0';
 
-    // Ação
-    var actions=document.createElement('div');
-    actions.style.cssText='padding:12px 16px';
-    var btn=document.createElement('button');
-    btn.className='btn bpurple';
-    btn.style.cssText='width:100%;padding:12px;font-size:14px';
-    btn.textContent='🏭 Lançar Produção';
-    btn.onclick=(function(o2){return function(){
-      // Pre-fill modal with this order's data
-      document.getElementById('mq-tipo').value=o2.tipo.toLowerCase();
-      onMqTipo();
-      setTimeout(function(){
-        var cSel=document.getElementById('mq-cor');
-        for(var i=0;i<cSel.options.length;i++){
-          if(cSel.options[i].value===o2.corId){cSel.selectedIndex=i;break;}
-        }
-      },50);
-      document.getElementById('mq-data').value=hoje();
-      abrirMaquina();
-    };})(o);
-    actions.appendChild(btn);
-    card.appendChild(actions);
-
-    lista.appendChild(card);
+    if(l.status==='aguardando'){
+      var b=document.createElement('button');
+      b.className='btn bp';b.style.whiteSpace='nowrap';
+      b.textContent='▶ Colocar na Máquina';
+      b.onclick=(function(lid){return function(){setLoteStatus(lid,'maquina');R('hoje');};})(l.id);
+      right.appendChild(b);
+    } else {
+      var badge=document.createElement('div');
+      badge.style.cssText='background:#faf5ff;border:1.5px solid var(--purple);color:var(--purple);padding:6px 12px;border-radius:8px;font-size:12px;font-weight:800;text-align:center';
+      badge.textContent='🔴 RODANDO';
+      right.appendChild(badge);
+      var b2=document.createElement('button');
+      b2.className='btn bp';b2.style.fontSize='12px';
+      b2.textContent='🏭 Lançar Produção';
+      b2.onclick=(function(l2){return function(){
+        document.getElementById('mq-tipo').value=l2.tipo;
+        maqFillCores();
+        setTimeout(function(){
+          var s=document.getElementById('mq-cor');
+          for(var i=0;i<s.options.length;i++){if(s.options[i].value===l2.corId){s.selectedIndex=i;break;}}
+          document.getElementById('mq-kg').value=l2.kgPorCor.toFixed(2);
+          maqPrev();
+        },30);
+        document.getElementById('mq-data').value=hoje();
+        document.getElementById('ov-maq').classList.add('on');
+      };})(l);
+      right.appendChild(b2);
+      var b3=document.createElement('button');
+      b3.className='btn bg2';b3.style.fontSize='11px';
+      b3.textContent='⏸ Pausar';
+      b3.onclick=(function(lid){return function(){setLoteStatus(lid,'aguardando');R('hoje');};})(l.id);
+      right.appendChild(b3);
+    }
+    card.appendChild(right);
+    wrap.appendChild(card);
   });
 }
 
-// ─────────────────────────────────────────────
-// RENDER KANBAN
-// ─────────────────────────────────────────────
-function renderKanban(){
+// ──────────────────────────────────────────────
+// KANBAN
+// ──────────────────────────────────────────────
+function rKanban(){
   var d=D();
+  var lotes=buildLotes(d);
   var board=document.getElementById('kb-board');
   board.innerHTML='';
 
-  var cols=[
-    {id:'fila',    label:'📋 Fila',             cor:'#64748b',items:[]},
-    {id:'maq',     label:'🏭 Máquina',           cor:'#8b5cf6',items:[]},
-    {id:'cru',     label:'📦 Pronto p/ Facc.',   cor:'#f59e0b',items:[]},
-    {id:'facc',    label:'🤝 Faccionista',        cor:'#ef4444',items:[]},
-    {id:'virado',  label:'✅ Pronto p/ Embalar', cor:'#3b82f6',items:[]},
-    {id:'pronto',  label:'🚚 Pronto p/ Expedir', cor:'#10b981',items:[]},
+  var COLS=[
+    {s:'aguardando',label:'📋 Aguardando',cor:'#64748b',btn:{l:'▶ Colocar na Máquina',c:'#8b5cf6',fn:function(l){setLoteStatus(l.id,'maquina');R('kanban');}}},
+    {s:'maquina',   label:'🏭 Máquina',    cor:'#8b5cf6',btn:{l:'🏭 Lançar Produção',c:'#8b5cf6',fn:function(l){prefillMaquina(l);}}},
+    {s:'cru',       label:'📦 Estoque Cru', cor:'#f59e0b',btn:{l:'🤝 Enviar Facc.',c:'#f59e0b',fn:function(l){prefillFacc(l);}}},
+    {s:'facc',      label:'🤝 Faccionista', cor:'#ef4444',btn:{l:'📦 Reg. Retorno',c:'#3b82f6',fn:function(l){prefillRetorno(l);}}},
+    {s:'virado',    label:'✅ Pronto p/ Embalar',cor:'#3b82f6',btn:{l:'📦 Embalar',c:'#10b981',fn:function(l){abrirEmbalar();}}},
+    {s:'pronto',    label:'🚚 Pronto p/ Expedir',cor:'#10b981',btn:null},
   ];
 
-  // Fila: pedidos recebidos
-  d.pedidos.filter(function(p){return p.status==='recebido';}).forEach(function(p){
-    var total=(p.itens||[]).reduce(function(s,i){return s+Number(i.total||0);},0);
-    var dias=diasAte(p.entrega);
-    cols[0].items.push({titulo:p.clienteNome,sub:(p.itens||[]).length+' item(s) · '+( p.numero||''),
-      info:'Entrega: '+fmtD(p.entrega),valor:total,dias:dias,atrasado:dias<0,urgente:dias>=0&&dias<=3,
-      btn:{l:'🏭 Iniciar',fn:function(){moverProducao(p.id,'producao');}}});
-  });
+  COLS.forEach(function(col){
+    var items=lotes.filter(function(l){return l.status===col.s;});
+    // Sort by urgency then pedido date
+    items.sort(function(a,b){
+      var pa=a.atrasado?0:a.urgente?1:2;
+      var pb=b.atrasado?0:b.urgente?1:2;
+      return pa-pb||new Date(a.entrega||'9999')-new Date(b.entrega||'9999');
+    });
 
-  // Máquina: pedidos em producao
-  d.pedidos.filter(function(p){return p.status==='producao';}).forEach(function(p){
-    var total=(p.itens||[]).reduce(function(s,i){return s+Number(i.total||0);},0);
-    var dias=diasAte(p.entrega);
-    cols[1].items.push({titulo:p.clienteNome,sub:(p.numero||''),
-      info:'Entrega: '+fmtD(p.entrega),valor:total,dias:dias,atrasado:dias<0,urgente:dias>=0&&dias<=3});
-  });
-
-  // Cru: estoque cru
-  Object.entries(d.estoque.cru||{}).filter(function(e){return Number(e[1].kg||0)>0.001;}).forEach(function(e){
-    var v=e[1];
-    cols[2].items.push({titulo:(v.tecido||'').toUpperCase()+' — '+(v.corNome||''),
-      sub:'Aguardando envio',kg:Number(v.kg||0),
-      btn:{l:'🤝 Enviar',fn:function(){abrirFacc();}}});
-  });
-
-  // Facc: envios em andamento
-  d.envios.filter(function(e){return e.status==='enviado';}).forEach(function(e){
-    var facc=d.faccionistas.find(function(f){return f.id===e.faccId;})||{nome:e.faccNome||'Facc.'};
-    var dr=diasAte(e.previsao);
-    var eid=e.id;
-    cols[3].items.push({titulo:facc.nome,
-      sub:(e.tipo||'').toUpperCase()+(e.corNome?' — '+e.corNome:''),
-      info:'Retorno: '+fmtD(e.previsao)+(dr<0?' 🔴':dr===0?' ⚡':' ('+dr+'d)'),
-      kg:e.kg,atrasado:dr<0,urgente:dr>=0&&dr<=1,
-      btn:{l:'📦 Retorno',fn:(function(id){return function(){abrirRetornoPorId(id);};})(eid)}});
-  });
-
-  // Virado: estoque virado
-  Object.entries(d.estoque.virado||{}).filter(function(e){return Number(e[1].kg||0)>0.001;}).forEach(function(e){
-    var v=e[1];
-    var rend=1000;var pcts=Math.floor(Number(v.kg||0)*rend/12);
-    cols[4].items.push({titulo:(v.tecido||'').toUpperCase()+' — '+(v.corNome||''),
-      sub:'Pronto para embalar',
-      info:Number(v.kg||0).toFixed(2)+'kg ≈ '+pcts+' pacotes',
-      kg:v.kg,
-      btn:{l:'📦 Embalar',fn:function(){abrirEmbalar();}}});
-  });
-
-  // Pronto: pedidos prontos
-  d.pedidos.filter(function(p){return p.status==='pronto';}).forEach(function(p){
-    var total=(p.itens||[]).reduce(function(s,i){return s+Number(i.total||0);},0);
-    var pid=p.id;
-    cols[5].items.push({titulo:p.clienteNome,sub:p.numero||'',
-      info:'Pronto para expedir',valor:total,
-      btn:{l:'🚚 Expedir',fn:(function(id){return function(){expedirPedido(id);};})(pid)}});
-  });
-
-  cols.forEach(function(col){
     var kc=document.createElement('div');kc.className='kc';
     var head=document.createElement('div');head.className='kc-head';
     head.style.borderLeft='3px solid '+col.cor;
     head.innerHTML='<span style="color:'+col.cor+'">'+col.label+'</span>'+
-      '<span style="background:'+col.cor+'22;color:'+col.cor+';padding:1px 7px;border-radius:20px;font-size:11px">'+col.items.length+'</span>';
+      '<span style="background:'+col.cor+'22;color:'+col.cor+';padding:2px 8px;border-radius:20px;font-size:11px">'+items.length+'</span>';
     kc.appendChild(head);
+
     var body=document.createElement('div');body.className='kc-body';
-    if(!col.items.length){
+
+    if(!items.length){
       var empty=document.createElement('div');
-      empty.style.cssText='text-align:center;padding:16px;color:var(--text3);font-size:12px';
+      empty.style.cssText='text-align:center;padding:16px;color:var(--t3);font-size:12px';
       empty.textContent='Vazio';
       body.appendChild(empty);
     } else {
-      col.items.forEach(function(item){
-        var kk=document.createElement('div');kk.className='kk';
-        if(item.atrasado)kk.style.borderLeft='3px solid #ef4444';
-        else if(item.urgente)kk.style.borderLeft='3px solid #f59e0b';
-        kk.innerHTML='<div class="kk-title">'+item.titulo+'</div>'+
-          '<div class="kk-sub">'+item.sub+'</div>'+
-          (item.info?'<div style="font-size:11px;color:var(--text2);margin-top:2px">'+item.info+'</div>':'')+
-          (item.kg?'<div class="kk-kg">'+Number(item.kg).toFixed(2)+'kg</div>':'')+
-          (item.valor?'<div style="font-size:12px;font-weight:700;color:var(--green);margin:3px 0">R$ '+Number(item.valor).toFixed(2)+'</div>':'');
-        if(item.btn){
-          var b=document.createElement('button');
-          b.className='kk-btn';
-          b.style.background=col.cor;b.style.color='#fff';
-          b.textContent=item.btn.l;
-          b.onclick=item.btn.fn;
-          kk.appendChild(b);
+      items.forEach(function(l){
+        var tc=tipoCor(l.tipo);
+        var card=document.createElement('div');
+        card.className='lcard'+(l.atrasado?' atrasado':l.urgente?' urgente':'');
+
+        // Tipo badge
+        var tipoSpan=document.createElement('div');
+        tipoSpan.className='lc-tipo';
+        tipoSpan.style.cssText='font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;color:'+tc.c;
+        tipoSpan.textContent=l.tipo.toUpperCase();
+        card.appendChild(tipoSpan);
+
+        // Cor (principal)
+        var corDiv=document.createElement('div');
+        corDiv.className='lc-cor';
+        corDiv.textContent=l.corNome;
+        card.appendChild(corDiv);
+
+        // Produto
+        var prodDiv=document.createElement('div');
+        prodDiv.className='lc-prod';
+        prodDiv.textContent=l.prodNome+(l.prodRef?' ('+l.prodRef+')':'');
+        card.appendChild(prodDiv);
+
+        // Pedido + kg
+        var pedDiv=document.createElement('div');
+        pedDiv.className='lc-ped';
+        pedDiv.innerHTML=l.pedNum+' · '+l.kgPorCor.toFixed(2)+'kg'+(l.atrasado?' <span style="color:#ef4444;font-weight:700">🔴 atrasado</span>':l.urgente?' <span style="color:#f59e0b;font-weight:700">⚡'+l.dias+'d</span>':'');
+        card.appendChild(pedDiv);
+
+        // Button
+        if(col.btn){
+          var btn=document.createElement('button');
+          btn.className='lc-btn';
+          btn.style.background=col.btn.c;btn.style.color='#fff';
+          btn.textContent=col.btn.l;
+          btn.onclick=(function(lote,fn){return function(){fn(lote);};})(l,col.btn.fn);
+          card.appendChild(btn);
         }
-        body.appendChild(kk);
+        body.appendChild(card);
       });
     }
     kc.appendChild(body);
@@ -621,66 +554,46 @@ function renderKanban(){
   });
 }
 
-// ─────────────────────────────────────────────
-// RENDER AGENDA
-// ─────────────────────────────────────────────
-function renderAgenda(){
-  var d=D();
-  var wrap=document.getElementById('agenda-wrap');
-  var peds=d.pedidos.filter(function(p){return['recebido','producao','pronto','expedido'].includes(p.status)&&(p.entrega||p.previsaoEntrega);});
-  peds.sort(function(a,b){return new Date(a.entrega||a.previsaoEntrega)-new Date(b.entrega||b.previsaoEntrega);});
-  if(!peds.length){wrap.innerHTML='<div style="text-align:center;padding:40px;color:var(--text2)">Nenhuma entrega agendada</div>';return;}
-  var semanas={};
+// ──────────────────────────────────────────────
+// AGENDA
+// ──────────────────────────────────────────────
+function rAgenda(){
+  var d=D();var wrap=document.getElementById('agenda-wrap');
+  var peds=d.pedidos.filter(function(p){return['recebido','producao','pronto','expedido'].includes(p.status)&&p.entrega;});
+  peds.sort(function(a,b){return new Date(a.entrega)-new Date(b.entrega);});
+  if(!peds.length){wrap.innerHTML='<div style="text-align:center;padding:40px;color:var(--t2)">Nenhuma entrega agendada</div>';return;}
+  var sem={};
   peds.forEach(function(p){
-    var dt=new Date((p.entrega||p.previsaoEntrega)+'T00:00');
-    var sem=new Date(dt);sem.setDate(sem.getDate()-((sem.getDay()||7)-1));
-    var key=sem.toISOString().split('T')[0];
-    if(!semanas[key])semanas[key]={inicio:sem,peds:[]};
-    semanas[key].peds.push(p);
+    var dt=new Date(p.entrega+'T00:00');
+    var s2=new Date(dt);s2.setDate(s2.getDate()-((s2.getDay()||7)-1));
+    var k=s2.toISOString().split('T')[0];
+    if(!sem[k])sem[k]={ini:s2,peds:[]};sem[k].peds.push(p);
   });
-  wrap.innerHTML=Object.keys(semanas).sort().map(function(key){
-    var s=semanas[key];
-    var fim=new Date(s.inicio);fim.setDate(fim.getDate()+6);
-    return '<div class="ag-week">'+
-      '<div class="ag-week-hdr"><span>Semana '+s.inicio.toLocaleDateString('pt-BR',{day:'numeric',month:'short'})+' – '+fim.toLocaleDateString('pt-BR',{day:'numeric',month:'short'})+'</span><span>'+s.peds.length+' pedido(s)</span></div>'+
-      s.peds.map(function(p){
-        var dias=diasAte(p.entrega||p.previsaoEntrega);
-        var cor=dias<0?'#ef4444':dias<=3?'#f59e0b':'#10b981';
+  wrap.innerHTML=Object.keys(sem).sort().map(function(k){
+    var s2=sem[k];var fim=new Date(s2.ini);fim.setDate(fim.getDate()+6);
+    return '<div style="margin-bottom:20px"><div class="ag-hdr"><span>'+s2.ini.toLocaleDateString('pt-BR',{day:'numeric',month:'short'})+' – '+fim.toLocaleDateString('pt-BR',{day:'numeric',month:'short'})+'</span><span>'+s2.peds.length+' pedido(s)</span></div>'+
+      s2.peds.map(function(p){
+        var dias=diasAte(p.entrega);var cor=dias<0?'#ef4444':dias<=3?'#f59e0b':'#10b981';
         var total=(p.itens||[]).reduce(function(s,i){return s+Number(i.total||0);},0);
-        var isPrevisao=!p.entrega&&p.previsaoEntrega;
-        return '<div class="ag-item">'+
-          '<div style="width:8px;height:8px;border-radius:50%;background:'+cor+';flex-shrink:0"></div>'+
-          '<div style="flex:1">'+
-            '<div style="font-weight:700">'+p.clienteNome+'</div>'+
-            '<div style="font-size:12px;color:var(--text2)">'+
-              (isPrevisao?'Previsão: ':'Entrega: ')+
-              new Date((p.entrega||p.previsaoEntrega)+'T00:00').toLocaleDateString('pt-BR',{weekday:'short',day:'numeric',month:'long'})+
-              (isPrevisao?' <span style="font-size:10px;color:var(--orange)">(automática)</span>':'')+
-            '</div>'+
-          '</div>'+
-          '<div style="text-align:right">'+
-            '<div style="font-weight:800;color:var(--purple)">R$ '+total.toFixed(2)+'</div>'+
-            '<div style="font-size:11px;font-weight:700;color:'+cor+'">'+(dias<0?Math.abs(dias)+'d atraso':dias===0?'Hoje!':dias+'d')+'</div>'+
-          '</div>'+
-          '<span style="background:'+cor+'22;color:'+cor+';padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700">'+p.status+'</span>'+
-        '</div>';
-      }).join('')+
-    '</div>';
+        return '<div class="ag-item"><div style="width:8px;height:8px;border-radius:50%;background:'+cor+';flex-shrink:0"></div>'+
+          '<div style="flex:1"><div style="font-weight:700">'+p.clienteNome+'</div><div style="font-size:12px;color:var(--t2)">'+new Date(p.entrega+'T00:00').toLocaleDateString('pt-BR',{weekday:'short',day:'numeric',month:'long'})+'</div></div>'+
+          '<div style="text-align:right"><div style="font-weight:800;color:var(--purple)">R$ '+total.toFixed(2)+'</div><div style="font-size:11px;font-weight:700;color:'+cor+'">'+(dias<0?Math.abs(dias)+'d atraso':dias===0?'Hoje!':dias+'d')+'</div></div>'+
+          '<span style="background:'+cor+'22;color:'+cor+';padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700">'+p.status+'</span></div>';
+      }).join('')+'</div>';
   }).join('');
 }
 
-// ─────────────────────────────────────────────
-// RENDER CAPACIDADE
-// ─────────────────────────────────────────────
-function renderCapacidade(){
-  var d=D();var cfg=getCfg();var cap=getCap(cfg);
+// ──────────────────────────────────────────────
+// CAPACIDADE
+// ──────────────────────────────────────────────
+function rCap(){
+  var d=D();var cap=getCap();var cfg=D().cfg;
   var fila={meia:0,liso:0,mini:0};
   d.pedidos.filter(function(p){return['recebido','producao'].includes(p.status);}).forEach(function(p){
     (p.itens||[]).forEach(function(it){
       var prod=d.produtos.find(function(x){return x.id===it.prodId;});
       if(!prod)return;
-      var tipo=(prod.tecidoTipo||'liso').toLowerCase();
-      var rend=prod.rendimento||1000;var unid=prod['unid-pacote']||12;
+      var tipo=(prod.tecidoTipo||'liso');var rend=prod.rendimento||1000;var unid=prod['unid-pacote']||12;
       fila[tipo]=(fila[tipo]||0)+Number(it.qtd||0)*unid/rend;
     });
   });
@@ -689,179 +602,152 @@ function renderCapacidade(){
     ['liso','meia','mini'].map(function(tipo){
       var capD=cap[tipo];var kg=fila[tipo]||0;
       var dias=capD>0?Math.ceil(kg/capD):0;
-      var maq=tipo==='meia'?cfg.maqMeia:tipo==='mini'?cfg.maqMini:cfg.maqLiso;
-      var prod2=tipo==='meia'?cfg.prodMeia:tipo==='mini'?cfg.prodMini:cfg.prodLiso;
+      var maq=tipo==='meia'?+cfg.maqMeia||2:tipo==='mini'?+cfg.maqMini||4:+cfg.maqLiso||4;
+      var prod2=tipo==='meia'?+cfg.prodMeia||2:tipo==='mini'?+cfg.prodMini||1.2:+cfg.prodLiso||2.5;
       var cor=dias>14?'#ef4444':dias>7?'#f59e0b':'#10b981';
-      var pct=kg>0?Math.min(100,capD*5/Math.max(kg,capD*5)*100):100;
+      var pct=capD>0?Math.min(100,kg/(capD*14)*100):0;
       return '<div class="cap-card">'+
-        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'+
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">'+
           '<div style="font-size:15px;font-weight:800">'+(tipo==='meia'?'🧶 Meia':tipo==='mini'?'🔹 Mini':'📏 Liso')+'</div>'+
           '<div style="font-size:22px;font-weight:900;color:'+cor+'">'+(dias>0?dias+'d':'✅ Livre')+'</div>'+
         '</div>'+
         '<div class="cap-bar"><div class="cap-fill" style="width:'+pct+'%;background:'+cor+'"></div></div>'+
-        '<div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text2)">'+
-          '<span>'+maq+' máq. × '+prod2+'kg/dia = '+capD.toFixed(1)+'kg/dia</span>'+
+        '<div style="display:flex;justify-content:space-between;font-size:12px;color:var(--t2)">'+
+          '<span>'+maq+'máq × '+prod2+'kg/dia = '+capD.toFixed(1)+'kg/dia cap.</span>'+
           '<span>Fila: '+kg.toFixed(1)+'kg</span>'+
         '</div>'+
-        (dias>14?'<div style="margin-top:8px;background:#fee2e2;border-radius:6px;padding:8px 10px;font-size:12px;font-weight:700;color:#991b1b">'+
-          '💡 Ligar mais máquinas para entregar em 14 dias</div>':'')+
       '</div>';
     }).join('')+
-    '<div class="cap-card">'+
-      '<div style="font-weight:800;margin-bottom:8px">📦 Embalagem</div>'+
-      '<div style="display:flex;justify-content:space-between;font-size:13px">'+
-        '<span style="color:var(--text2)">Capacidade</span><span style="font-weight:700">'+cap.embDia+' pct/dia</span>'+
-      '</div>'+
-    '</div>';
+    '<div class="cap-card"><div style="font-weight:800;margin-bottom:6px">📦 Embalagem</div>'+
+    '<div style="font-size:13px;color:var(--t2)">Capacidade: <strong>'+cap.embDia+' pct/dia</strong></div></div>';
 }
 
-// ─────────────────────────────────────────────
-// RENDER HISTORICO
-// ─────────────────────────────────────────────
-var _histFiltro='all';
-function renderHistorico(){
+// ──────────────────────────────────────────────
+// HISTORICO
+// ──────────────────────────────────────────────
+var _hf='all';
+function rHist(){
   var d=D();
-  var filtros=[
-    {k:'all',l:'Tudo'},
-    {k:'maquina',l:'🏭 Máquina'},
-    {k:'envio_facc',l:'🤝 Facc.'},
-    {k:'retorno_facc',l:'📦 Retorno'},
-    {k:'embalagem',l:'📦 Embalar'},
-  ];
   var fEl=document.getElementById('hist-filtros');
-  if(fEl&&!fEl.children.length){
-    filtros.forEach(function(f){
-      var b=document.createElement('button');
-      b.textContent=f.l;
-      b.className='btn bgray';b.style.fontSize='12px';b.style.padding='5px 12px';
-      b.onclick=(function(fk){return function(){_histFiltro=fk;renderHistorico();};})(f.k);
-      fEl.appendChild(b);
+  if(!fEl.children.length){
+    [['all','Tudo'],['maquina','🏭 Máquina'],['envio_facc','🤝 Facc.'],['retorno_facc','📦 Retorno'],['embalagem','📦 Embalar']].forEach(function(f){
+      var b=document.createElement('button');b.className='btn bg2';b.style.cssText='font-size:12px;padding:5px 12px';
+      b.textContent=f[1];b.onclick=(function(fk){return function(){_hf=fk;rHist();};})(f[0]);fEl.appendChild(b);
     });
   }
-
-  var prods=d.producoes.filter(function(p){
-    return _histFiltro==='all'||p.etapa===_histFiltro;
-  }).sort(function(a,b){return new Date(b.data||b.criadoEm)-new Date(a.data||a.criadoEm);}).slice(0,60);
-
   var labels={maquina:'🏭 Máquina',embalagem:'📦 Embalar',envio_facc:'🤝 Envio Facc.',retorno_facc:'📦 Retorno Facc.'};
-  var cors={maquina:'#8b5cf6',embalagem:'#10b981',envio_facc:'#f59e0b',retorno_facc:'#3b82f6'};
-
-  var body=document.getElementById('hist-body');
-  body.innerHTML=prods.map(function(p){
-    var cor=cors[p.etapa]||'#94a3b8';
-    return '<tr style="border-bottom:1px solid var(--border)">'+
-      '<td style="padding:10px 14px;color:var(--text2);font-size:12px">'+(p.data||'—')+'</td>'+
-      '<td style="padding:10px 14px"><span style="background:'+cor+'22;color:'+cor+';padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700">'+(labels[p.etapa]||p.etapa)+'</span></td>'+
-      '<td style="padding:10px 14px;font-weight:600">'+(p.prodNome||p.corNome||p.tecido||'—')+(p.corNome&&p.prodNome?' — '+p.corNome:'')+'</td>'+
-      '<td style="padding:10px 14px;text-align:right;font-weight:700;color:'+cor+'">'+(p.kg?p.kg.toFixed(2)+'kg':p.pacotes?p.pacotes+' pct':'—')+'</td>'+
-    '</tr>';
+  var cors2={maquina:'#8b5cf6',embalagem:'#10b981',envio_facc:'#f59e0b',retorno_facc:'#3b82f6'};
+  var prods=d.producoes.filter(function(p){return _hf==='all'||p.etapa===_hf;})
+    .sort(function(a,b){return new Date(b.data||b.criadoEm)-new Date(a.data||a.criadoEm);}).slice(0,60);
+  document.getElementById('hist-body').innerHTML=prods.map(function(p){
+    var cor=cors2[p.etapa]||'#94a3b8';
+    return '<tr><td style="color:var(--t2);font-size:12px">'+(p.data||'—')+'</td>'+
+      '<td><span style="background:'+cor+'22;color:'+cor+';padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700">'+(labels[p.etapa]||p.etapa)+'</span></td>'+
+      '<td style="font-weight:600">'+(p.prodNome||p.corNome||p.tecido||'—')+(p.corNome&&p.prodNome?' — '+p.corNome:'')+'</td>'+
+      '<td style="text-align:right;font-weight:700;color:'+cor+'">'+(p.kg?p.kg.toFixed(2)+'kg':p.pacotes?p.pacotes+' pct':'—')+'</td></tr>';
   }).join('');
 }
 
-// ─────────────────────────────────────────────
-// ABA SYSTEM
-// ─────────────────────────────────────────────
-var _aba='hoje';
-function aba(id){
-  _aba=id;
-  document.querySelectorAll('.tab').forEach(function(t,i){t.classList.remove('on');});
-  document.querySelectorAll('.tc').forEach(function(t){t.classList.remove('on');});
-  var tabs=['hoje','kanban','agenda','capacidade','historico'];
-  var idx=tabs.indexOf(id);
-  if(idx>=0)document.querySelectorAll('.tab')[idx].classList.add('on');
-  var el=document.getElementById('tc-'+id);if(el)el.classList.add('on');
-  renderAba(id);
-}
-function renderAba(id){
-  if(id==='hoje')renderHoje();
-  else if(id==='kanban')renderKanban();
-  else if(id==='agenda')renderAgenda();
-  else if(id==='capacidade')renderCapacidade();
-  else if(id==='historico')renderHistorico();
-}
-
-// ─────────────────────────────────────────────
+// ──────────────────────────────────────────────
 // MODAL — MÁQUINA
-// ─────────────────────────────────────────────
-function abrirMaquina(){
-  var d=D();
-  onMqTipo();
-  if(!document.getElementById('mq-data').value) document.getElementById('mq-data').value=hoje();
-  document.getElementById('ov-maq').classList.add('on');
-}
-function onMqTipo(){
+// ──────────────────────────────────────────────
+function maqFillCores(){
   var d=D();var tipo=document.getElementById('mq-tipo').value;
   var sel=document.getElementById('mq-cor');
   sel.innerHTML='<option value="">— Selecionar cor —</option>';
   d.cores.forEach(function(c){var o=document.createElement('option');o.value=c.id;o.textContent=c.nome;sel.appendChild(o);});
-  // Show available cru stock
-  calcMaqPrev();
 }
-function calcMaqPrev(){
-  var d=D();var tipo=document.getElementById('mq-tipo').value;
+function maqPrev(){
   var kg=parseFloat(document.getElementById('mq-kg').value||0);
   var prev=document.getElementById('mq-prev');
   if(kg<=0){prev.style.display='none';return;}
-  var cap=getCap();
-  var capD=cap[tipo]||cap.liso;
-  var rend=1000;
-  var pcts=Math.round(kg*rend/12);
-  prev.style.display='block';
-  prev.innerHTML='📊 <strong>'+kg.toFixed(2)+'kg</strong> = ~'+pcts+' pacotes &nbsp;·&nbsp; Cap. máquina: '+capD.toFixed(1)+'kg/dia';
+  var rend=1000;var pcts=Math.round(kg*rend/12);
+  prev.style.display='block';prev.innerHTML='<strong>'+kg.toFixed(2)+'kg</strong> ≈ '+pcts+' pacotes equivalentes';
+}
+function abrirMaquina(){
+  maqFillCores();document.getElementById('mq-data').value=hoje();
+  document.getElementById('mq-kg').value='';document.getElementById('mq-obs').value='';
+  document.getElementById('mq-prev').style.display='none';
+  document.getElementById('ov-maq').classList.add('on');
+}
+function prefillMaquina(l){
+  document.getElementById('mq-tipo').value=l.tipo;maqFillCores();
+  setTimeout(function(){
+    var s=document.getElementById('mq-cor');
+    for(var i=0;i<s.options.length;i++){if(s.options[i].value===l.corId){s.selectedIndex=i;break;}}
+    document.getElementById('mq-kg').value=l.kgPorCor.toFixed(2);maqPrev();
+  },20);
+  document.getElementById('mq-data').value=hoje();
+  document.getElementById('ov-maq').classList.add('on');
 }
 function salvarMaquina(){
   var tipo=document.getElementById('mq-tipo').value;
   var corId=document.getElementById('mq-cor').value;
   var kg=parseFloat(document.getElementById('mq-kg').value||0);
   var data=document.getElementById('mq-data').value;
-  if(!kg||kg<=0){alert('Informe os kg produzidos!');return;}
+  if(!kg||kg<=0){alert('Informe os kg!');return;}
   if(!data){alert('Informe a data!');return;}
   var d=D();
-  var cor=d.cores.find(function(c){return c.id===corId;})||{nome:corId||'sem cor'};
+  var cor=d.cores.find(function(c){return c.id===corId;})||{nome:corId||'Padrão'};
   // Add to producoes
-  d.producoes.push({id:'p_'+Date.now(),etapa:'maquina',tecido:tipo,corId:corId,corNome:cor.nome,kg:kg,data:data,obs:document.getElementById('mq-obs').value||'',criadoEm:new Date().toLocaleString('pt-BR')});
+  d.producoes.push({id:'p_'+Date.now(),etapa:'maquina',tecido:tipo,corId:corId,corNome:cor.nome,kg:kg,data:data,obs:document.getElementById('mq-obs').value||'',criadoEm:new Date().toLocaleString()});
   // Add to estoque cru
-  var ck=cruKey(tipo,corId);
+  var ck=tipo+'_'+corId;
   if(!d.estoque.cru[ck])d.estoque.cru[ck]={tecido:tipo,corId:corId,corNome:cor.nome,kg:0};
   d.estoque.cru[ck].kg=Number(d.estoque.cru[ck].kg||0)+kg;
-  // Update pedidos in producao status
+  // Update lote status: find matching lote aguardando or maquina with this tipo+cor
+  var lotes=buildLotes(d);
+  var match=lotes.find(function(l){return l.tipo===tipo&&l.corId===corId&&['aguardando','maquina'].includes(l.status);});
+  if(match){d.lotes[match.id]='cru';}
+  // Move pedidos to producao
   d.pedidos.filter(function(p){return p.status==='recebido';}).forEach(function(p){p.status='producao';});
-  recalcPrevisoes(d);
-  saveAll(d);
-  fechar('maq');
-  renderAba(_aba);renderAba('kanban');
-  alert('✅ '+kg.toFixed(2)+'kg de '+tipo.toUpperCase()+' '+cor.nome+' lançados no estoque cru!');
+  saveD(d);X('maq');R(_aba);
+  alert('✅ '+kg.toFixed(2)+'kg de '+cor.nome+' ('+tipo+') lançados no estoque cru!');
 }
 
-// ─────────────────────────────────────────────
+// ──────────────────────────────────────────────
 // MODAL — FACCIONISTA
-// ─────────────────────────────────────────────
-function abrirFacc(){
-  var d=D();
-  var sel=document.getElementById('fc-facc');
-  sel.innerHTML='<option value="">— Selecionar —</option>';
-  if(!d.faccionistas.length){
-    sel.innerHTML+='<option value="facc1">Faccionista 1</option><option value="facc2">Faccionista 2</option><option value="facc3">Faccionista 3</option>';
-  } else {
-    d.faccionistas.forEach(function(f){var o=document.createElement('option');o.value=f.id;o.textContent=f.nome;sel.appendChild(o);});
-  }
-  onFcTipo();
-  document.getElementById('fc-data').value=hoje();
-  var ret=new Date();ret.setDate(ret.getDate()+getCfg().faccDias);
-  document.getElementById('fc-prev').value=ret.toISOString().split('T')[0];
-  document.getElementById('fc-kg').value='';
-  document.getElementById('fc-frete').value='0';
-  document.getElementById('ov-facc').classList.add('on');
-}
-function onFcTipo(){
+// ──────────────────────────────────────────────
+function faccFillCores(){
   var d=D();var tipo=document.getElementById('fc-tipo').value;
   var sel=document.getElementById('fc-cor');
   sel.innerHTML='<option value="">— Selecionar cor —</option>';
   d.cores.forEach(function(c){var o=document.createElement('option');o.value=c.id;o.textContent=c.nome;sel.appendChild(o);});
-  // Show cru stock info
-  var info=document.getElementById('fc-estoque-info');
-  var total=Object.entries(d.estoque.cru||{}).filter(function(e){return e[0].startsWith(tipo);}).reduce(function(s,e){return s+Number(e[1].kg||0);},0);
-  info.textContent=total>0?'Disponível no estoque cru: '+total.toFixed(2)+'kg de '+tipo:'Estoque cru de '+tipo+': 0kg';
+  faccInfo();
+}
+function faccInfo(){
+  var d=D();var tipo=document.getElementById('fc-tipo').value;var corId=document.getElementById('fc-cor').value;
+  var info=document.getElementById('fc-info');
+  if(!corId){info.style.display='none';return;}
+  var ck=tipo+'_'+corId;var kg=Number((d.estoque.cru[ck]||{}).kg||0);
+  info.style.display='block';
+  info.innerHTML='Disponível no estoque cru: <strong>'+kg.toFixed(2)+'kg</strong>';
+  if(kg>0)document.getElementById('fc-kg').value=kg.toFixed(2);
+}
+function abrirFacc(){
+  var d=D();var sel=document.getElementById('fc-facc');
+  sel.innerHTML='<option value="">— Selecionar —</option>';
+  if(!d.faccionistas.length){
+    ['Faccionista 1','Faccionista 2','Faccionista 3'].forEach(function(n,i){var o=document.createElement('option');o.value='facc'+(i+1);o.textContent=n;sel.appendChild(o);});
+  } else {
+    d.faccionistas.forEach(function(f){var o=document.createElement('option');o.value=f.id;o.textContent=f.nome;sel.appendChild(o);});
+  }
+  faccFillCores();document.getElementById('fc-data').value=hoje();
+  var ret=new Date();ret.setDate(ret.getDate()+getCap().faccDias);
+  document.getElementById('fc-prev').value=ret.toISOString().split('T')[0];
+  document.getElementById('fc-kg').value='';document.getElementById('fc-frete').value='0';
+  document.getElementById('ov-facc').classList.add('on');
+}
+function prefillFacc(l){
+  abrirFacc();
+  setTimeout(function(){
+    document.getElementById('fc-tipo').value=l.tipo;faccFillCores();
+    setTimeout(function(){
+      var s=document.getElementById('fc-cor');
+      for(var i=0;i<s.options.length;i++){if(s.options[i].value===l.corId){s.selectedIndex=i;break;}}
+      faccInfo();
+    },20);
+  },20);
 }
 function salvarFacc(){
   var faccId=document.getElementById('fc-facc').value||'facc1';
@@ -876,203 +762,176 @@ function salvarFacc(){
   var cor=d.cores.find(function(c){return c.id===corId;})||{nome:corId||'—'};
   var facc=d.faccionistas.find(function(f){return f.id===faccId;})||{nome:faccId};
   var frete=parseFloat(document.getElementById('fc-frete').value||0);
-  d.envios.push({id:'env_'+Date.now(),faccId:faccId,faccNome:facc.nome,tipo:tipo,corId:corId,corNome:cor.nome,kg:kg,valor:frete,frete:frete,dataEnvio:data,previsao:prev,status:'enviado',pago:false,criadoEm:new Date().toLocaleString('pt-BR')});
-  d.producoes.push({id:'ef_'+Date.now(),etapa:'envio_facc',tecido:tipo,corId:corId,corNome:cor.nome,kg:kg,data:data,criadoEm:new Date().toLocaleString('pt-BR')});
+  d.envios.push({id:'env_'+Date.now(),faccId:faccId,faccNome:facc.nome,tipo:tipo,corId:corId,corNome:cor.nome,kg:kg,valor:frete,frete:frete,dataEnvio:data,previsao:prev,status:'enviado',pago:false,criadoEm:new Date().toLocaleString()});
+  d.producoes.push({id:'ef_'+Date.now(),etapa:'envio_facc',tecido:tipo,corId:corId,corNome:cor.nome,kg:kg,data:data,criadoEm:new Date().toLocaleString()});
   // Remove from cru
-  var ck=cruKey(tipo,corId);
+  var ck=tipo+'_'+corId;
   if(d.estoque.cru[ck]){d.estoque.cru[ck].kg=Math.max(0,Number(d.estoque.cru[ck].kg||0)-kg);if(d.estoque.cru[ck].kg<0.001)delete d.estoque.cru[ck];}
-  saveAll(d);
-  fechar('facc');
-  renderAba(_aba);
-  alert('✅ '+kg.toFixed(2)+'kg enviados! Retorno previsto: '+fmtD(prev));
+  // Update lote status
+  var lotes=buildLotes(d);
+  var match=lotes.find(function(l){return l.tipo===tipo&&l.corId===corId&&l.status==='cru';});
+  if(match){d.lotes[match.id]='facc';}
+  saveD(d);X('facc');R(_aba);
+  alert('✅ Enviado! Retorno previsto: '+fmtD(prev));
 }
 
-// ─────────────────────────────────────────────
+// ──────────────────────────────────────────────
 // MODAL — RETORNO
-// ─────────────────────────────────────────────
-function abrirRetornoLista(){
-  var d=D();
-  var emAndamento=d.envios.filter(function(e){return e.status==='enviado';});
-  if(!emAndamento.length){alert('Nenhum lote no faccionista no momento.');return;}
-  var sel=document.getElementById('ret-lote');
-  sel.innerHTML='';
-  emAndamento.forEach(function(e){
-    var facc=d.faccionistas.find(function(f){return f.id===e.faccId;})||{nome:e.faccNome||e.faccId};
-    var o=document.createElement('option');o.value=e.id;
-    o.textContent=facc.nome+' — '+(e.tipo||'').toUpperCase()+(e.corNome?' '+e.corNome:'')+' — '+e.kg+'kg — Prev. '+fmtD(e.previsao);
-    sel.appendChild(o);
-  });
-  onRetLote();
-  document.getElementById('ret-data').value=hoje();
-  document.getElementById('ret-kg').value='';
-  document.getElementById('ov-ret').classList.add('on');
-}
-function abrirRetornoPorId(envId){
-  var d=D();
-  var emAndamento=d.envios.filter(function(e){return e.status==='enviado';});
-  if(!emAndamento.length)return;
-  var sel=document.getElementById('ret-lote');
-  sel.innerHTML='';
-  emAndamento.forEach(function(e){
-    var facc=d.faccionistas.find(function(f){return f.id===e.faccId;})||{nome:e.faccNome||e.faccId};
-    var o=document.createElement('option');o.value=e.id;
-    o.textContent=facc.nome+' — '+(e.tipo||'').toUpperCase()+(e.corNome?' '+e.corNome:'')+' — '+e.kg+'kg';
-    if(e.id===envId)o.selected=true;
-    sel.appendChild(o);
-  });
-  onRetLote();
-  document.getElementById('ret-data').value=hoje();
-  document.getElementById('ret-kg').value='';
-  document.getElementById('ov-ret').classList.add('on');
-}
-function onRetLote(){
-  var d=D();var sel=document.getElementById('ret-lote');var envId=sel.value;
+// ──────────────────────────────────────────────
+function retInfo(){
+  var d=D();var sel=document.getElementById('ret-sel');var envId=sel.value;
   var env=d.envios.find(function(e){return e.id===envId;});
   var info=document.getElementById('ret-info');
-  if(env){
-    var facc=d.faccionistas.find(function(f){return f.id===env.faccId;})||{nome:env.faccNome||'—'};
-    info.innerHTML='<strong>'+facc.nome+'</strong> &nbsp;·&nbsp; '+(env.tipo||'').toUpperCase()+' '+(env.corNome||'')+' &nbsp;·&nbsp; Enviado: '+env.kg+'kg &nbsp;·&nbsp; Prev: '+fmtD(env.previsao);
-    document.getElementById('ret-kg').value=env.kg||'';
-  }
+  if(!env){info.style.display='none';return;}
+  var facc=d.faccionistas.find(function(f){return f.id===env.faccId;})||{nome:env.faccNome||'—'};
+  info.style.display='block';
+  info.innerHTML=facc.nome+' · '+(env.tipo||'').toUpperCase()+' '+env.corNome+' · Enviado: '+env.kg+'kg · Prev: '+fmtD(env.previsao);
+  document.getElementById('ret-kg').value=env.kg||'';
+}
+function abrirRetorno(){
+  var d=D();
+  var emAnd=d.envios.filter(function(e){return e.status==='enviado';});
+  if(!emAnd.length){alert('Nenhum lote no faccionista.');return;}
+  var sel=document.getElementById('ret-sel');sel.innerHTML='';
+  emAnd.forEach(function(e){
+    var facc=d.faccionistas.find(function(f){return f.id===e.faccId;})||{nome:e.faccNome||e.faccId};
+    var o=document.createElement('option');o.value=e.id;
+    o.textContent=facc.nome+' — '+(e.tipo||'').toUpperCase()+' '+(e.corNome||'')+' — '+e.kg+'kg';
+    sel.appendChild(o);
+  });
+  retInfo();document.getElementById('ret-data').value=hoje();document.getElementById('ret-kg').value='';
+  document.getElementById('ov-ret').classList.add('on');
+}
+function prefillRetorno(l){
+  var d=D();
+  var env=d.envios.find(function(e){return e.status==='enviado'&&e.tipo===l.tipo&&e.corId===l.corId;});
+  if(!env){abrirRetorno();return;}
+  var sel=document.getElementById('ret-sel');
+  var emAnd=d.envios.filter(function(e){return e.status==='enviado';});
+  sel.innerHTML='';
+  emAnd.forEach(function(e){
+    var facc=d.faccionistas.find(function(f){return f.id===e.faccId;})||{nome:e.faccNome||e.faccId};
+    var o=document.createElement('option');o.value=e.id;o.selected=(e.id===env.id);
+    o.textContent=facc.nome+' — '+(e.tipo||'').toUpperCase()+' '+(e.corNome||'')+' — '+e.kg+'kg';
+    sel.appendChild(o);
+  });
+  retInfo();document.getElementById('ret-data').value=hoje();
+  document.getElementById('ov-ret').classList.add('on');
 }
 function salvarRetorno(){
-  var sel=document.getElementById('ret-lote');var envId=sel.value;
+  var envId=document.getElementById('ret-sel').value;
   var kg=parseFloat(document.getElementById('ret-kg').value||0);
   var data=document.getElementById('ret-data').value;
   if(!envId){alert('Selecione o lote!');return;}
   if(!kg||kg<=0){alert('Informe os kg!');return;}
   if(!data){alert('Informe a data!');return;}
   var d=D();
-  var env=d.envios.find(function(e){return e.id===envId;});
-  if(!env)return;
+  var env=d.envios.find(function(e){return e.id===envId;});if(!env)return;
   env.status='devolvido';env.kgDev=kg;env.dataRetorno=data;
   // Add to virado
-  var vk=cruKey(env.tipo,env.corId);
+  var vk=env.tipo+'_'+env.corId;
   if(!d.estoque.virado[vk])d.estoque.virado[vk]={tecido:env.tipo,corId:env.corId,corNome:env.corNome,kg:0};
   d.estoque.virado[vk].kg=Number(d.estoque.virado[vk].kg||0)+kg;
-  d.producoes.push({id:'rf_'+Date.now(),etapa:'retorno_facc',tecido:env.tipo,corId:env.corId,corNome:env.corNome,kg:kg,data:data,criadoEm:new Date().toLocaleString('pt-BR')});
-  recalcPrevisoes(d);saveAll(d);
-  fechar('ret');renderAba(_aba);
-  alert('✅ '+kg.toFixed(2)+'kg retornados — agora em estoque virado, pronto para embalar!');
+  d.producoes.push({id:'rf_'+Date.now(),etapa:'retorno_facc',tecido:env.tipo,corId:env.corId,corNome:env.corNome,kg:kg,data:data,criadoEm:new Date().toLocaleString()});
+  // Update lote status
+  var lotes=buildLotes(d);
+  var match=lotes.find(function(l){return l.tipo===env.tipo&&l.corId===env.corId&&l.status==='facc';});
+  if(match){d.lotes[match.id]='virado';}
+  saveD(d);X('ret');R(_aba);
+  alert('✅ '+kg.toFixed(2)+'kg virados! Pronto para embalar.');
 }
 
-// ─────────────────────────────────────────────
+// ──────────────────────────────────────────────
 // MODAL — EMBALAR
-// ─────────────────────────────────────────────
+// ──────────────────────────────────────────────
 function abrirEmbalar(){
-  var d=D();
-  var sel=document.getElementById('emb-prod');
+  var d=D();var sel=document.getElementById('emb-prod');
   sel.innerHTML='<option value="">— Selecionar produto —</option>';
   d.produtos.forEach(function(p){var o=document.createElement('option');o.value=p.id;o.textContent=p.nome+(p.ref?' ('+p.ref+')':'');sel.appendChild(o);});
-  document.getElementById('emb-data').value=hoje();
-  document.getElementById('emb-pct').value='';
-  document.getElementById('emb-prev').style.display='none';
+  document.getElementById('emb-data').value=hoje();document.getElementById('emb-pct').value='';
+  document.getElementById('emb-info').style.display='none';
   document.getElementById('ov-emb').classList.add('on');
 }
-function onEmbProd(){calcEmbPrev();}
-function calcEmbPrev(){
-  var d=D();var prodId=document.getElementById('emb-prod').value;
-  var qtd=parseInt(document.getElementById('emb-pct').value||0);
-  var prev=document.getElementById('emb-prev');
-  if(!prodId||!qtd){prev.style.display='none';return;}
-  var prod=d.produtos.find(function(p){return p.id===prodId;});if(!prod){prev.style.display='none';return;}
-  var unid=prod['unid-pacote']||12;var rend=prod.rendimento||1000;
-  var pcs=qtd*unid;var kg=pcs/rend;
-  prev.style.display='block';
-  prev.innerHTML='📦 <strong>'+qtd+' pacotes</strong> = '+pcs+' peças = '+kg.toFixed(3)+'kg do virado';
+function embPrev(){
+  var d=D();var prodId=document.getElementById('emb-prod').value;var qtd=parseInt(document.getElementById('emb-pct').value||0);
+  var info=document.getElementById('emb-info');
+  if(!prodId||!qtd){info.style.display='none';return;}
+  var prod=d.produtos.find(function(p){return p.id===prodId;});if(!prod){info.style.display='none';return;}
+  var unid=prod['unid-pacote']||12;var rend=prod.rendimento||1000;var pcs=qtd*unid;var kg=pcs/rend;
+  info.style.display='block';
+  info.innerHTML='<strong>'+qtd+' pacotes</strong> = '+pcs+' peças = '+kg.toFixed(3)+'kg do virado';
 }
 function salvarEmbalar(){
-  var prodId=document.getElementById('emb-prod').value;
-  var qtd=parseInt(document.getElementById('emb-pct').value||0);
+  var prodId=document.getElementById('emb-prod').value;var qtd=parseInt(document.getElementById('emb-pct').value||0);
   var data=document.getElementById('emb-data').value;
   if(!prodId){alert('Selecione o produto!');return;}
   if(!qtd||qtd<=0){alert('Informe a quantidade!');return;}
   var d=D();
   var prod=d.produtos.find(function(p){return p.id===prodId;});if(!prod)return;
-  var unid=prod['unid-pacote']||12;var rend=prod.rendimento||1000;
-  var pcs=qtd*unid;var kg=pcs/rend;
-  d.producoes.push({id:'e_'+Date.now(),etapa:'embalagem',prodId:prodId,prodNome:prod.nome,pacotes:qtd,pecas:pcs,kg:kg,data:data,criadoEm:new Date().toLocaleString('pt-BR')});
+  var unid=prod['unid-pacote']||12;var rend=prod.rendimento||1000;var pcs=qtd*unid;var kg=pcs/rend;
+  d.producoes.push({id:'e_'+Date.now(),etapa:'embalagem',prodId:prodId,prodNome:prod.nome,pacotes:qtd,pecas:pcs,kg:kg,data:data,criadoEm:new Date().toLocaleString()});
   // Remove from virado
-  var tipo=(prod.tecidoTipo||'liso');
-  var kgRest=kg;
+  var tipo=(prod.tecidoTipo||'liso');var kgR=kg;
   Object.keys(d.estoque.virado||{}).filter(function(k){return k.startsWith(tipo);}).forEach(function(k){
-    if(kgRest<=0)return;
-    var disp=Number(d.estoque.virado[k].kg||0);
-    var dec=Math.min(disp,kgRest);d.estoque.virado[k].kg-=dec;kgRest-=dec;
-    if(d.estoque.virado[k].kg<0.001)delete d.estoque.virado[k];
+    if(kgR<=0)return;var disp=Number(d.estoque.virado[k].kg||0);var dec=Math.min(disp,kgR);
+    d.estoque.virado[k].kg-=dec;kgR-=dec;if(d.estoque.virado[k].kg<0.001)delete d.estoque.virado[k];
   });
   // Add to embalado
   if(!d.estoque.embalado[prodId])d.estoque.embalado[prodId]={prodId:prodId,prodNome:prod.nome,pacotes:0};
   d.estoque.embalado[prodId].pacotes=Number(d.estoque.embalado[prodId].pacotes||0)+qtd;
-  // Check if pedido is fulfilled → mark as pronto
-  checkPedidosProntos(d,prodId,qtd);
-  recalcPrevisoes(d);saveAll(d);
-  fechar('emb');renderAba(_aba);
-  alert('✅ '+qtd+' pacotes embalados e prontos!');
-}
-function checkPedidosProntos(d,prodId,novosPcts){
-  // Check if any open pedido has this product and is now fulfilled
+  // Update lote status: find virado lotes for this product's cores
+  var lotes=buildLotes(d);
+  lotes.filter(function(l){return l.prodId===prodId&&l.status==='virado';}).forEach(function(l){d.lotes[l.id]='pronto';});
+  // Check if pedido is fully embalado → pronto
   d.pedidos.filter(function(p){return['recebido','producao'].includes(p.status);}).forEach(function(ped){
-    var item=( ped.itens||[]).find(function(i){return i.prodId===prodId;});
-    if(!item)return;
-    var needed=Number(item.qtd||0);
+    var pedItem=( ped.itens||[]).find(function(i){return i.prodId===prodId;});
+    if(!pedItem)return;
+    var needed=Number(pedItem.qtd||0);
     var have=Number((d.estoque.embalado[prodId]||{}).pacotes||0);
     if(have>=needed)ped.status='pronto';
   });
+  saveD(d);X('emb');R(_aba);
+  alert('✅ '+qtd+' pacotes embalados!');
 }
 
-// ─────────────────────────────────────────────
-// ACTIONS
-// ─────────────────────────────────────────────
-function moverProducao(pedId,status){
-  var d=D();
-  var p=d.pedidos.find(function(p){return p.id===pedId;});
-  if(p){p.status=status;recalcPrevisoes(d);saveAll(d);renderAba(_aba);}
-}
-function expedirPedido(pedId){
-  if(!confirm('Marcar como expedido?'))return;
-  var d=D();
-  var p=d.pedidos.find(function(x){return x.id===pedId;});
-  if(p){p.status='expedido';saveAll(d);renderAba(_aba);}
-}
-
-// ─────────────────────────────────────────────
-// FECHAR MODAL
-// ─────────────────────────────────────────────
-function fechar(id){document.getElementById('ov-'+id).classList.remove('on');}
-
-// ─────────────────────────────────────────────
+// ──────────────────────────────────────────────
 // IMPRIMIR
-// ─────────────────────────────────────────────
+// ──────────────────────────────────────────────
 function imprimirHoje(){
-  var d=D();var ordens=buildOrdens(d);
+  var d=D();var lotes=buildLotes(d);
+  var paraHoje=lotes.filter(function(l){return['aguardando','maquina'].includes(l.status);});
+  paraHoje.sort(function(a,b){var pa=a.atrasado?0:a.urgente?1:2;var pb=b.atrasado?0:b.urgente?1:2;return pa-pb||new Date(a.entrega||'9999')-new Date(b.entrega||'9999');});
   var html='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Ordem do Dia</title>'+
-    '<style>body{font-family:Arial,sans-serif;padding:20px}h1{font-size:18px;margin-bottom:4px}.os{border:2px solid #e2e8f0;border-radius:8px;margin-bottom:12px;overflow:hidden}.os-h{display:flex;border-bottom:1px solid #e2e8f0}.tipo{padding:12px;font-size:12px;font-weight:900;text-transform:uppercase;background:#f8fafc;border-right:1px solid #e2e8f0;width:60px;text-align:center}.info{padding:12px 16px;flex:1}.nome{font-size:15px;font-weight:800}.cor{color:#8b5cf6;font-size:13px}.meta{display:flex;gap:0;border-bottom:1px solid #e2e8f0}.kpi{flex:1;padding:10px;text-align:center;border-right:1px solid #e2e8f0}.kval{font-size:22px;font-weight:900;color:#8b5cf6}.klbl{font-size:10px;color:#64748b;text-transform:uppercase}.check{border-bottom:1px solid #e2e8f0;padding:10px 16px;display:flex;gap:8px;align-items:center}.box{width:20px;height:20px;border:2px solid #94a3b8;border-radius:4px}@media print{body{padding:8px}}</style>'+
+    '<style>body{font-family:Arial,sans-serif;padding:20px;color:#1e293b}h1{font-size:18px;margin-bottom:4px}table{width:100%;border-collapse:collapse;margin-top:16px}th{padding:8px 12px;background:#f1f5f9;font-size:11px;text-align:left;font-weight:700;text-transform:uppercase;border-bottom:2px solid #e2e8f0}td{padding:11px 12px;border-bottom:1px solid #e2e8f0;font-size:14px}.tipo{font-size:10px;font-weight:900;text-transform:uppercase;display:inline-block;padding:2px 8px;border-radius:4px}.kg{font-weight:900;color:#8b5cf6}.atrasado{background:#fff5f5}.check{width:20px;height:20px;border:2px solid #94a3b8;border-radius:4px;display:inline-block}@media print{body{padding:8px}}</style>'+
     '</head><body>'+
-    '<h1>🏭 Ordem de Produção — '+new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long',year:'numeric'})+'</h1>'+
-    '<p style="color:#64748b;font-size:13px;margin-bottom:16px">ALL HAIR — '+ordens.length+' lote(s) para hoje</p>'+
-    ordens.map(function(o,i){
-      return '<div class="os">'+
-        '<div class="os-h">'+
-          '<div class="tipo">'+o.tipo+'</div>'+
-          '<div class="info"><div class="nome">'+(i+1)+'. '+o.modelo+(o.ref?' ('+o.ref+')':'')+'</div><div class="cor">🎨 '+o.cor+'</div><div style="font-size:12px;color:#64748b;margin-top:4px">'+o.cliente+(o.dias<99?' · '+(o.atrasado?'ATRASADO':o.dias+'d para entregar'):'')+'</div></div>'+
-        '</div>'+
-        '<div class="meta">'+
-          '<div class="kpi"><div class="kval">'+o.pct+'</div><div class="klbl">pacotes</div></div>'+
-          '<div class="kpi"><div class="kval">'+o.kg.toFixed(2)+'</div><div class="klbl">kg</div></div>'+
-          '<div class="kpi" style="border-right:none"><div class="kval">'+(o.pct*o.unid)+'</div><div class="klbl">peças</div></div>'+
-        '</div>'+
-        '<div class="check"><div class="box"></div><span style="font-size:12px;color:#64748b">Kg produzidos: _______</span></div>'+
-      '</div>';
-    }).join('')+
-    '</body></html>';
-  var w=window.open('','_blank','width=700,height=900');
+    '<h1>🏭 Ordem de Produção</h1>'+
+    '<p style="color:#64748b;font-size:13px;margin-bottom:4px">'+new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long',year:'numeric'})+'</p>'+
+    '<p style="color:#64748b;font-size:13px;margin-bottom:16px">ALL HAIR · '+paraHoje.length+' lote(s)</p>'+
+    '<table><thead><tr><th>#</th><th>TIPO</th><th>COR</th><th>PRODUTO</th><th>KG</th><th>PEDIDO</th><th>PRAZO</th><th>✓ Kg feito</th></tr></thead><tbody>'+
+    paraHoje.map(function(l,i){
+      return '<tr class="'+(l.atrasado?'atrasado':'')+'">'+
+        '<td style="font-weight:700;color:#64748b">'+(i+1)+'</td>'+
+        '<td><span class="tipo" style="background:'+(l.tipo==='meia'?'#ede9fe':l.tipo==='mini'?'#d1fae5':'#dbeafe')+';color:'+(l.tipo==='meia'?'#6d28d9':l.tipo==='mini'?'#065f46':'#1e40af')+'">'+l.tipo.toUpperCase()+'</span></td>'+
+        '<td style="font-weight:800;font-size:15px">'+l.corNome+'</td>'+
+        '<td>'+l.prodNome+(l.prodRef?' ('+l.prodRef+')':'')+'</td>'+
+        '<td class="kg">'+l.kgPorCor.toFixed(2)+'kg</td>'+
+        '<td style="color:#64748b">'+l.pedNum+' · '+l.cliente+'</td>'+
+        '<td style="color:'+(l.atrasado?'#ef4444':l.urgente?'#f59e0b':'#64748b')+';font-weight:700">'+(l.atrasado?'ATRASADO':l.dias<999?l.dias+'d':'—')+'</td>'+
+        '<td><span class="check"></span> _______kg</td>'+
+      '</tr>';
+    }).join('')+'</tbody></table></body></html>';
+  var w=window.open('','_blank','width=800,height=900');
   w.document.write(html);w.document.close();setTimeout(function(){w.print();},400);
 }
 
-// ─────────────────────────────────────────────
+// ──────────────────────────────────────────────
+// CLOSE MODAL
+// ──────────────────────────────────────────────
+function X(id){document.getElementById('ov-'+id).classList.remove('on');}
+
+// ──────────────────────────────────────────────
 // CLOCK
-// ─────────────────────────────────────────────
+// ──────────────────────────────────────────────
 function tick(){
   var n=new Date();
   document.getElementById('sb-time').textContent=n.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
@@ -1080,12 +939,8 @@ function tick(){
 }
 setInterval(tick,1000);tick();
 
-window.render=function(){renderAba(_aba);};
-
-// ─────────────────────────────────────────────
-// INIT
-// ─────────────────────────────────────────────
-renderAba('hoje');
+window.render=function(){R(_aba);};
+R('hoje');
 </script>
 <script src="firebase-sync.js"></script>
 </body>
