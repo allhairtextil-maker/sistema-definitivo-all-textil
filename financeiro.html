@@ -438,8 +438,15 @@ function render(which){
 // RESUMO
 // ============================================================
 function renderResumo(d){
-  var pedsMes = d.pedidos.filter(function(p){ return noMes(p.data) && p.status!=='cancelado'; });
+  // Faturado = data de entrega (competência) — igual ao dashboard
+  var pedsMes = d.pedidos.filter(function(p){
+    if(p.status==='cancelado') return false;
+    var dt = p.entrega || p.data;
+    return dt && noMes(dt);
+  });
   var fat = pedsMes.reduce(function(s,p){ return s+(p.itens||[]).reduce(function(s2,i){ return s2+Number(i.total||0); },0); },0);
+  // Recebido no mês (caixa real)
+  var fatRecebido = d.recebimentos.filter(function(r){ return noMes(r.data); }).reduce(function(s,r){ return s+Number(r.valor||0); },0);
   var despFixas = d.despesas.filter(function(x){ return x.tipo==='fixo'&&x.ativo; }).reduce(function(s,x){ return s+Number(x.valor||0); },0);
   var saldo = d.contas.reduce(function(s,c){ return s+Number(c.saldo||0); },0);
   
@@ -448,8 +455,9 @@ function renderResumo(d){
   var aRec = getBoletosPendentes(d).reduce(function(s,r){ return s+Number(r.valor||0); },0);
 
   document.getElementById('kpi-resumo').innerHTML = [
-    {icon:'💰',label:'Faturamento Mês',val:fmt(fat),cor:'var(--purple)'},
+    {icon:'💰',label:'Faturado (entrega)',val:fmt(fat),cor:'var(--purple)'},
     {icon:'⚙️',label:'Despesas Fixas',val:fmt(despFixas),cor:'var(--red)'},
+    {icon:'🏦',label:'Recebido (caixa)',val:fmt(fatRecebido),cor:'var(--blue)'},
     {icon:'💚',label:'A Receber',val:fmt(aRec),cor:'var(--green)'},
     {icon:'🏦',label:'Saldo Caixa',val:fmt(saldo),cor:'var(--blue)'},
   ].map(function(k){
