@@ -433,8 +433,8 @@ function renderResumo(d){
   var saldo = d.contas.reduce(function(s,c){ return s+Number(c.saldo||0); },0);
   
   // A receber = boletos pendentes + avulsos
+  // getBoletosPendentes already includes manual aReceber entries
   var aRec = getBoletosPendentes(d).reduce(function(s,r){ return s+Number(r.valor||0); },0);
-  aRec += d.aReceber.filter(function(r){ return r.status==='pendente'; }).reduce(function(s,r){ return s+Number(r.valor||0); },0);
 
   document.getElementById('kpi-resumo').innerHTML = [
     {icon:'💰',label:'Faturamento Mês',val:fmt(fat),cor:'var(--purple)'},

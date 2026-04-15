@@ -3477,24 +3477,25 @@ main { padding: 24px 28px; }
       vencimentos:(function(){
         var fpEl=document.getElementById('ped-forma-pgto');
         if(!fpEl||fpEl.value!=='Boleto') return [];
-        var datas=[];
         var n=parseInt(document.getElementById('ped-parcelas')?.value||1);
-        // Collect all vencimentos by id
-        for(var i=1;i<=n;i++){
+        var datas=[];
+        // Collect venc-1 from dedicated input
+        var v1=document.getElementById('ped-venc-1');
+        if(v1&&v1.value) datas.push(v1.value);
+        // Collect remaining from dynamic parcelas-datas (parcelas 2..n)
+        var wrap=document.getElementById('parcelas-datas');
+        if(wrap){
+          var inputs=wrap.querySelectorAll('input[type="date"]');
+          inputs.forEach(function(el){
+            if(el.value) datas.push(el.value);
+          });
+        }
+        // Fallback: collect by ID for any remaining
+        for(var i=datas.length+1;i<=n;i++){
           var el=document.getElementById('ped-venc-'+i);
-          if(el&&el.value) datas.push(el.value);
+          if(el&&el.value&&!datas.includes(el.value)) datas.push(el.value);
         }
-        // Also check dynamic parcelas-datas inputs
-        if(datas.length<n){
-          var wrap=document.getElementById('parcelas-datas');
-          if(wrap){
-            var inputs=wrap.querySelectorAll('input[type="date"]');
-            inputs.forEach(function(el){
-              if(el.value&&!datas.includes(el.value)) datas.push(el.value);
-            });
-          }
-        }
-        return datas;
+        return datas.slice(0,n);
       })(),
       nf:document.getElementById('ped-nf').value,
       obs:document.getElementById('ped-obs').value,
