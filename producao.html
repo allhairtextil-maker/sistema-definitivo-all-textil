@@ -705,10 +705,11 @@ function rKanban(){
       var pb=b.atrasado?0:b.urgente?1:2;
       return pa-pb||new Date(a.entrega||'9999')-new Date(b.entrega||'9999');
     });
-    // For aguardando: split by capacity
+    // Split by capacity per column
     var itemsHoje=items, itemsFila=[], capLimitado=false;
-    if(col.s==='aguardando'){
-      var cap2=getCap();
+    var cap2=getCap();
+    if(col.s==='aguardando'||col.s==='maquina'||col.s==='corte'){
+      // Machine/corte capacity: kg per tipo per day
       var capRest2={liso:cap2.liso,meia:cap2.meia,mini:cap2.mini};
       itemsHoje=[];itemsFila=[];capLimitado=true;
       items.forEach(function(l){
@@ -717,6 +718,46 @@ function rKanban(){
         if(disp>=l.kgPorCor*0.5){
           itemsHoje.push(l);
           capRest2[tipo]=Math.max(0,disp-l.kgPorCor);
+        } else {
+          itemsFila.push(l);
+        }
+      });
+    } else if(col.s==='cru'){
+      // Cru: kg to send to facc today (same as machine cap as proxy)
+      var capRest3={liso:cap2.liso,meia:cap2.meia,mini:cap2.mini};
+      itemsHoje=[];itemsFila=[];capLimitado=true;
+      items.forEach(function(l){
+        var tipo=l.tipo.toLowerCase();
+        var disp=capRest3[tipo]||0;
+        if(disp>=l.kgPorCor*0.5){
+          itemsHoje.push(l);
+          capRest3[tipo]=Math.max(0,disp-l.kgPorCor);
+        } else {
+          itemsFila.push(l);
+        }
+      });
+    } else if(col.s==='facc'){
+      // Facc: split by return date — today/overdue on top, future below
+      itemsHoje=[];itemsFila=[];capLimitado=true;
+      items.forEach(function(l){
+        var env=d.envios.find(function(e){return e.status==='enviado'&&e.tipo===l.tipo&&e.corId===l.corId;});
+        var dr=env?diasAte(env.previsao):99;
+        if(dr<=0){ itemsHoje.push(l); }  // today or overdue
+        else { itemsFila.push(l); }
+      });
+    } else if(col.s==='virado'){
+      // Embalar: pacotes/dia capacity
+      var embDia=cap2.embDia||100;
+      var pctRest=embDia;
+      itemsHoje=[];itemsFila=[];capLimitado=true;
+      items.forEach(function(l){
+        var prod3=d.produtos.find(function(p){return p.id===l.prodId;});
+        var unid3=prod3?prod3['unid-pacote']||12:12;
+        var rend3=prod3?prod3.rendimento||1000:1000;
+        var pctLote=Math.round(l.kgPorCor*rend3/unid3);
+        if(pctRest>=pctLote*0.5){
+          itemsHoje.push(l);
+          pctRest=Math.max(0,pctRest-pctLote);
         } else {
           itemsFila.push(l);
         }
@@ -734,7 +775,7 @@ function rKanban(){
     rightSide.style.cssText='display:flex;align-items:center;gap:4px';
     var countBadge=document.createElement('span');
     countBadge.style.cssText='background:'+col.cor+'22;color:'+col.cor+';padding:1px 6px;border-radius:20px;font-size:10px';
-    countBadge.textContent=capLimitado?(itemsHoje.length+'+'+itemsFila.length):items.length;
+    countBadge.textContent=capLimitado&&itemsFila.length?(itemsHoje.length+'+'+itemsFila.length):items.length;
     var printBtn=document.createElement('button');
     printBtn.title='Imprimir esta etapa';
     printBtn.textContent='🖨️';
@@ -760,7 +801,8 @@ function rKanban(){
       if(capLimitado&&itemsHoje.length){
         var hdrHoje=document.createElement('div');
         hdrHoje.style.cssText='font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--green);padding:4px 6px 2px';
-        hdrHoje.textContent='▼ Para hoje';
+        var hdrLabel={aguardando:'▼ Para hoje',maquina:'▼ Dentro da capacidade',cru:'▼ Enviar hoje',facc:'▼ Buscar hoje / Atrasado',corte:'▼ Para hoje',virado:'▼ Dentro da capacidade'};
+        hdrHoje.textContent=hdrLabel[col.s]||'▼ Para hoje';
         body.appendChild(hdrHoje);
       }
       itemsHoje.forEach(function(l){
@@ -866,7 +908,8 @@ function rKanban(){
       if(capLimitado&&itemsFila.length){
         var hdrFila=document.createElement('div');
         hdrFila.style.cssText='font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--t3);padding:6px 6px 2px;margin-top:4px;border-top:1px dashed var(--border)';
-        hdrFila.textContent='▼ Próximos dias';
+        var filaLabel={aguardando:'▼ Próximos dias',maquina:'▼ Acima da capacidade',cru:'▼ Próximos dias',facc:'▼ Aguardando retorno',corte:'▼ Próximos dias',virado:'▼ Acima da capacidade'};
+        hdrFila.textContent=filaLabel[col.s]||'▼ Próximos dias';
         body.appendChild(hdrFila);
         itemsFila.forEach(function(l){
           var tc=tipoCor(l.tipo);
