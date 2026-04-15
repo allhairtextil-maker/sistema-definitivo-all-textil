@@ -3400,7 +3400,14 @@ main { padding: 24px 28px; }
     const totalPagarFacc=envios.filter(e=>e.status==='devolvido'&&!e.pago).reduce((s,e)=>s+Number(e.valor||0),0);
     const totalPagar=totalPagarForn+totalPagarFacc;
     // Faturamento pelos pedidos do mês
-    const fatBruto=pedidos.filter(p=>{if(!p.data)return false;const d=new Date(p.data+' 00:00');return d.getMonth()===mes&&d.getFullYear()===ano;}).reduce((s,p)=>(p.itens||[]).reduce((ss,i)=>ss+Number(i.total||0),0)+s,0);
+    // Faturado = data de entrega do pedido (competência)
+    const fatBruto=pedidos.filter(p=>{
+      var dt=p.entrega||p.data;if(!dt)return false;
+      const d=new Date(dt+' 00:00');
+      return d.getMonth()===mes&&d.getFullYear()===ano;
+    }).reduce((s,p)=>(p.itens||[]).reduce((ss,i)=>ss+Number(i.total||0),0)+s,0);
+    // Recebido = caixa real (recebimentos confirmados)
+    const fatRecebido=recebimentos.filter(r=>noMes(r.data)).reduce((s,r)=>s+Number(r.valor||0),0);
     const receitaMes=fatBruto;
     const despesasMes=pagamentos.filter(p=>noMes(p.data)).reduce((s,p)=>s+Number(p.valor||0),0)+despesas.filter(d=>d.tipo==='fixo'&&d.ativo).reduce((s,d)=>s+Number(d.valor||0),0);
     const lucro=receitaMes-despesasMes;
@@ -3582,8 +3589,8 @@ main { padding: 24px 28px; }
       </div>
       <div class="card">
         <div class="card-header"><div class="card-title">Financeiro do Mês</div><a class="card-link" href="financeiro.html">Ver</a></div>
-        <div class="fin-row"><span class="fin-label">Faturamento bruto</span><span class="fin-val" style="color:var(--purple)">${fmt(fatBruto)}</span></div>
-        <div class="fin-row"><span class="fin-label">Recebido</span><span class="fin-val" style="color:var(--green)">${fmt(receitaMes)}</span></div>
+        <div class="fin-row"><span class="fin-label">Faturado (entrega)</span><span class="fin-val" style="color:var(--purple)">${fmt(fatBruto)}</span></div>
+        <div class="fin-row"><span class="fin-label">Recebido (caixa)</span><span class="fin-val" style="color:var(--green)">${fmt(fatRecebido)}</span></div>
         <div class="fin-row"><span class="fin-label">Pago</span><span class="fin-val" style="color:var(--red)">${fmt(despesasMes)}</span></div>
         <div class="fin-row" style="background:var(--bg)"><span class="fin-label" style="font-weight:800">Resultado</span><span class="fin-val" style="color:${lucro>=0?'var(--green)':'var(--red)'};font-size:14px">${fmt(lucro)}</span></div>
         <div class="fin-row"><span class="fin-label">A receber</span><span class="fin-val" style="color:var(--blue)">${fmt(totalReceber)}</span></div>
