@@ -371,6 +371,17 @@ function load(key, def){ try{ return JSON.parse(localStorage.getItem(key)||'null
 function save(key, val){ localStorage.setItem(key, JSON.stringify(val)); }
 
 function getData(){
+  // One-time cleanup: remove old auto-generated boleto entries (duplicates)
+  try{
+    var _ar=load('allhair_a_receber',[]);
+    var _cleaned=_ar.filter(function(r){
+      if(!r.id) return true;
+      if(r.id.indexOf('rec_ped_')===0) return false; // old format from pedidos.html
+      if(r.id.indexOf('bol_')===0&&r.status==='pendente') return false; // old dynamic entries
+      return true;
+    });
+    if(_cleaned.length!==_ar.length) save('allhair_a_receber',_cleaned);
+  }catch(e){}
   return {
     pedidos:      load('allhair_pedidos', []),
     aReceber:     load('allhair_a_receber', []),
@@ -509,8 +520,14 @@ function getBoletosPendentes(d){
       });
     });
   });
-  // Also include manual aReceber entries
-  d.aReceber.filter(function(r){ return r.status==='pendente'&&r.tipo!=='boleto'; }).forEach(function(r){
+  // Include manual aReceber entries (exclude auto-generated boleto entries from pedidos)
+  d.aReceber.filter(function(r){
+    if(r.status!=='pendente') return false;
+    if(r.tipo==='boleto') return false;
+    // Exclude old auto-generated boletos (id starts with rec_ped_ or bol_)
+    if(r.id&&(r.id.indexOf('rec_ped_')===0||r.id.indexOf('bol_')===0)) return false;
+    return true;
+  }).forEach(function(r){
     lista.push(r);
   });
   return lista.sort(function(a,b){ return new Date(a.vencimento||'9999')-new Date(b.vencimento||'9999'); });

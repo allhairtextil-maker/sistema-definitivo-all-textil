@@ -3537,35 +3537,7 @@ main { padding: 24px 28px; }
     toast.textContent='✅ Pedido salvo! Total: '+verifica.length+' pedido(s)';
     document.body.appendChild(toast);
     setTimeout(function(){toast.remove();},3000);
-    // Gera parcelas no A Receber (financeiro) para boleto parcelado
-    console.log('[A Receber] formaPgto='+data.formaPgto+' vencimentos='+JSON.stringify(data.vencimentos));
-    if(data.formaPgto==='Boleto' && data.vencimentos && data.vencimentos.length>0){
-      try{
-        var recArr=JSON.parse(localStorage.getItem('allhair_a_receber')||'[]');
-        // Remove parcelas antigas deste pedido se re-salvando
-        recArr=recArr.filter(function(r){return r.pedidoId!==data.id;});
-        var totalPed=itens.reduce(function(s,i){return s+Number(i.total||0);},0);
-        var valorParc=Math.round(totalPed/data.parcelas*100)/100;
-        data.vencimentos.forEach(function(dtVenc,idx){
-          recArr.push({
-            id:'rec_ped_'+data.id+'_p'+(idx+1),
-            pedidoId:data.id,
-            pedidoNum:data.numero,
-            nf:data.nf||'',
-            clienteNome:data.clienteNome,
-            desc:'Boleto '+data.numero+' — '+data.clienteNome+' ('+(idx+1)+'/'+data.parcelas+'x)',
-            valor:valorParc,
-            vencimento:dtVenc,
-            forma:'Boleto',
-            status:'pendente',
-            parcela:(idx+1),
-            totalParcelas:data.parcelas,
-            criadoEm:new Date().toLocaleString('pt-BR')
-          });
-        });
-        localStorage.setItem('allhair_a_receber',JSON.stringify(recArr));
-      }catch(e){}
-    }
+    // Boletos gerados dinamicamente pelo financeiro a partir de p.vencimentos
 
     // Gera comissão se tiver representante
     if(data.repId){
