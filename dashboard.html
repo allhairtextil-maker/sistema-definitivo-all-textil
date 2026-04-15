@@ -3435,6 +3435,12 @@ main { padding: 24px 28px; }
     // ===== ALERTAS =====
     const alertas=[];
     if(pedAtraso.length) alertas.push({cls:'red',icon:'!',txt:`${pedAtraso.length} pedido(s) em atraso`,sub:pedAtraso.map(p=>p.clienteNome).join(', '),href:'pedidos.html'});
+    // NF não enviada
+    const semNF=pedidos.filter(p=>['pronto','expedido'].includes(p.status)&&!p.nfEnviada);
+    if(semNF.length) alertas.push({cls:'red',icon:'🧾',txt:`${semNF.length} pedido(s) sem NF enviada`,sub:semNF.map(p=>p.clienteNome).join(', '),href:'pedidos.html'});
+    // Boleto não enviado
+    const semBoleto=pedidos.filter(p=>['pronto','expedido'].includes(p.status)&&(p.formaPgto||'').toLowerCase()==='boleto'&&!p.boletoEnviado);
+    if(semBoleto.length) alertas.push({cls:'orange',icon:'📄',txt:`${semBoleto.length} boleto(s) não enviado(s)`,sub:semBoleto.map(p=>p.clienteNome).join(', '),href:'pedidos.html'});
     const vencidosRec=pedidos.filter(p=>p.status!=='finalizado'&&getSaldo(p)>0&&p.vencimento&&new Date(p.vencimento+' 00:00')<now);
     if(vencidosRec.length) alertas.push({cls:'orange',icon:'!',txt:`${vencidosRec.length} boleto(s) vencido(s)`,sub:fmt(vencidosRec.reduce((s,p)=>s+getSaldo(p),0))+' a receber',href:'financeiro.html'});
         if(metaFat>0&&!noRitmo&&fatBruto<metaFat) alertas.push({cls:'yellow',icon:'!',txt:'Ritmo abaixo da meta',sub:`Precisa de ${fmt(necessarioPorDia)}/dia nos próximos ${diasRestantes} dias`,href:'financeiro.html'});

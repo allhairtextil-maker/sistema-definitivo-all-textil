@@ -149,6 +149,29 @@ td{padding:10px 14px;font-size:13px;border-bottom:1px solid var(--border);}
 </div>
 
 
+
+<!-- MODAL CHECKLIST EXPEDIR -->
+<div class="ov" id="ov-expedir">
+  <div class="modal" style="max-width:400px">
+    <div class="mh"><h2>🚚 Confirmar Expedição</h2><button class="mx" onclick="X('expedir')">×</button></div>
+    <div class="mb">
+      <div style="background:var(--bg);border-radius:10px;padding:14px;font-size:13px;margin-bottom:4px" id="exp-ped-info"></div>
+      <div style="font-size:13px;font-weight:700;color:var(--t2);margin-bottom:8px">Confirme antes de expedir:</div>
+      <label style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--bg);border-radius:8px;cursor:pointer;margin-bottom:8px">
+        <input type="checkbox" id="exp-nf" style="width:20px;height:20px;cursor:pointer">
+        <div><div style="font-weight:700">🧾 NF enviada ao cliente</div><div style="font-size:11px;color:var(--t2)">Email, WhatsApp ou portal</div></div>
+      </label>
+      <label id="exp-boleto-wrap" style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--bg);border-radius:8px;cursor:pointer;margin-bottom:4px">
+        <input type="checkbox" id="exp-boleto" style="width:20px;height:20px;cursor:pointer">
+        <div><div style="font-weight:700">📄 Boleto enviado ao cliente</div><div style="font-size:11px;color:var(--t2)">Link ou arquivo enviado</div></div>
+      </label>
+    </div>
+    <div class="mf">
+      <button class="btn bg2" onclick="X('expedir')">Cancelar</button>
+      <button class="btn bgr" onclick="confirmarExpedicao()">🚚 Confirmar Expedição</button>
+    </div>
+  </div>
+</div>
 <!-- MODAL DETALHE LOTE -->
 <div class="ov" id="ov-detalhe">
   <div class="modal" style="max-width:480px">
@@ -488,6 +511,50 @@ function rHoje(){
 }
 
 
+var _expedirPedId=null;
+function expedirPedido(pedId){
+  var d=D();
+  var ped=d.pedidos.find(function(p){return p.id===pedId;});
+  if(!ped)return;
+  _expedirPedId=pedId;
+  // Fill info
+  document.getElementById('exp-ped-info').innerHTML=
+    '<strong>'+ped.clienteNome+'</strong> · '+( ped.numero||'')+
+    '<br><span style="font-size:12px;color:var(--t2)">'+
+      (ped.itens||[]).length+' item(s) · Total: R$ '+(ped.itens||[]).reduce(function(s,i){return s+Number(i.total||0);},0).toFixed(2)+
+    '</span>';
+  // Show/hide boleto checkbox
+  var hasBoleto=(ped.formaPgto||'').toLowerCase()==='boleto';
+  document.getElementById('exp-boleto-wrap').style.display=hasBoleto?'flex':'none';
+  // Reset checkboxes
+  document.getElementById('exp-nf').checked=ped.nfEnviada||false;
+  document.getElementById('exp-boleto').checked=ped.boletoEnviado||false;
+  document.getElementById('ov-expedir').classList.add('on');
+}
+function confirmarExpedicao(){
+  if(!_expedirPedId)return;
+  var nfOk=document.getElementById('exp-nf').checked;
+  var bolOk=document.getElementById('exp-boleto').checked;
+  var d=D();
+  var ped=d.pedidos.find(function(p){return p.id===_expedirPedId;});
+  if(!ped)return;
+  var hasBoleto=(ped.formaPgto||'').toLowerCase()==='boleto';
+  if(!nfOk){
+    if(!confirm('⚠️ NF ainda não foi enviada. Deseja expedir assim mesmo?'))return;
+  }
+  if(hasBoleto&&!bolOk){
+    if(!confirm('⚠️ Boleto ainda não foi enviado. Deseja expedir assim mesmo?'))return;
+  }
+  ped.status='expedido';
+  ped.nfEnviada=nfOk;
+  ped.boletoEnviado=bolOk;
+  ped.dataExpedicao=new Date().toISOString().split('T')[0];
+  S('allhair_pedidos',d.pedidos);
+  X('expedir');
+  R(_aba);
+  _expedirPedId=null;
+}
+
 function abrirDetalhe(l){
   var d=D();
   document.getElementById('det-title').textContent=l.tipo.toUpperCase()+' '+l.corNome+' — '+l.prodNome;
@@ -690,7 +757,7 @@ function rKanban(){
     {s:'virado',    label:'✅ P/ Embalar',   cor:'#3b82f6',
      btn:{l:'📦 Embalar',c:'#10b981',fn:function(l){abrirEmbalar();}},
      filter:function(l){return l.fluxo!=='corte';}},
-    {s:'pronto',    label:'🚚 Expedir',   cor:'#10b981',btn:null}
+    {s:'pronto',    label:'🚚 Expedir',   cor:'#10b981',btn:{l:'🚚 Expedir',c:'#10b981',fn:function(l){expedirPedido(l.pedId);}}}
   ];
 
   COLS.forEach(function(col){

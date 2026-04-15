@@ -4226,6 +4226,18 @@ main { padding: 24px 28px; }
         '<td><div style="font-weight:700">'+(p.numero||'—')+'</div><div style="font-size:11px;color:var(--text3)">'+(p.data?new Date(p.data+' 00:00').toLocaleDateString('pt-BR'):'')+'</div></td>'+
         '<td><div style="font-weight:700">'+(p.clienteNome||'—')+'</div></td>'+
         '<td style="font-size:12px;font-weight:700">'+(p.nf?'🧾 '+p.nf:'<span style="color:var(--text3)">—</span>')+'</td>'+
+        '<td style="text-align:center">'+(
+          p.status==='pronto'||p.status==='expedido'?
+            (p.nfEnviada?'<span title="NF enviada" style="color:#10b981;font-size:16px">✅</span>':
+            '<span title="NF não enviada" style="color:#ef4444;font-size:16px">🔴</span>')
+          :'<span style="color:var(--text3);font-size:12px">—</span>'
+        )+'</td>'+
+        '<td style="text-align:center">'+(
+          p.formaPgto==='Boleto'&&(p.status==='pronto'||p.status==='expedido')?
+            (p.boletoEnviado?'<span title="Boleto enviado" style="color:#10b981;font-size:16px">✅</span>':
+            '<span title="Boleto não enviado" style="color:#ef4444;font-size:16px">🔴</span>')
+          :'<span style="color:var(--text3);font-size:12px">—</span>'
+        )+'</td>'+
         '<td>'+(p.entrega?new Date(p.entrega+' 00:00').toLocaleDateString('pt-BR'):'—')+'</td>'+
         '<td><div style="font-weight:800">'+fmt(total)+'</div>'+(saldo>0?'<div style="font-size:11px;color:#f59e0b">Saldo: '+fmt(saldo)+'</div>':'')+'</td>'+
         '<td><span style="background:'+corStatus+'20;color:'+corStatus+';padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700">'+STATUS_LABEL[p.status]+'</span></td>'+
