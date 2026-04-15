@@ -481,6 +481,8 @@ function getBoletosPendentes(d){
     if(fp !== 'boleto') return;
     var venc = p.vencimentos || [];
     if(!venc.length && p.vencimento) venc = [p.vencimento];
+    // Deduplicate dates (fix for legacy data with duplicate vencimentos)
+    venc = venc.filter(function(v,i,arr){ return v && arr.indexOf(v)===i; });
     if(!venc.length) return;
     var total = (p.itens||[]).reduce(function(s,i){ return s+Number(i.total||0); },0);
     var nParc = venc.length;
