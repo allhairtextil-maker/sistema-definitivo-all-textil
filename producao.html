@@ -124,17 +124,14 @@ td{padding:10px 14px;font-size:13px;border-bottom:1px solid var(--border);}
   </div>
 
   <div class="tabs">
-    <div class="tab on" onclick="aba('hoje')">📊 Dashboard</div>
-    <div class="tab" onclick="aba('kanban')">🔄 Kanban</div>
+        <div class="tab on" onclick="aba('kanban')">🔄 Kanban</div>
     <div class="tab" onclick="aba('agenda')">📅 Agenda</div>
     <div class="tab" onclick="aba('capacidade')">📊 Capacidade</div>
     <div class="tab" onclick="aba('historico')">📋 Histórico</div>
   </div>
 
-  <div class="tc on" id="tc-hoje">
-    <div id="dash-wrap"></div>
-  </div>
-  <div class="tc" id="tc-kanban">
+  
+  <div class="tc on" id="tc-kanban">
     <div class="kb" id="kb-board"></div>
   </div>
   <div class="tc" id="tc-agenda"><div id="agenda-wrap"></div></div>
@@ -355,12 +352,12 @@ function setLoteStatus(loteId,status){
 // ──────────────────────────────────────────────
 // ABA SYSTEM
 // ──────────────────────────────────────────────
-var _aba='hoje';
+var _aba='kanban';
 function aba(id){
   _aba=id;
   document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('on');});
   document.querySelectorAll('.tc').forEach(function(t){t.classList.remove('on');});
-  var tabs=['hoje','kanban','agenda','capacidade','historico'];
+  var tabs=['kanban','agenda','capacidade','historico'];
   document.querySelectorAll('.tab')[tabs.indexOf(id)].classList.add('on');
   document.getElementById('tc-'+id).classList.add('on');
   R(id);
@@ -1351,7 +1348,7 @@ function tick(){
 setInterval(tick,1000);tick();
 
 window.render=function(){R(_aba);};
-R('hoje');
+R('kanban');
 </script>
 <script src="firebase-sync.js"></script>
 </body>
