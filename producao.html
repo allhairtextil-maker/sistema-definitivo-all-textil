@@ -705,6 +705,23 @@ function rKanban(){
       var pb=b.atrasado?0:b.urgente?1:2;
       return pa-pb||new Date(a.entrega||'9999')-new Date(b.entrega||'9999');
     });
+    // For aguardando: split by capacity
+    var itemsHoje=items, itemsFila=[], capLimitado=false;
+    if(col.s==='aguardando'){
+      var cap2=getCap();
+      var capRest2={liso:cap2.liso,meia:cap2.meia,mini:cap2.mini};
+      itemsHoje=[];itemsFila=[];capLimitado=true;
+      items.forEach(function(l){
+        var tipo=l.tipo.toLowerCase();
+        var disp=capRest2[tipo]||0;
+        if(disp>=l.kgPorCor*0.5){
+          itemsHoje.push(l);
+          capRest2[tipo]=Math.max(0,disp-l.kgPorCor);
+        } else {
+          itemsFila.push(l);
+        }
+      });
+    }
 
     var kc=document.createElement('div');kc.className='kc';
     var head=document.createElement('div');head.className='kc-head';
@@ -717,7 +734,7 @@ function rKanban(){
     rightSide.style.cssText='display:flex;align-items:center;gap:4px';
     var countBadge=document.createElement('span');
     countBadge.style.cssText='background:'+col.cor+'22;color:'+col.cor+';padding:1px 6px;border-radius:20px;font-size:10px';
-    countBadge.textContent=items.length;
+    countBadge.textContent=capLimitado?(itemsHoje.length+'+'+itemsFila.length):items.length;
     var printBtn=document.createElement('button');
     printBtn.title='Imprimir esta etapa';
     printBtn.textContent='🖨️';
@@ -739,7 +756,14 @@ function rKanban(){
       empty.textContent='Vazio';
       body.appendChild(empty);
     } else {
-      items.forEach(function(l){
+      // Render "hoje" section
+      if(capLimitado&&itemsHoje.length){
+        var hdrHoje=document.createElement('div');
+        hdrHoje.style.cssText='font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--green);padding:4px 6px 2px';
+        hdrHoje.textContent='▼ Para hoje';
+        body.appendChild(hdrHoje);
+      }
+      itemsHoje.forEach(function(l){
         var tc=tipoCor(l.tipo);
         var card=document.createElement('div');
         card.className='lcard'+(l.atrasado?' atrasado':l.urgente?' urgente':'');
@@ -838,6 +862,44 @@ function rKanban(){
         }
         body.appendChild(card);
       });
+      // Render "fila" section for aguardando
+      if(capLimitado&&itemsFila.length){
+        var hdrFila=document.createElement('div');
+        hdrFila.style.cssText='font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--t3);padding:6px 6px 2px;margin-top:4px;border-top:1px dashed var(--border)';
+        hdrFila.textContent='▼ Próximos dias';
+        body.appendChild(hdrFila);
+        itemsFila.forEach(function(l){
+          var tc=tipoCor(l.tipo);
+          var card=document.createElement('div');
+          card.className='lcard';
+          card.style.opacity='.45';
+          card.style.cursor='pointer';
+          card.title='Além da capacidade de hoje — clique para ver detalhes';
+          card.onclick=(function(lote){return function(ev){if(ev.target.tagName!=='BUTTON')abrirDetalhe(lote);};})(l);
+
+          var tipoSpan=document.createElement('div');
+          tipoSpan.style.cssText='font-size:8px;font-weight:900;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;color:'+tc.c;
+          tipoSpan.textContent=l.tipo.toUpperCase();
+          card.appendChild(tipoSpan);
+
+          var corDiv=document.createElement('div');
+          corDiv.className='lc-cor';
+          corDiv.textContent=l.corNome;
+          card.appendChild(corDiv);
+
+          var prodDiv=document.createElement('div');
+          prodDiv.className='lc-prod';
+          prodDiv.textContent=l.prodNome+(l.prodRef?' ('+l.prodRef+')':'');
+          card.appendChild(prodDiv);
+
+          var kgDiv=document.createElement('div');
+          kgDiv.style.cssText='font-size:10px;color:var(--t3);font-weight:700';
+          kgDiv.textContent=l.kgPorCor.toFixed(2)+'kg · '+l.pedNum;
+          card.appendChild(kgDiv);
+
+          body.appendChild(card);
+        });
+      }
     }
     kc.appendChild(body);
     board.appendChild(kc);
