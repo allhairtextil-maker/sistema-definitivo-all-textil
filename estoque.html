@@ -426,24 +426,102 @@ function rMP(){
 function rProcesso(){
   var d=D();
   var wrap=document.getElementById('processo-wrap');
-  var rows=[];
-  Object.entries(d.estoque.cru||{}).forEach(function(e){
-    var v=e[1];if(!Number(v.kg||0))return;
-    rows.push({tipo:v.tecido||'',cor:v.corNome||'',kg:Number(v.kg),etapa:'📦 Estoque Cru',cor2:'#f59e0b'});
-  });
-  d.envios.filter(function(e){return e.status==='enviado';}).forEach(function(e){
-    rows.push({tipo:(e.tipo||'').toUpperCase(),cor:e.corNome||'',kg:Number(e.kg||0),etapa:'🤝 Faccionista',cor2:'#ef4444',extra:'Retorno: '+fmtD(e.previsao)});
-  });
-  if(!rows.length){wrap.innerHTML='<div style="text-align:center;padding:40px;color:var(--t3)">Nenhum material em processo</div>';return;}
-  wrap.innerHTML='<div class="card" style="overflow:hidden"><table>'+
-    '<thead><tr><th>Tipo</th><th>Cor</th><th style="text-align:right">Kg</th><th>Etapa</th><th>Info</th></tr></thead>'+
-    '<tbody>'+rows.map(function(r){
-      return '<tr><td><span class="badge" style="background:var(--pl);color:var(--purple)">'+r.tipo.toUpperCase()+'</span></td>'+
-        '<td style="font-weight:700">'+r.cor+'</td>'+
-        '<td style="text-align:right;font-weight:800;color:var(--purple)">'+r.kg.toFixed(3)+'kg</td>'+
-        '<td><span class="badge" style="background:'+r.cor2+'22;color:'+r.cor2+'">'+r.etapa+'</span></td>'+
-        '<td style="color:var(--t2);font-size:12px">'+(r.extra||'—')+'</td></tr>';
-    }).join('')+'</tbody></table></div>';
+  if(!wrap)return;
+  wrap.innerHTML='';
+
+  // CRU
+  var cruItems=Object.entries(d.estoque.cru||{}).filter(function(e){return Number(e[1].kg||0)>0;});
+  if(cruItems.length){
+    var hdr=document.createElement('div');
+    hdr.style.cssText='font-size:12px;font-weight:800;color:var(--orange);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;margin-top:4px';
+    hdr.textContent='📦 Estoque Cru';
+    wrap.appendChild(hdr);
+    var tbl=document.createElement('div');
+    tbl.className='card';tbl.style.overflow='hidden';tbl.style.marginBottom='16px';
+    tbl.innerHTML='<table><thead><tr><th>Tipo</th><th>Cor</th><th style="text-align:right">Kg</th><th></th></tr></thead><tbody>'+
+      cruItems.map(function(e){
+        var v=e[1];var key=e[0];var kg=Number(v.kg||0);
+        return '<tr>'+
+          '<td><span class="badge" style="background:var(--pl);color:var(--purple)">'+(v.tecido||'').toUpperCase()+'</span></td>'+
+          '<td style="font-weight:700">'+(v.corNome||'—')+'</td>'+
+          '<td style="text-align:right;font-weight:800;color:var(--orange)">'+kg.toFixed(3)+'kg</td>'+
+          '<td style="display:flex;gap:4px;justify-content:flex-end">'+
+            '<button class="btn bg2" style="font-size:11px;padding:4px 10px" data-key="'+key+'" data-kg="'+kg+'" data-action="editCru">✏️ Editar</button>'+
+            '<button class="btn bred" style="font-size:11px;padding:4px 10px" data-key="'+key+'" data-action="delCru">🗑️</button>'+
+          '</td></tr>';
+      }).join('')+'</tbody></table>';
+    wrap.appendChild(tbl);
+  }
+
+  // FACCIONISTA
+  var faccItems=d.envios.filter(function(e){return e.status==='enviado';});
+  if(faccItems.length){
+    var hdr2=document.createElement('div');
+    hdr2.style.cssText='font-size:12px;font-weight:800;color:var(--red);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px';
+    hdr2.textContent='🤝 No Faccionista';
+    wrap.appendChild(hdr2);
+    var tbl2=document.createElement('div');
+    tbl2.className='card';tbl2.style.overflow='hidden';
+    tbl2.innerHTML='<table><thead><tr><th>Tipo</th><th>Cor</th><th style="text-align:right">Kg</th><th>Retorno Previsto</th><th></th></tr></thead><tbody>'+
+      faccItems.map(function(e){
+        return '<tr>'+
+          '<td><span class="badge" style="background:var(--bl);color:var(--blue)">'+(e.tipo||'').toUpperCase()+'</span></td>'+
+          '<td style="font-weight:700">'+(e.corNome||'—')+'</td>'+
+          '<td style="text-align:right;font-weight:800;color:var(--red)">'+Number(e.kg||0).toFixed(3)+'kg</td>'+
+          '<td style="color:var(--t2);font-size:12px">'+fmtD(e.previsao)+'</td>'+
+          '<td style="display:flex;gap:4px;justify-content:flex-end">'+
+            '<button class="btn bg2" style="font-size:11px;padding:4px 10px" data-id="'+e.id+'" data-action="editFacc">✏️ Editar</button>'+
+            '<button class="btn bred" style="font-size:11px;padding:4px 10px" data-id="'+e.id+'" data-action="delFacc">🗑️</button>'+
+          '</td></tr>';
+      }).join('')+'</tbody></table>';
+    wrap.appendChild(tbl2);
+  }
+
+  if(!cruItems.length&&!faccItems.length){
+    wrap.innerHTML='<div style="text-align:center;padding:40px;color:var(--t3)">Nenhum material em processo</div>';
+  }
+}
+
+function editarCru(key,kg){
+  var novo=prompt('Novo saldo em kg para '+key+':',kg);
+  if(novo===null)return;
+  novo=parseFloat(novo)||0;
+  var d=D();
+  if(novo<=0){delete d.estoque.cru[key];}
+  else{d.estoque.cru[key].kg=novo;}
+  S('allhair_estoque_v2',d.estoque);R(_aba);
+}
+function apagarCru(key){
+  if(!confirm('Apagar este lote do estoque cru?'))return;
+  var d=D();delete d.estoque.cru[key];
+  S('allhair_estoque_v2',d.estoque);R(_aba);
+}
+function editarFacc(envId){
+  var d=D();
+  var env=d.envios.find(function(e){return e.id===envId;});
+  if(!env)return;
+  var novoKg=prompt('Novo kg enviado ao faccionista:',env.kg);
+  if(novoKg===null)return;
+  var novaPrev=prompt('Nova data de retorno previsto (AAAA-MM-DD):',env.previsao);
+  if(novaPrev===null)return;
+  env.kg=parseFloat(novoKg)||env.kg;
+  env.previsao=novaPrev||env.previsao;
+  S('allhair_envios_v2',d.envios);R(_aba);
+}
+function apagarFacc(envId){
+  if(!confirm('Remover este envio ao faccionista? O material voltará ao estoque cru.'))return;
+  var d=D();
+  var env=d.envios.find(function(e){return e.id===envId;});
+  if(env){
+    // Return to cru
+    var ck=env.tipo+'_'+env.corId;
+    if(!d.estoque.cru[ck])d.estoque.cru[ck]={tecido:env.tipo,corId:env.corId,corNome:env.corNome,kg:0};
+    d.estoque.cru[ck].kg=Number(d.estoque.cru[ck].kg||0)+Number(env.kg||0);
+    d.envios=d.envios.filter(function(e){return e.id!==envId;});
+    S('allhair_estoque_v2',d.estoque);
+    S('allhair_envios_v2',d.envios);
+  }
+  R(_aba);
 }
 
 // ──────────────────────────────────────────────
@@ -455,14 +533,34 @@ function rVirado(){
   var rows=Object.entries(d.estoque.virado||{}).filter(function(e){return Number(e[1].kg||0)>0;});
   if(!rows.length){wrap.innerHTML='<div style="text-align:center;padding:40px;color:var(--t3)">Nenhum material virado aguardando embalagem</div>';return;}
   wrap.innerHTML='<div class="card" style="overflow:hidden"><table>'+
-    '<thead><tr><th>Tipo</th><th>Cor</th><th style="text-align:right">Kg Disponível</th><th style="text-align:right">≈ Pacotes</th></tr></thead>'+
+    '<thead><tr><th>Tipo</th><th>Cor</th><th style="text-align:right">Kg Disponível</th><th style="text-align:right">≈ Pacotes</th><th></th></tr></thead>'+
     '<tbody>'+rows.map(function(e){
-      var v=e[1];var kg=Number(v.kg||0);var pcts=Math.floor(kg*1000/12);
-      return '<tr><td><span class="badge" style="background:var(--bl);color:var(--blue)">'+(v.tecido||'').toUpperCase()+'</span></td>'+
-        '<td style="font-weight:700">'+( v.corNome||'')+'</td>'+
+      var v=e[1];var kg=Number(v.kg||0);var pcts=Math.floor(kg*1000/12);var key=e[0];
+      return '<tr>'+
+        '<td><span class="badge" style="background:var(--bl);color:var(--blue)">'+(v.tecido||'').toUpperCase()+'</span></td>'+
+        '<td style="font-weight:700">'+(v.corNome||'')+'</td>'+
         '<td style="text-align:right;font-weight:800;color:var(--blue)">'+kg.toFixed(3)+'kg</td>'+
-        '<td style="text-align:right;color:var(--t2)">~'+pcts+' pct</td></tr>';
+        '<td style="text-align:right;color:var(--t2)">~'+pcts+' pct</td>'+
+        '<td style="display:flex;gap:4px;justify-content:flex-end">'+
+          '<button class="btn bg2" style="font-size:11px;padding:4px 10px" data-key="'+key+'" data-kg="'+kg+'" data-action="editVir">✏️ Editar</button>'+
+          '<button class="btn bred" style="font-size:11px;padding:4px 10px" data-key="'+key+'" data-action="delVir">🗑️</button>'+
+        '</td></tr>';
     }).join('')+'</tbody></table></div>';
+}
+
+function editarVirado(key,kg){
+  var novo=prompt('Novo saldo em kg para '+key+':',kg);
+  if(novo===null)return;
+  novo=parseFloat(novo)||0;
+  var d=D();
+  if(novo<=0){delete d.estoque.virado[key];}
+  else{d.estoque.virado[key].kg=novo;}
+  S('allhair_estoque_v2',d.estoque);R(_aba);
+}
+function apagarVirado(key){
+  if(!confirm('Apagar este lote do estoque virado?'))return;
+  var d=D();delete d.estoque.virado[key];
+  S('allhair_estoque_v2',d.estoque);R(_aba);
 }
 
 // ──────────────────────────────────────────────
@@ -660,16 +758,7 @@ function ajustarInsumo(id,nome,qty){
     document.getElementById('aj-novo').value=qty;
   },20);
 }
-function ajustarEmbalado(prodId,pcts){
-  var novo=prompt('Novo saldo de pacotes para '+prodId+':',pcts);
-  if(novo===null)return;
-  novo=parseInt(novo)||0;
-  var d=D();
-  d.estoque.embalado[prodId]=(d.estoque.embalado[prodId]||{prodId:prodId,prodNome:prodId,pacotes:0});
-  d.estoque.embalado[prodId].pacotes=novo;
-  S('allhair_estoque_v2',d.estoque);
-  R(_aba);
-}
+
 
 function salvarAjuste(){
   var item=document.getElementById('aj-item').value;
@@ -733,6 +822,24 @@ function imprimirInsumos(){
   var w=window.open('','_blank','width=750,height=900');
   w.document.write(html);w.document.close();setTimeout(function(){w.print();},400);
 }
+
+// Event delegation for edit/delete buttons
+document.addEventListener('click', function(ev){
+  var btn=ev.target.closest('button[data-action]');
+  if(!btn)return;
+  var action=btn.dataset.action;
+  var key=btn.dataset.key;
+  var id=btn.dataset.id;
+  if(action==='editCru') editarCru(key, parseFloat(btn.dataset.kg||0));
+  else if(action==='delCru') apagarCru(key);
+  else if(action==='editFacc') editarFacc(id);
+  else if(action==='delFacc') apagarFacc(id);
+  else if(action==='editVir') editarVirado(key, parseFloat(btn.dataset.kg||0));
+  else if(action==='delVir') apagarVirado(key);
+  else if(action==='editEmb') editarEmbalado(key, parseInt(btn.dataset.pcts||0));
+  else if(action==='delEmb') apagarEmbalado(key);
+});
+
 
 // ──────────────────────────────────────────────
 // CLOSE MODAL
