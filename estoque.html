@@ -825,13 +825,69 @@ td{padding:10px 14px;font-size:13px;border-bottom:1px solid var(--border);}
     cores2.forEach(function(cor){var p=pm30('FIO_'+cor.id);if(p>0){pmFiosColor+=p;nFC++;}});
     pmFiosColor=nFC>0?pmFiosColor/nFC:0;
 
-    var resumoEl=document.getElementById('mp-preco-resumo');
+        var resumoEl=document.getElementById('mp-preco-resumo');
     if(resumoEl){
-      resumoEl.innerHTML='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;background:var(--white);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:16px">'+
-        '<div style="text-align:center"><div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:4px">PES Branco (30d)</div><div style="font-size:18px;font-weight:900;color:var(--purple)">'+(pmPESB>0?'R$ '+pmPESB.toFixed(2)+'/kg':'—')+'</div></div>'+
-        '<div style="text-align:center"><div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:4px">PES Preto (30d)</div><div style="font-size:18px;font-weight:900;color:var(--text)">'+(pmPESP>0?'R$ '+pmPESP.toFixed(2)+'/kg':'—')+'</div></div>'+
-        '<div style="text-align:center"><div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:4px">Fio Colorido — média (30d)</div><div style="font-size:18px;font-weight:900;color:var(--pink)">'+(pmFiosColor>0?'R$ '+pmFiosColor.toFixed(2)+'/kg':'—')+'</div></div>'+
-      '</div>';
+      // Stock quantities
+      var qtyBranco=parseFloat(estoque.mp&&estoque.mp.PES_BRANCO||estoque.mp&&estoque.mp.PES||0);
+      var qtyPreto=parseFloat(estoque.mp&&estoque.mp.PES_PRETO||0);
+      var qtyEla=parseFloat(estoque.mp&&estoque.mp.ELA||0);
+      var fiosBranco=estoque.mp&&estoque.mp.fios||fios||{};
+
+      // Avg price for colored fios (excl branco and preto)
+      var pmCores=0,nCores=0;
+      cores2.forEach(function(cor){
+        var n=cor.nome.toLowerCase();
+        if(n==='branco'||n==='preto') return;
+        var p=pm30('FIO_'+cor.id);
+        if(p>0){pmCores+=p;nCores++;}
+      });
+      pmCores=nCores>0?pmCores/nCores:0;
+
+      // Stock value = qty * price
+      var valBranco=qtyBranco*pmPESB;
+      var valPreto=qtyPreto*(pmPESP||pmPESB);
+      var valEla=qtyEla*(pm30('ELA')||0);
+
+      // Colored fios total qty + value
+      var qtyCores=0,valCores=0;
+      cores2.forEach(function(cor){
+        var n=cor.nome.toLowerCase();
+        if(n==='branco'||n==='preto') return;
+        var qty=parseFloat(fiosBranco['FIO_'+cor.id]||fiosBranco[cor.id]||0);
+        var p=pm30('FIO_'+cor.id)||pmCores;
+        qtyCores+=qty;
+        valCores+=qty*p;
+      });
+
+      var totalVal=valBranco+valPreto+valEla+valCores;
+
+      function kpiCard(label,qty,unit,pm2,val){
+        var pmStr=pm2>0?'R$ '+pm2.toFixed(2)+'/kg':'—';
+        var valStr=val>0?'R$ '+val.toFixed(2):'—';
+        var qtyStr=qty>0?qty.toFixed(3)+' '+unit:'0 '+unit;
+        return '<div style="background:var(--white);border:1px solid var(--border);border-radius:10px;padding:14px">'+
+          '<div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">'+label+'</div>'+
+          '<div style="font-size:20px;font-weight:900;color:var(--purple)">'+qtyStr+'</div>'+
+          '<div style="display:flex;justify-content:space-between;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">'+
+            '<div><div style="font-size:9px;color:var(--text2);font-weight:700;text-transform:uppercase">Média pago</div><div style="font-size:13px;font-weight:800">'+pmStr+'</div></div>'+
+            '<div style="text-align:right"><div style="font-size:9px;color:var(--text2);font-weight:700;text-transform:uppercase">Valor em estoque</div><div style="font-size:13px;font-weight:800;color:var(--green)">'+valStr+'</div></div>'+
+          '</div>'+
+        '</div>';
+      }
+
+      resumoEl.innerHTML=
+        '<div style="margin-bottom:16px">'+
+          '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">'+
+            '<div style="font-size:14px;font-weight:800">Resumo de Estoque</div>'+
+            '<div style="font-size:13px;font-weight:900;color:var(--purple)">Total em estoque: <span style="color:var(--green)">R$ '+(totalVal>0?totalVal.toFixed(2):'0.00')+'</span></div>'+
+          '</div>'+
+          '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">'+
+            kpiCard('Elastano',qtyEla,'kg',pm30('ELA'),valEla)+
+            kpiCard('Fio Branco',qtyBranco,'kg',pmPESB,valBranco)+
+            kpiCard('Fio Preto',qtyPreto,'kg',pmPESP,valPreto)+
+            kpiCard('Cores em Geral',qtyCores,'kg',pmCores,valCores)+
+          '</div>'+
+        '</div>';
     }
 
     // === NECESSIDADE DE COMPRAS ===

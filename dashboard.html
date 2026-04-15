@@ -2488,6 +2488,7 @@ main { padding: 24px 28px; }
     <div class="kpi-grid" id="kpi-grid"></div>
     <div class="bottom-grid" id="bottom-grid"></div>
     <div class="charts-grid" id="charts-grid"></div>
+    <div class="chart-card" id="chart-anual-wrap" style="margin-top:16px;padding:20px;background:var(--white);border:1px solid var(--border);border-radius:var(--radius)"></div>
     <div class="bottom3-grid" id="bottom3-grid"></div>
     <div id="diagnostico-wrap" style="margin-top:14px"></div>
   </div>
@@ -3651,6 +3652,111 @@ main { padding: 24px 28px; }
           <svg viewBox="0 0 480 ${svgH+20}" style="width:100%;height:auto">${svgBars}</svg>
         </div>
       </div>`;
+    // ===== GRÁFICO ANUAL DE FATURAMENTO =====
+    (function(){
+      var anoAtual=new Date().getFullYear();
+      var mesesNome=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+      var mesesData=[];
+      for(var m2=0;m2<12;m2++){
+        var chave=anoAtual+'-'+(m2+1<10?'0'+(m2+1):(''+(m2+1)));
+        var fat=recebimentos.filter(function(r){
+          return r.data&&r.data.substring(0,7)===chave;
+        }).reduce(function(s,r){return s+Number(r.valor||0);},0);
+        mesesData.push({mes:mesesNome[m2],idx:m2,fat:fat});
+      }
+
+      var maxFat=Math.max.apply(null,mesesData.map(function(d){return d.fat;}));
+      var metas=[30000,50000,80000,100000];
+      var svgW=640,svgH=180,padL=40,padR=16,padT=24,padB=32;
+      var chartW=svgW-padL-padR,chartH=svgH-padT-padB;
+      var yMax=Math.max(maxFat*1.15,110000);
+
+      function yPos(v){return padT+chartH-(v/yMax*chartH);}
+      function xPos(i){return padL+(i/(11))*chartW;}
+
+      // Build path
+      var validPts=mesesData.filter(function(d){return d.fat>0;});
+      var pathD='';
+      var areaD='';
+      if(validPts.length>0){
+        var pts=mesesData.map(function(d,i){return {x:xPos(i),y:yPos(d.fat),fat:d.fat};});
+        pathD='M '+pts[0].x+' '+pts[0].y;
+        for(var i2=1;i2<pts.length;i2++){
+          // Smooth curve
+          var prev=pts[i2-1],curr=pts[i2];
+          var cpx=(prev.x+curr.x)/2;
+          pathD+=' C '+cpx+' '+prev.y+' '+cpx+' '+curr.y+' '+curr.x+' '+curr.y;
+        }
+        areaD=pathD+' L '+pts[pts.length-1].x+' '+(padT+chartH)+' L '+pts[0].x+' '+(padT+chartH)+' Z';
+      }
+
+      // Meta lines + stars
+      var metaLines=metas.map(function(meta){
+        var y=yPos(meta);
+        if(y<padT||y>padT+chartH)return '';
+        var label=meta>=1000?(meta/1000)+'k':''+meta;
+        return '<line x1="'+padL+'" y1="'+y+'" x2="'+(svgW-padR)+'" y2="'+y+'" stroke="#f59e0b" stroke-width="1" stroke-dasharray="4,3" opacity=".7"/>'+
+          '<text x="'+padL+'" y="'+(y-4)+'" font-size="8" fill="#f59e0b" font-weight="700" font-family="Arial">⭐ R$'+label+'</text>';
+      }).join('');
+
+      // Grid lines Y (light)
+      var gridLines='';
+      for(var gi=0;gi<=4;gi++){
+        var gy=padT+(gi/4)*chartH;
+        var gv=yMax*(1-gi/4);
+        gridLines+='<line x1="'+padL+'" y1="'+gy+'" x2="'+(svgW-padR)+'" y2="'+gy+'" stroke="#e2e8f0" stroke-width="1"/>';
+        gridLines+='<text x="'+(padL-4)+'" y="'+(gy+3)+'" font-size="8" fill="#94a3b8" text-anchor="end" font-family="Arial">'+(gv>=1000?Math.round(gv/1000)+'k':Math.round(gv))+'</text>';
+      }
+
+      // Dots + labels per month
+      var dots=mesesData.map(function(d,i){
+        var x=xPos(i),y=yPos(d.fat);
+        var isCurrent=i===new Date().getMonth();
+        var hasFat=d.fat>0;
+        var label=hasFat?(d.fat>=1000?'R$'+Math.round(d.fat/1000)+'k':'R$'+Math.round(d.fat)):'';
+        return (hasFat?'<circle cx="'+x+'" cy="'+y+'" r="'+(isCurrent?5:3.5)+'" fill="'+(isCurrent?'#8b5cf6':'#8b5cf6')+'" stroke="#fff" stroke-width="2"/>':'')+
+          (label?'<text x="'+x+'" y="'+(y-9)+'" font-size="8.5" fill="#1e293b" text-anchor="middle" font-weight="700" font-family="Arial">'+label+'</text>':'')+
+          '<text x="'+x+'" y="'+(padT+chartH+14)+'" font-size="9" fill="'+(isCurrent?'#8b5cf6':'#94a3b8')+'" text-anchor="middle" font-weight="'+(isCurrent?'800':'600')+'" font-family="Arial">'+d.mes+'</text>';
+      }).join('');
+
+      var svgStr='<svg viewBox="0 0 '+svgW+' '+svgH+'" style="width:100%;height:auto">'+
+        '<defs>'+
+          '<linearGradient id="fatGrad" x1="0" y1="0" x2="0" y2="1">'+
+            '<stop offset="0%" stop-color="#8b5cf6" stop-opacity=".25"/>'+
+            '<stop offset="100%" stop-color="#8b5cf6" stop-opacity="0"/>'+
+          '</linearGradient>'+
+        '</defs>'+
+        gridLines+metaLines+
+        (areaD?'<path d="'+areaD+'" fill="url(#fatGrad)"/>':'')+
+        (pathD?'<path d="'+pathD+'" fill="none" stroke="#8b5cf6" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>':'')+
+        dots+
+      '</svg>';
+
+      var totalAno=mesesData.reduce(function(s,d){return s+d.fat;},0);
+      var melhorMes=mesesData.reduce(function(a,b){return b.fat>a.fat?b:a;},{fat:0,mes:'—'});
+
+      var wrap=document.getElementById('chart-anual-wrap');
+      if(wrap){
+        wrap.innerHTML=
+          '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">'+
+            '<div>'+
+              '<div style="font-size:15px;font-weight:800">📈 Faturamento '+anoAtual+'</div>'+
+              '<div style="font-size:12px;color:var(--text2);margin-top:2px">Evolução mensal de recebimentos</div>'+
+            '</div>'+
+            '<div style="display:flex;gap:16px;text-align:right">'+
+              '<div><div style="font-size:10px;color:var(--text2);font-weight:700;text-transform:uppercase">Total Ano</div><div style="font-size:18px;font-weight:900;color:var(--purple)">'+fmtK(totalAno)+'</div></div>'+
+              '<div><div style="font-size:10px;color:var(--text2);font-weight:700;text-transform:uppercase">Melhor Mês</div><div style="font-size:18px;font-weight:900;color:var(--green)">'+melhorMes.mes+(melhorMes.fat>0?' · '+fmtK(melhorMes.fat):'')+'</div></div>'+
+            '</div>'+
+          '</div>'+
+          svgStr+
+          '<div style="display:flex;gap:12px;margin-top:8px;font-size:11px;color:var(--text2)">'+
+            '<span>⭐ Metas: R$30k · R$50k · R$80k · R$100k</span>'+
+            '<span style="margin-left:auto">Linha roxa = recebimentos confirmados</span>'+
+          '</div>';
+      }
+    })();
+
+
 
     // ===== ESTOQUE + PRODUÇÃO + FACCIONISTAS =====
     const estRows=[
