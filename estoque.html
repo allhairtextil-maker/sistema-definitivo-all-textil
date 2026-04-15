@@ -358,10 +358,19 @@ function rMP(){
       if(!prod)return;
       var unid=prod['unid-pacote']||12;var rend=prod.rendimento||1000;
       var pct=Number(it.qtd||0);var kg=pct*unid/rend;
-      necPed.ELA+=kg*0.20;
+      // Use actual product percentages
+      var pctEla=(Number(prod.elastano)||20)/100;
+      var pctFio=(Number(prod.poliester)||80)/100;
+      necPed.ELA+=kg*pctEla;
       var coresProd=prod.cores||[];
-      if(coresProd.length>0){coresProd.forEach(function(cid){necPed.fios[cid]=(necPed.fios[cid]||0)+kg*0.80/coresProd.length;});}
-      else{necPed.PES_BRANCO+=kg*0.80;}
+      if(coresProd.length>0){
+        // Each color gets equal share of the fio
+        coresProd.forEach(function(cid){
+          necPed.fios[cid]=(necPed.fios[cid]||0)+kg*pctFio/coresProd.length;
+        });
+      } else {
+        necPed.PES_BRANCO+=kg*pctFio;
+      }
       if(prod.embalagem)necPed.emb[prod.embalagem]=(necPed.emb[prod.embalagem]||0)+pct;
       if(prod.etiqueta)necPed.etq[prod.etiqueta]=(necPed.etq[prod.etiqueta]||0)+pct;
     });
