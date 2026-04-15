@@ -774,7 +774,7 @@ td{padding:10px 14px;font-size:13px;border-bottom:1px solid var(--border);}
       '<table><thead><tr>'+
         '<th>Material</th><th style="text-align:right">Estoque (kg)</th><th style="text-align:right">Nec. Pedidos</th><th style="text-align:right">Sugestão Compra</th><th style="text-align:right">Preço Médio</th><th style="text-align:center">Status</th>'+
       '</tr></thead><tbody>';
-    var grupos=['Fios Base','Fios Coloridos','Embalagens','Etiquetas'];
+    var grupos=['Fios Base','Fios Coloridos','Embalagens','Caixas','Etiquetas'];
     grupos.forEach(function(g){
       var gm=mats.filter(function(m){return m.grupo===g;});
       if(!gm.length)return;
@@ -938,32 +938,37 @@ td{padding:10px 14px;font-size:13px;border-bottom:1px solid var(--border);}
       mats.push({nome:'Fio '+cor.nome, grupo:'Fios Coloridos', key:'FIO_'+cor.id, qty:qty, pm:pm30('FIO_'+cor.id), hex:cor.hex||'#888', necPed:necPed, necProj:0, corId:cor.id});
     });
 
-    // Embalagens e Etiquetas
-    var embalagensArr=JSON.parse(localStorage.getItem('allhair_embalagens_prod')||'[]');
+    // Embalagens, Caixas e Etiquetas
+    var embalagensArr=JSON.parse(localStorage.getItem('allhair_embalagens')||'[]');
     var etiquetasArr=JSON.parse(localStorage.getItem('allhair_etiquetas')||'[]');
     var insumos=estoque.insumos||{};
 
-    // Calcular necessidade de embalagens/etiquetas pelos pedidos abertos
-    var necEmb={};  // embId → qtd pacotes necessária
-    var necEtiq={}; // etiqId → qtd necessária
+    // Calcular necessidade pelos pedidos abertos (1 pacote = 1 embalagem + 1 etiqueta)
+    var necEmb={};
+    var necEtiq={};
     pedidos2.filter(function(p){return['recebido','producao','pronto'].includes(p.status);}).forEach(function(ped){
       (ped.itens||[]).forEach(function(it){
         var prod=produtos2.find(function(x){return x.id===it.prodId;});
         if(!prod)return;
         var qtdPct=Number(it.qtd||0);
-        if(prod.embalagem){
-          necEmb[prod.embalagem]=(necEmb[prod.embalagem]||0)+qtdPct;
-        }
-        if(prod.etiqueta){
-          necEtiq[prod.etiqueta]=(necEtiq[prod.etiqueta]||0)+qtdPct;
-        }
+        if(prod.embalagem) necEmb[prod.embalagem]=(necEmb[prod.embalagem]||0)+qtdPct;
+        if(prod.etiqueta)  necEtiq[prod.etiqueta]=(necEtiq[prod.etiqueta]||0)+qtdPct;
       });
     });
 
+    // Separate embalagens into Embalagens (bags/sachets) and Caixas (boxes)
     embalagensArr.forEach(function(emb){
       var qty=Number((insumos['emb_'+emb.id]||insumos[emb.id]||{}).qty||0);
       var necPed=necEmb[emb.id]||0;
-      mats.push({nome:emb.nome||('Embalagem '+emb.id), grupo:'Embalagens', key:'emb_'+emb.id, qty:qty, pm:0, hex:'#fbbf24', necPed:necPed, necProj:0, unidade:'un'});
+      var nome=(emb.nome||'').toLowerCase();
+      var isCaixa=nome.indexOf('caixa')>=0||nome.indexOf('box')>=0||nome.indexOf('cx')>=0;
+      mats.push({
+        nome:emb.nome||('Embalagem '+emb.id),
+        grupo:isCaixa?'Caixas':'Embalagens',
+        key:'emb_'+emb.id, qty:qty, pm:0,
+        hex:isCaixa?'#f97316':'#fbbf24',
+        necPed:necPed, necProj:0, unidade:'un'
+      });
     });
 
     etiquetasArr.forEach(function(etq){
@@ -1007,7 +1012,7 @@ td{padding:10px 14px;font-size:13px;border-bottom:1px solid var(--border);}
     '</div>';
 
     // Tabela formal
-    var grupos=['Fios Base','Fios Coloridos','Embalagens','Etiquetas'];
+    var grupos=['Fios Base','Fios Coloridos','Embalagens','Caixas','Etiquetas'];
     var tableHtml='<div style="border:1px solid #cbd5e1;border-radius:10px;overflow:hidden">'+
       '<table style="width:100%;border-collapse:collapse;font-size:12px;font-family:Arial,sans-serif">'+
       '<thead>'+
