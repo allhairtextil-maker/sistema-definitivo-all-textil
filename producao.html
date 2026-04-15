@@ -30,7 +30,7 @@ a.sl:hover,a.sl.on{background:rgba(255,255,255,.1);color:#fff;}
 .tabs{display:flex;padding:0 20px;background:var(--white);border-bottom:1px solid var(--border);overflow-x:auto;}
 .tab{padding:12px 16px;font-size:13px;font-weight:600;color:var(--t2);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;}
 .tab.on{color:var(--purple);border-color:var(--purple);}
-.tc{display:none;padding:12px 16px;overflow-y:auto;}.tc#tc-hoje{overflow:hidden;}
+.tc{display:none;padding:12px 16px;overflow-y:auto;}.tc#tc-hoje{overflow:hidden;display:flex;flex-direction:column;}
 .tc.on{display:block;}
 /* KANBAN */
 .kb{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;align-items:flex-start;width:100%;}
@@ -379,360 +379,186 @@ function R(id){
 function rHoje(){
   var d=D();
   var lotes=buildLotes(d);
+  var cap=getCap();
   var wrap=document.getElementById('dash-wrap');
   if(!wrap)return;
   wrap.innerHTML='';
 
+  // ── Status counts ──
   var atrasados=lotes.filter(function(l){return l.atrasado&&l.status!=='pronto';});
   var urgentes=lotes.filter(function(l){return l.urgente&&!l.atrasado&&l.status!=='pronto';});
   var emFacc=d.envios.filter(function(e){return e.status==='enviado';});
-  var prontos=lotes.filter(function(l){return l.status==='pronto';});
-  var aguardando=lotes.filter(function(l){return l.status==='aguardando';});
   var rodando=lotes.filter(function(l){return l.status==='maquina';});
   var virado=lotes.filter(function(l){return l.status==='virado';});
+  var prontos=lotes.filter(function(l){return l.status==='pronto';});
   var emOrdem=atrasados.length===0&&urgentes.length===0;
 
-  // Layout: 2 colunas — esquerda status+kpis+alertas | direita fila
+  var hoje2=new Date();
+
+  // ── Retornos facc hoje ──
+  var retornoHoje=emFacc.filter(function(e){return diasAte(e.previsao)<=0;});
+  var retornoUrgente=emFacc.filter(function(e){var d2=diasAte(e.previsao);return d2>0&&d2<=1;});
+
+  // ── Outer layout ──
   var outer=document.createElement('div');
-  outer.style.cssText='display:grid;grid-template-columns:300px 1fr;gap:12px;height:calc(100vh - 110px)';
+  outer.style.cssText='display:flex;flex-direction:column;gap:10px;height:calc(100vh - 108px)';
 
-  // ── COLUNA ESQUERDA ──
-  var left=document.createElement('div');
-  left.style.cssText='display:flex;flex-direction:column;gap:8px;overflow:hidden';
+  // ── 1. Status geral ──
+  var statusBar=document.createElement('div');
+  statusBar.style.cssText='background:'+(emOrdem?'#065f46':'#991b1b')+';border-radius:var(--r);padding:12px 18px;display:flex;align-items:center;gap:12px;flex-shrink:0';
+  statusBar.innerHTML=
+    '<div style="font-size:24px">'+(emOrdem?'✅':'🚨')+'</div>'+
+    '<div style="flex:1">'+
+      '<div style="color:#fff;font-size:15px;font-weight:900">'+(emOrdem?'Produção em ordem':'Atenção necessária')+'</div>'+
+      '<div style="color:rgba(255,255,255,.7);font-size:12px;margin-top:1px">'+
+        (emOrdem?lotes.length+' lote(s) em andamento':
+          [atrasados.length?atrasados.length+'d lote(s) atrasado(s)':'',
+           urgentes.length?urgentes.length+' urgente(s)':''].filter(Boolean).join(' · '))+
+      '</div>'+
+    '</div>'+
+    '<div style="display:flex;gap:16px">'+
+      mkKpi('🏭',rodando.length,'Rodando','#c4b5fd')+
+      mkKpi('🤝',emFacc.length,'No Facc.','#fcd34d')+
+      mkKpi('📦',virado.length,'P/ Embalar','#93c5fd')+
+      mkKpi('🚚',prontos.length,'Pronto','#6ee7b7')+
+    '</div>';
+  outer.appendChild(statusBar);
 
-  // Status badge
-  var badge=document.createElement('div');
-  badge.style.cssText='background:'+(emOrdem?'#d1fae5':'#fee2e2')+';border:2px solid '+(emOrdem?'#10b981':'#ef4444')+';border-radius:var(--r);padding:10px 14px;display:flex;align-items:center;gap:10px;flex-shrink:0';
-  badge.innerHTML='<div style="font-size:24px">'+(emOrdem?'✅':'🚨')+'</div>'+
-    '<div><div style="font-size:14px;font-weight:900;color:'+(emOrdem?'#065f46':'#991b1b')+'">'+(emOrdem?'Tudo em ordem':'Atenção necessária')+'</div>'+
-    '<div style="font-size:11px;color:'+(emOrdem?'#065f46':'#991b1b')+'">'+(emOrdem?lotes.length+' lote(s) em andamento':atrasados.length+' atrasado(s)'+(urgentes.length?' · '+urgentes.length+' urgente(s)':''))+'</div></div>';
-  left.appendChild(badge);
+  // ── 2. Alertas + Hoje ──
+  var midRow=document.createElement('div');
+  midRow.style.cssText='display:grid;grid-template-columns:1fr 1fr;gap:10px;flex-shrink:0';
 
-  // KPIs 3x2
-  var kpiData=[
-    {icon:'📋',l:'Aguardando',v:aguardando.length,c:aguardando.length?'#64748b':'#10b981'},
-    {icon:'🏭',l:'Máquina',v:rodando.length,c:rodando.length?'#8b5cf6':'#64748b'},
-    {icon:'🤝',l:'Faccionista',v:emFacc.length,c:emFacc.length?'#f59e0b':'#64748b'},
-    {icon:'📦',l:'P/ Embalar',v:virado.length,c:virado.length?'#3b82f6':'#64748b',alert:virado.length>0},
-    {icon:'🔴',l:'Atrasados',v:atrasados.length,c:atrasados.length?'#ef4444':'#10b981'},
-    {icon:'🚚',l:'Prontos',v:prontos.length,c:'#10b981'},
-  ];
-  var kgrid=document.createElement('div');
-  kgrid.style.cssText='display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;flex-shrink:0';
-  kpiData.forEach(function(k){
-    var kEl=document.createElement('div');
-    kEl.style.cssText='background:var(--white);border:1.5px solid '+(k.alert?k.c:'var(--border)')+';border-radius:9px;padding:8px 6px;text-align:center';
-    kEl.innerHTML='<div style="font-size:16px">'+k.icon+'</div>'+
-      '<div style="font-size:22px;font-weight:900;color:'+k.c+';line-height:1.1">'+k.v+'</div>'+
-      '<div style="font-size:9px;font-weight:700;color:var(--t2);text-transform:uppercase">'+k.l+'</div>';
-    kgrid.appendChild(kEl);
+  // Alertas
+  var alertas=[];
+  atrasados.forEach(function(l){alertas.push({c:'#ef4444',m:'🔴 '+l.tipo.toUpperCase()+' '+l.corNome+' — '+l.prodNome+' ('+Math.abs(l.dias)+'d atraso)'});});
+  urgentes.forEach(function(l){alertas.push({c:'#f59e0b',m:'⚡ '+l.tipo.toUpperCase()+' '+l.corNome+' — '+l.dias+'d p/ entregar'});});
+  retornoHoje.forEach(function(e){alertas.push({c:'#ef4444',m:'🤝 Buscar HOJE: '+(e.corNome||'')+' '+(e.tipo||'').toUpperCase()+' ('+e.faccNome+')'});});
+  retornoUrgente.forEach(function(e){alertas.push({c:'#f59e0b',m:'🤝 Buscar amanhã: '+(e.corNome||'')+' ('+e.faccNome+')'});});
+  virado.forEach(function(l){alertas.push({c:'#3b82f6',m:'📦 Pronto p/ embalar: '+l.corNome+' '+l.prodNome});});
+
+  var alertBox=document.createElement('div');
+  alertBox.style.cssText='background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:12px;overflow-y:auto;max-height:140px';
+  alertBox.innerHTML='<div style="font-size:10px;font-weight:800;color:var(--t2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">⚠️ Requer ação</div>'+
+    (alertas.length?alertas.map(function(a){
+      return '<div style="background:'+a.c+'15;border-left:3px solid '+a.c+';border-radius:5px;padding:6px 10px;margin-bottom:4px;font-size:11px;font-weight:700;color:'+a.c+'">'+a.m+'</div>';
+    }).join(''):'<div style="color:var(--t3);font-size:12px;padding:8px 0">✅ Sem alertas no momento</div>');
+  midRow.appendChild(alertBox);
+
+  // Capacidade hoje
+  var capRest={liso:cap.liso,meia:cap.meia,mini:cap.mini};
+  var paraHoje=lotes.filter(function(l){return l.status==='aguardando';});
+  paraHoje.sort(function(a,b){var pa=a.atrasado?0:a.urgente?1:2;var pb=b.atrasado?0:b.urgente?1:2;return pa-pb;});
+  var hojeItems=[],totalKg={liso:0,meia:0,mini:0};
+  paraHoje.forEach(function(l){
+    var tipo=l.tipo.toLowerCase();
+    if((capRest[tipo]||0)>=l.kgPorCor*0.5){
+      hojeItems.push(l);capRest[tipo]=Math.max(0,(capRest[tipo]||0)-l.kgPorCor);
+      totalKg[tipo]=(totalKg[tipo]||0)+l.kgPorCor;
+    }
   });
-  left.appendChild(kgrid);
+  var capBox=document.createElement('div');
+  capBox.style.cssText='background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:12px;overflow-y:auto;max-height:140px';
+  capBox.innerHTML='<div style="font-size:10px;font-weight:800;color:var(--t2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">🏭 Para produzir hoje</div>'+
+    (hojeItems.length?
+      hojeItems.map(function(l){
+        var tc=tipoCor(l.tipo);
+        return '<div style="display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid var(--border)">'+
+          '<span style="font-size:9px;font-weight:900;background:'+tc.bg+';color:'+tc.c+';padding:1px 6px;border-radius:4px">'+l.tipo.toUpperCase()+'</span>'+
+          '<span style="font-size:12px;font-weight:700;flex:1">'+l.corNome+'</span>'+
+          '<span style="font-size:11px;color:var(--purple);font-weight:700">'+l.kgPorCor.toFixed(2)+'kg</span>'+
+          (l.atrasado?'<span style="color:#ef4444;font-size:10px;font-weight:700">🔴</span>':l.urgente?'<span style="color:#f59e0b;font-size:10px">⚡</span>':'')+
+        '</div>';
+      }).join(''):
+      '<div style="color:var(--t3);font-size:12px;padding:8px 0">Nenhum lote aguardando</div>');
+  midRow.appendChild(capBox);
+  outer.appendChild(midRow);
 
-  // Alertas compactos
-  var alerts=[];
-  atrasados.forEach(function(l){alerts.push({c:'#ef4444',m:'🔴 '+l.corNome+' '+l.prodNome+' · Ped.'+l.pedNum+' ('+Math.abs(l.dias)+'d atraso)'});});
-  virado.forEach(function(l){alerts.push({c:'#3b82f6',m:'📦 '+l.corNome+' '+l.prodNome+' · pronto p/ embalar'});});
-  emFacc.forEach(function(e){
-    var dr=diasAte(e.previsao);
-    if(dr<=1)alerts.push({c:dr<0?'#ef4444':'#f59e0b',m:'🤝 Retorno '+(dr<0?'atrasado':'hoje')+' · '+e.corNome});
-  });
-  urgentes.forEach(function(l){alerts.push({c:'#f59e0b',m:'⚡ '+l.corNome+' '+l.prodNome+' · '+l.dias+'d p/ entregar'});});
-
-  if(alerts.length){
-    var aBox=document.createElement('div');
-    aBox.style.cssText='overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:4px';
-    alerts.forEach(function(a){
-      var aEl=document.createElement('div');
-      aEl.style.cssText='background:'+a.c+'15;border-left:3px solid '+a.c+';border-radius:6px;padding:6px 10px;font-size:11px;font-weight:700;color:'+a.c;
-      aEl.textContent=a.m;
-      aBox.appendChild(aEl);
-    });
-    left.appendChild(aBox);
-  } else {
-    var ok=document.createElement('div');
-    ok.style.cssText='background:#f0fdf4;border-radius:8px;padding:12px;text-align:center;color:#065f46;font-size:12px;font-weight:700';
-    ok.textContent='✅ Sem alertas';
-    left.appendChild(ok);
-  }
-
-  outer.appendChild(left);
-
-  // ── COLUNA DIREITA — Fila por pedido ──
-  var right=document.createElement('div');
-  right.style.cssText='overflow-y:auto;display:flex;flex-direction:column;gap:8px';
-
+  // ── 3. Fila de pedidos ──
   var pedidos_prod=d.pedidos.filter(function(p){return['recebido','producao','pronto'].includes(p.status);});
   pedidos_prod.sort(function(a,b){return new Date(a.entrega||'9999')-new Date(b.entrega||'9999');});
 
+  var filaWrap=document.createElement('div');
+  filaWrap.style.cssText='background:var(--white);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;flex:1;display:flex;flex-direction:column;min-height:0';
+
+  var filaHdr=document.createElement('div');
+  filaHdr.style.cssText='padding:10px 14px;font-size:10px;font-weight:800;color:var(--t2);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border);flex-shrink:0;background:var(--bg)';
+  filaHdr.textContent='📋 Fila de Pedidos — Lotes por Etapa';
+  filaWrap.appendChild(filaHdr);
+
+  var filaBody=document.createElement('div');
+  filaBody.style.cssText='overflow-y:auto;flex:1';
+
+  var STATUS_ICON={aguardando:'⬜',maquina:'🟣',cru:'🟡',facc:'🔶',corte:'✂️',virado:'🔵',pronto:'🟢'};
+  var STATUS_LABEL={aguardando:'Aguard.',maquina:'Máquina',cru:'Cru',facc:'Facc.',corte:'Corte',virado:'Embalar',pronto:'Pronto'};
+
   if(!pedidos_prod.length){
-    var empty=document.createElement('div');
-    empty.style.cssText='text-align:center;padding:40px;color:var(--t2)';
-    empty.innerHTML='<div style="font-size:36px;margin-bottom:8px">📋</div><div style="font-size:14px;font-weight:700">Nenhum pedido em produção</div>';
-    right.appendChild(empty);
-  }
+    filaBody.innerHTML='<div style="text-align:center;padding:30px;color:var(--t3)">Nenhum pedido em produção</div>';
+  } else {
+    pedidos_prod.forEach(function(ped){
+      var pedLotes=lotes.filter(function(l){return l.pedId===ped.id;});
+      var dias=diasAte(ped.entrega);
+      var corDias=dias<0?'#ef4444':dias<=3?'#f59e0b':'var(--t2)';
 
-  pedidos_prod.forEach(function(ped){
-    var pedLotes=lotes.filter(function(l){return l.pedId===ped.id;});
-    if(!pedLotes.length)return;
-    var dias=diasAte(ped.entrega);
-    var cor=dias<0?'#ef4444':dias<=3?'#f59e0b':'var(--border)';
+      var row=document.createElement('div');
+      row.style.cssText='display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--border);cursor:pointer';
+      row.onmouseover=function(){this.style.background='var(--bg)';};
+      row.onmouseout=function(){this.style.background='';};
 
-    var card=document.createElement('div');
-    card.style.cssText='background:var(--white);border:1.5px solid '+cor+';border-radius:var(--r);padding:10px 14px;flex-shrink:0';
+      // Pedido info
+      var info=document.createElement('div');
+      info.style.cssText='min-width:160px;flex-shrink:0';
+      info.innerHTML=
+        '<div style="font-size:13px;font-weight:800">'+ped.clienteNome+'</div>'+
+        '<div style="font-size:11px;color:var(--t2)">'+( ped.numero||'')+'</div>'+
+        '<div style="font-size:11px;font-weight:700;color:'+corDias+'">'+(dias<0?'🔴 '+Math.abs(dias)+'d atraso':dias===0?'⚡ Hoje!':dias<999?'📅 '+dias+'d':'')+'</div>';
+      row.appendChild(info);
 
-    // Header do pedido
-    var ph=document.createElement('div');
-    ph.style.cssText='display:flex;align-items:center;justify-content:space-between;margin-bottom:8px';
-    ph.innerHTML='<div><span style="font-size:14px;font-weight:800">'+ped.clienteNome+'</span> <span style="font-size:11px;color:var(--t2)">'+( ped.numero||'')+'</span></div>'+
-      '<div style="font-size:11px;font-weight:700;color:'+cor+'">'+(dias<0?Math.abs(dias)+'d atraso':dias===0?'Hoje!':dias<999?dias+'d':'Sem prazo')+'</div>';
-    card.appendChild(ph);
+      // Lotes como chips
+      var chips=document.createElement('div');
+      chips.style.cssText='display:flex;flex-wrap:wrap;gap:4px;flex:1';
 
-    // Lotes em linha
-    var ll=document.createElement('div');
-    ll.style.cssText='display:flex;flex-wrap:wrap;gap:4px';
-    pedLotes.forEach(function(l){
-      var stCor={aguardando:'#94a3b8',maquina:'#8b5cf6',cru:'#f59e0b',facc:'#ef4444',virado:'#3b82f6',pronto:'#10b981'}[l.status]||'#94a3b8';
-      var stLbl={aguardando:'Aguard.',maquina:'Máquina',cru:'Cru',facc:'Facc.',virado:'Embalar',pronto:'Pronto'}[l.status]||l.status;
-      var tc=tipoCor(l.tipo);
-      var chip=document.createElement('div');
-      chip.style.cssText='display:flex;align-items:center;gap:4px;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:4px 8px';
-      chip.innerHTML='<span style="font-size:9px;font-weight:900;background:'+tc.bg+';color:'+tc.c+';padding:1px 5px;border-radius:3px">'+l.tipo.toUpperCase()+'</span>'+
-        '<span style="font-size:12px;font-weight:700">'+l.corNome+'</span>'+
-        '<span style="background:'+stCor+'22;color:'+stCor+';padding:1px 6px;border-radius:10px;font-size:10px;font-weight:700">'+stLbl+'</span>';
-      ll.appendChild(chip);
+      if(!pedLotes.length){
+        var noLote=document.createElement('span');
+        noLote.style.cssText='font-size:11px;color:var(--t3)';
+        noLote.textContent='Sem lotes gerados';
+        chips.appendChild(noLote);
+      } else {
+        pedLotes.forEach(function(l){
+          var tc=tipoCor(l.tipo);
+          var ic=STATUS_ICON[l.status]||'⬜';
+          var chip=document.createElement('div');
+          chip.style.cssText='display:flex;align-items:center;gap:3px;padding:3px 7px;border-radius:20px;background:var(--bg);border:1px solid var(--border);font-size:11px;cursor:pointer';
+          chip.title=STATUS_LABEL[l.status]+' — '+l.corNome+' ('+l.kgPorCor.toFixed(2)+'kg)';
+          chip.innerHTML=
+            '<span style="font-size:8px;font-weight:900;background:'+tc.bg+';color:'+tc.c+';padding:1px 4px;border-radius:3px">'+l.tipo.toUpperCase()+'</span>'+
+            '<span style="font-weight:700">'+l.corNome+'</span>'+
+            '<span title="'+STATUS_LABEL[l.status]+'">'+ic+'</span>';
+          chip.onclick=(function(lote){return function(ev){ev.stopPropagation();abrirDetalhe(lote);};})(l);
+          chips.appendChild(chip);
+        });
+      }
+      row.appendChild(chips);
+
+      // Total
+      var tot=document.createElement('div');
+      tot.style.cssText='text-align:right;flex-shrink:0;font-size:12px;color:var(--t2)';
+      var total=(ped.itens||[]).reduce(function(s,i){return s+Number(i.total||0);},0);
+      tot.innerHTML='<div style="font-weight:800;color:var(--purple)">R$ '+total.toFixed(2)+'</div>'+
+        '<div>'+pedLotes.length+' lote(s)</div>';
+      row.appendChild(tot);
+
+      filaBody.appendChild(row);
     });
-    card.appendChild(ll);
-    right.appendChild(card);
-  });
-
-  outer.appendChild(right);
+  }
+  filaWrap.appendChild(filaBody);
+  outer.appendChild(filaWrap);
   wrap.appendChild(outer);
 }
 
-
-var _expedirPedId=null;
-function expedirPedido(pedId){
-  var d=D();
-  var ped=d.pedidos.find(function(p){return p.id===pedId;});
-  if(!ped)return;
-  _expedirPedId=pedId;
-  // Fill info
-  document.getElementById('exp-ped-info').innerHTML=
-    '<strong>'+ped.clienteNome+'</strong> · '+( ped.numero||'')+
-    '<br><span style="font-size:12px;color:var(--t2)">'+
-      (ped.itens||[]).length+' item(s) · Total: R$ '+(ped.itens||[]).reduce(function(s,i){return s+Number(i.total||0);},0).toFixed(2)+
-    '</span>';
-  // Show/hide boleto checkbox
-  var hasBoleto=(ped.formaPgto||'').toLowerCase()==='boleto';
-  document.getElementById('exp-boleto-wrap').style.display=hasBoleto?'flex':'none';
-  // Reset checkboxes
-  document.getElementById('exp-nf').checked=ped.nfEnviada||false;
-  document.getElementById('exp-boleto').checked=ped.boletoEnviado||false;
-  document.getElementById('ov-expedir').classList.add('on');
-}
-function confirmarExpedicao(){
-  if(!_expedirPedId)return;
-  var nfOk=document.getElementById('exp-nf').checked;
-  var bolOk=document.getElementById('exp-boleto').checked;
-  var d=D();
-  var ped=d.pedidos.find(function(p){return p.id===_expedirPedId;});
-  if(!ped)return;
-  var hasBoleto=(ped.formaPgto||'').toLowerCase()==='boleto';
-  if(!nfOk){
-    if(!confirm('⚠️ NF ainda não foi enviada. Deseja expedir assim mesmo?'))return;
-  }
-  if(hasBoleto&&!bolOk){
-    if(!confirm('⚠️ Boleto ainda não foi enviado. Deseja expedir assim mesmo?'))return;
-  }
-  ped.status='expedido';
-  ped.nfEnviada=nfOk;
-  ped.boletoEnviado=bolOk;
-  ped.dataExpedicao=new Date().toISOString().split('T')[0];
-  S('allhair_pedidos',d.pedidos);
-  X('expedir');
-  R(_aba);
-  _expedirPedId=null;
+function mkKpi(icon,val,label,cor){
+  return '<div style="text-align:center"><div style="font-size:18px;font-weight:900;color:'+cor+'">'+val+'</div><div style="font-size:9px;color:rgba(255,255,255,.5);text-transform:uppercase">'+label+'</div></div>';
 }
 
-function abrirDetalhe(l){
-  var d=D();
-  document.getElementById('det-title').textContent=l.tipo.toUpperCase()+' '+l.corNome+' — '+l.prodNome;
-  var body=document.getElementById('det-body');
-  body.innerHTML='';
-
-  // Header info
-  var hdr=document.createElement('div');
-  hdr.style.cssText='padding:14px 20px;background:var(--bg);border-bottom:1px solid var(--border)';
-  hdr.innerHTML=
-    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px">'+
-      row('📋 Pedido', l.pedNum)+
-      row('👤 Cliente', l.cliente)+
-      row('📅 Entrega', l.entrega?fmtD(l.entrega):'—')+
-      row('⚖️ Meta', l.kgPorCor.toFixed(2)+'kg')+
-      row('📦 Produto', l.prodNome+(l.prodRef?' ('+l.prodRef+')':''))+
-      row('🎨 Cor', l.corNome)+
-    '</div>';
-  body.appendChild(hdr);
-
-  // Timeline of events
-  var tl=document.createElement('div');
-  tl.style.cssText='padding:14px 20px';
-  tl.innerHTML='<div style="font-size:11px;font-weight:800;color:var(--t2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">📅 Histórico do Lote</div>';
-
-  var eventos=[];
-
-  // Producoes (maquina launches)
-  var kgKey=l.id+'_kg';
-  var prods=d.producoes.filter(function(p){
-    return p.etapa==='maquina'&&p.corId===l.corId&&p.tecido===l.tipo;
-  }).sort(function(a,b){return new Date(a.data||a.criadoEm)-new Date(b.data||b.criadoEm);});
-  var totalProd=0;
-  prods.forEach(function(p){
-    totalProd+=Number(p.kg||0);
-    eventos.push({icon:'🏭',cor:'#8b5cf6',titulo:'Máquina — '+p.kg.toFixed(2)+'kg',data:p.data,obs:p.obs||''});
-  });
-
-  // Envios facc
-  var envs=d.envios.filter(function(e){return e.corId===l.corId&&e.tipo===l.tipo;});
-  envs.forEach(function(e){
-    var facc=d.faccionistas.find(function(f){return f.id===e.faccId;})||{nome:e.faccNome||'—'};
-    eventos.push({icon:'🤝',cor:'#f59e0b',titulo:'Enviado p/ '+facc.nome+' — '+e.kg+'kg',data:e.dataEnvio,obs:'Prev. retorno: '+fmtD(e.previsao)});
-    if(e.status==='devolvido'){
-      eventos.push({icon:'📦',cor:'#3b82f6',titulo:'Retorno Facc. — '+(e.kgDev||e.kg)+'kg virado',data:e.dataRetorno,obs:''});
-    }
-  });
-
-  // Embalagem
-  var embKey='_emb_'+l.id;
-  var kgEmb=Number(d.lotes[embKey]||0);
-  var prodEmb=d.produtos.find(function(p){return p.id===l.prodId;});
-  var unidEmb=prodEmb?prodEmb['unid-pacote']||12:12;
-  var rendEmb=prodEmb?prodEmb.rendimento||1000:1000;
-  var pctEmbFeito=Math.round(kgEmb*rendEmb/unidEmb);
-  var pctEmbMeta=l.pctTotal;
-  if(kgEmb>0){
-    var embs=d.producoes.filter(function(p){return p.etapa==='embalagem'&&p.prodId===l.prodId;});
-    embs.forEach(function(p){
-      eventos.push({icon:'📦',cor:'#10b981',titulo:'Embalagem — '+p.pacotes+' pacotes ('+p.pecas+' peças)',data:p.data,obs:''});
-    });
-  }
-
-  eventos.sort(function(a,b){return new Date(a.data||'9999')-new Date(b.data||'9999');});
-
-  if(!eventos.length){
-    tl.innerHTML+='<div style="color:var(--t3);font-size:12px;text-align:center;padding:12px">Nenhum lançamento ainda</div>';
-  } else {
-    eventos.forEach(function(ev,i){
-      var evEl=document.createElement('div');
-      evEl.style.cssText='display:flex;gap:10px;padding:8px 0;'+(i<eventos.length-1?'border-bottom:1px solid var(--border)':'');
-      evEl.innerHTML=
-        '<div style="width:28px;height:28px;border-radius:50%;background:'+ev.cor+'22;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">'+ev.icon+'</div>'+
-        '<div style="flex:1">'+
-          '<div style="font-size:12px;font-weight:700">'+ev.titulo+'</div>'+
-          '<div style="font-size:11px;color:var(--t2);margin-top:1px">'+
-            (ev.data?fmtD(ev.data):'—')+(ev.obs?' · '+ev.obs:'')+
-          '</div>'+
-        '</div>';
-      tl.appendChild(evEl);
-    });
-  }
-
-  // Progress summary
-  var kgF=d.lotes._kg?Number(d.lotes._kg[kgKey]||0):0;
-  var pct=l.kgPorCor>0?Math.min(100,Math.round(kgF/l.kgPorCor*100)):0;
-  var sumEl=document.createElement('div');
-  sumEl.style.cssText='margin-top:10px;display:flex;flex-direction:column;gap:6px';
-  // Maquina progress
-  if(kgF>0||l.status==='maquina'){
-    var maqProg=document.createElement('div');
-    maqProg.style.cssText='padding:10px 12px;background:var(--pl);border-radius:8px;font-size:12px';
-    maqProg.innerHTML=
-      '<div style="display:flex;justify-content:space-between;font-weight:700;margin-bottom:4px">'+
-        '<span>🏭 Máquina</span><span style="color:var(--purple)">'+kgF.toFixed(2)+'/'+l.kgPorCor.toFixed(2)+'kg ('+pct+'%)</span>'+
-      '</div>'+
-      '<div style="background:#e2e8f0;border-radius:20px;height:5px;overflow:hidden">'+
-        '<div style="height:100%;background:var(--purple);width:'+pct+'%;border-radius:20px"></div>'+
-      '</div>';
-    sumEl.appendChild(maqProg);
-  }
-  // Embalagem progress in pacotes
-  if(kgEmb>0||l.status==='virado'){
-    var pctEmb2=pctEmbMeta>0?Math.min(100,Math.round(pctEmbFeito/pctEmbMeta*100)):0;
-    var embProg=document.createElement('div');
-    embProg.style.cssText='padding:10px 12px;background:var(--gl);border-radius:8px;font-size:12px';
-    embProg.innerHTML=
-      '<div style="display:flex;justify-content:space-between;font-weight:700;margin-bottom:4px">'+
-        '<span>📦 Embalagem</span><span style="color:var(--green)">'+pctEmbFeito+'/'+pctEmbMeta+' pct ('+pctEmb2+'%)</span>'+
-      '</div>'+
-      '<div style="background:#e2e8f0;border-radius:20px;height:5px;overflow:hidden">'+
-        '<div style="height:100%;background:var(--green);width:'+pctEmb2+'%;border-radius:20px"></div>'+
-      '</div>';
-    sumEl.appendChild(embProg);
-  }
-  tl.appendChild(sumEl);
-
-  body.appendChild(tl);
-  document.getElementById('ov-detalhe').classList.add('on');
-}
-
-function row(label,val){
-  return '<div style="padding:4px 0"><div style="font-size:10px;color:var(--t2)">'+label+'</div><div style="font-weight:700">'+val+'</div></div>';
-}
-
-function fmtD(d2){return d2?new Date(d2+'T00:00').toLocaleDateString('pt-BR'):'—';}
-
-function imprimirEtapa(col, items){
-  var dataHoje=new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
-  var etapaLabel=col.label.replace(/[📋🏭📦🤝✂️✅🚚]/g,'').trim();
-  var html='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>'+etapaLabel+'</title>'+
-    '<style>'+
-      '*{margin:0;padding:0;box-sizing:border-box;}'+
-      'body{font-family:Arial,sans-serif;padding:20px;font-size:12px;color:#1e293b;}'+
-      'h1{font-size:16px;font-weight:900;margin-bottom:2px;}'+
-      '.sub{font-size:11px;color:#64748b;margin-bottom:16px;border-bottom:2px solid '+col.cor+';padding-bottom:8px;}'+
-      'table{width:100%;border-collapse:collapse;}'+
-      'th{padding:7px 10px;background:#f1f5f9;font-size:10px;font-weight:700;text-align:left;text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid #e2e8f0;}'+
-      'td{padding:8px 10px;border-bottom:1px solid #e2e8f0;font-size:12px;vertical-align:middle;}'+
-      '.urgente{background:#fff7ed;}.atrasado{background:#fff5f5;}'+
-      '.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;}'+
-      '.check{width:22px;height:22px;border:2px solid #94a3b8;border-radius:4px;display:inline-block;}'+
-      '@media print{body{padding:10px}}'+
-    '</style></head><body>'+
-    '<h1>'+col.label+' — Ordem de Produção</h1>'+
-    '<div class="sub">ALL HAIR &nbsp;·&nbsp; '+dataHoje+'</div>';
-
-  if(!items.length){
-    html+='<p style="color:#94a3b8;padding:20px 0;text-align:center">Nenhum lote nesta etapa</p>';
-  } else {
-    html+='<table><thead><tr>'+
-      '<th>#</th><th>Tipo</th><th>Cor</th><th>Produto</th><th>Kg</th><th>Pedido / Cliente</th><th>Prazo</th><th>✓</th>'+
-    '</tr></thead><tbody>';
-    items.forEach(function(l,i){
-      var cls=l.atrasado?'atrasado':l.urgente?'urgente':'';
-      var prazo=l.dias<0?'🔴 '+Math.abs(l.dias)+'d atraso':l.dias===0?'⚡ Hoje':l.dias<999?l.dias+'d':'—';
-      html+='<tr class="'+cls+'">'+
-        '<td style="font-weight:700;color:#94a3b8">'+(i+1)+'</td>'+
-        '<td><span class="badge" style="background:'+(l.tipo==='meia'?'#ede9fe':l.tipo==='mini'?'#d1fae5':'#dbeafe')+';color:'+(l.tipo==='meia'?'#6d28d9':l.tipo==='mini'?'#065f46':'#1e40af')+'">'+l.tipo.toUpperCase()+'</span></td>'+
-        '<td style="font-weight:800;font-size:13px">'+l.corNome+'</td>'+
-        '<td>'+l.prodNome+(l.prodRef?' ('+l.prodRef+')':'')+'</td>'+
-        '<td style="font-weight:900;color:#8b5cf6">'+l.kgPorCor.toFixed(2)+'kg</td>'+
-        '<td><div style="font-weight:600">'+l.pedNum+'</div><div style="font-size:10px;color:#64748b">'+l.cliente+'</div></td>'+
-        '<td style="font-weight:700;color:'+(l.atrasado?'#ef4444':l.urgente?'#f59e0b':'#64748b')+'">'+prazo+'</td>'+
-        '<td><span class="check"></span></td>'+
-      '</tr>';
-    });
-    html+='</tbody></table>';
-    html+='<div style="margin-top:20px;padding:10px 14px;background:#f8fafc;border-radius:8px;font-size:11px;color:#64748b">'+
-      'Total: <strong>'+items.length+' lote(s)</strong> &nbsp;·&nbsp; '+
-      'Kg total: <strong>'+items.reduce(function(s,l){return s+l.kgPorCor;},0).toFixed(2)+'kg</strong>'+
-    '</div>';
-  }
-  html+='</body></html>';
-  var w=window.open('','_blank','width=750,height=900');
-  w.document.write(html);w.document.close();
-  setTimeout(function(){w.print();},400);
-}
 
 function rKanban(){
   var d=D();
