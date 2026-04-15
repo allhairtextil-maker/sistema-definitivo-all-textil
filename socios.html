@@ -544,9 +544,12 @@ function switchTab(t){document.querySelectorAll('.tab').forEach(x=>x.classList.r
   // ===== CÁLCULO CENTRAL =====
   function calcularMes(mes, ano){
     // Pedidos do mês
+    // Usa data de entrega (competência) igual ao dashboard
     const pedsMes = pedidos.filter(p=>{
-      if(!p.data) return false;
-      const d = new Date(p.data+' 00:00');
+      if(p.status==='cancelado') return false;
+      const dt = p.entrega || p.data;
+      if(!dt) return false;
+      const d = new Date(dt+' 00:00');
       return d.getMonth()===mes && d.getFullYear()===ano;
     });
 
