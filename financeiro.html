@@ -2,6 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
+<script src="mes-global.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Financeiro — ALL HAIR</title>
 <link rel="manifest" href="manifest.json">
@@ -478,26 +479,38 @@ function getAPagar(d){
     });
   });
 
-  // 2) DESPESAS VARIÁVEIS a prazo, pendentes
+  // Limite do mês selecionado: itens vencidos antes do fim do mês aparecem
+  var _mgInt=typeof MG!=='undefined'?MG.intervalo():{inicio:'1900-01-01',fim:'2999-12-31'};
+  var _fimMes=_mgInt.fim; // último dia do mês selecionado
+  var _iniMes=_mgInt.inicio; // primeiro dia do mês selecionado
+
+  // 2) DESPESAS VARIÁVEIS: do mês selecionado OU atrasadas (vencimento <= fim do mês, ainda pendentes)
   d.despesas.filter(function(x){
     return x.tipo==='variavel'&&x.pagto!=='avista'&&x.status!=='pago';
   }).forEach(function(x){
+    var venc=x.venc||x.vencimento||x.dataavulso||'';
+    // Inclui se: vence no mês selecionado OU já estava vencida (carryover)
+    if(venc && venc > _fimMes) return; // vence no futuro além do mês, não inclui
     lista.push({
       id:'var_'+x.id,despesaId:x.id,
       desc:x.desc,cat:x.cat,valor:x.valor,
       tipo:'variavel',dataDivida:x.divida||x.dataavulso||'',
-      vencimento:x.venc||x.vencimento||x.dataavulso||'',
+      vencimento:venc,
       status:'pendente',pago:false,
+      atrasada:venc && venc < _iniMes, // veio de mês anterior
     });
   });
 
-  // 3) CONTAS A PAGAR MANUAIS
+  // 3) CONTAS A PAGAR MANUAIS: do mês OU atrasadas
   (d.aPagar||[]).forEach(function(x){
     if(x.status==='pago')return;
+    var venc=x.vencimento||'';
+    if(venc && venc > _fimMes) return; // vence depois do mês selecionado
     lista.push({
       id:x.id,desc:x.desc,cat:x.cat,valor:x.valor,
-      tipo:'manual',dataDivida:x.dataDivida||'',vencimento:x.vencimento||'',
-      status:'pendente',pago:false,obs:x.obs||''
+      tipo:'manual',dataDivida:x.dataDivida||'',vencimento:venc,
+      status:'pendente',pago:false,obs:x.obs||'',
+      atrasada:venc && venc < _iniMes,
     });
   });
 
@@ -509,11 +522,45 @@ function getAPagar(d){
   });
 }
 
+// Calcula saldo ainda a receber de um pedido
+function getSaldoPedido(p, recebimentos){
+  var total=(p.itens||[]).reduce(function(s,i){return s+Number(i.total||0);},0);
+  var recebido=(recebimentos||[]).filter(function(r){return r.pedidoId===p.id;})
+    .reduce(function(s,r){return s+Number(r.valor||0);},0);
+  var entrada=Number(p.entrada||0);
+  return Math.max(0, total - recebido - entrada);
+}
+
 function getBoletosPendentes(d){
   var lista=[];
   d.pedidos.forEach(function(p){
     if(p.status==='cancelado')return;
-    if((p.formaPgto||'').toLowerCase()!=='boleto')return;
+    var _fp=(p.formaPgto||'').toLowerCase();
+    
+    // PIX / Transferência / Dinheiro pendentes → aparecem como A Receber
+    if(_fp==='pix'||_fp==='transferência'||_fp==='transferencia'||_fp==='dinheiro'){
+      if(p.pgtoStatus==='pago') return; // já pago, não aparece
+      var _saldoPix=getSaldoPedido(p,d.recebimentos);
+      if(_saldoPix<=0) return;
+      var _vencPix=p.vencimento||p.entrega||p.data||'';
+      // Carryover: só mostra se vence até o fim do mês selecionado
+      var _mgBolPix=typeof MG!=='undefined'?MG.intervalo():{inicio:'1900-01-01',fim:'2999-12-31'};
+      if(_vencPix && _vencPix > _mgBolPix.fim) return;
+      lista.push({
+        id:'pix_'+p.id,tipo:'pix',pedidoId:p.id,
+        clienteNome:p.clienteNome||'—',
+        desc:(p.formaPgto||'PIX')+' – Ped.'+(p.numero||p.id),
+        valor:_saldoPix,
+        vencimento:_vencPix,
+        dataVenda:p.data||'',
+        nf:p.nf||'',
+        formaPgto:p.formaPgto||'PIX',
+        atrasado:_vencPix && _vencPix < _mgBolPix.inicio,
+      });
+      return;
+    }
+    
+    if(_fp!=='boleto')return;
     var venc=p.vencimentos||[];
     if(!venc.length&&p.vencimento)venc=[p.vencimento];
     venc=venc.filter(function(v,i,a){return v&&a.indexOf(v)===i;});
@@ -526,14 +573,30 @@ function getBoletosPendentes(d){
       var rid='bol_'+p.id+'_p'+(ii+1);
       var conf=d.aReceber.some(function(r){return r.id===rid&&r.status==='recebido';});
       if(conf)return;
+      // Carryover: inclui boletos vencidos (atrasados) no mês atual
+      var _mgBol=typeof MG!=='undefined'?MG.intervalo():{inicio:'1900-01-01',fim:'2999-12-31'};
+      if(dv > _mgBol.fim) return; // vence depois do mês selecionado, não mostra ainda
       lista.push({id:rid,tipo:'boleto',pedidoId:p.id,clienteNome:p.clienteNome||'—',
         desc:'Boleto '+(ii+1)+'/'+nP+(p.numero?' – Ped.'+p.numero:''),
-        valor:vP,vencimento:dv,dataVenda:p.data||'',nf:p.nf||''});
+        valor:vP,vencimento:dv,dataVenda:p.data||'',nf:p.nf||'',
+        atrasado:dv < _mgBol.inicio}); // veio de mês anterior
     });
   });
+  // Avulsos manuais: inclui do mês ou atrasados (carryover)
+  var _mgIntR=typeof MG!=='undefined'?MG.intervalo():{inicio:'1900-01-01',fim:'2999-12-31'};
   d.aReceber.filter(function(r){
-    return r.status==='pendente'&&r.tipo!=='boleto'&&!(r.id&&r.id.indexOf('bol_')===0);
+    if(r.status!=='pendente') return false;
+    if(r.tipo==='boleto') return false;
+    if(r.id&&r.id.indexOf('bol_')===0) return false;
+    // Inclui se vence até o fim do mês selecionado (carryover de meses anteriores)
+    var venc=r.vencimento||'';
+    if(venc && venc > _mgIntR.fim) return false; // vence depois, não inclui
+    return true;
   }).forEach(function(r){lista.push(r);});
+  
+  // Boletos de pedidos atrasados: também carregam pro mês
+  // (já incluídos acima pois não têm status 'recebido')
+  
   return lista.sort(function(a,b){return new Date(a.vencimento||'9999')-new Date(b.vencimento||'9999');});
 }
 
@@ -622,6 +685,7 @@ function renderAPagar(d){
     g.items.map(function(x){
       var pago=x.pago;
       var tipoBadge=x.tipo==='fixo'?'<span class="badge badge-fixo">🔁 Fixo</span>':x.tipo==='manual'?'<span class="badge badge-var">📌 Manual</span>':'<span class="badge badge-var">📌 Variável</span>';
+      if(x.atrasada) tipoBadge+=' <span class="badge" style="background:#fff3cd;color:#856404;font-size:10px">↩ Mês anterior</span>';
       return '<div class="pagar-item" style="background:'+g.cor+'">'+
         '<div class="pagar-dot" style="background:'+(pago?'var(--green)':diasAte(x.vencimento)<0?'var(--red)':diasAte(x.vencimento)===0?'var(--orange)':'var(--blue)')+'"></div>'+
         '<div class="pagar-info">'+
@@ -666,7 +730,7 @@ function renderAReceber(d){
     return '<div class="pagar-item">'+
       '<div class="pagar-dot" style="background:'+(atrasado?'var(--red)':'var(--green)')+'"></div>'+
       '<div class="pagar-info">'+
-        '<div class="pagar-desc">'+r.desc+'</div>'+
+        '<div class="pagar-desc">'+r.desc+(r.atrasado?' <span class="badge" style="background:#fff3cd;color:#856404;font-size:10px">↩ Mês anterior</span>':'')+'</div>'+
         '<div class="pagar-meta">'+(r.clienteNome||'')+(r.dataVenda?' · Venda: '+fmtD(r.dataVenda):'')+'</div>'+
       '</div>'+
       '<div style="margin-right:8px">'+vencBadge(r.vencimento)+'</div>'+
@@ -839,9 +903,9 @@ function renderCaixa(d){
 // DRE
 // ============================================================
 function renderDRE(d){
-  var pedsMes=d.pedidos.filter(function(p){return MG.noMesSel(p.data)&&p.status!=='cancelado';});
+  var pedsMes=d.pedidos.filter(function(p){return MG.noMesSel(p.entrega||p.data)&&p.status!=='cancelado';});
   var fat=pedsMes.reduce(function(s,p){return s+(p.itens||[]).reduce(function(s2,i){return s2+Number(i.total||0);},0);},0);
-  var mp=d.compras.filter(function(c){return MG.noMesSel(c.data);}).reduce(function(s,c){return s+Number(c.total||c.valor||0);},0);
+  var mp=d.compras.filter(function(c){return MG.noMesSel(c.data||c.criadoEm);}).reduce(function(s,c){return s+Number(c.total||c.valor||0);},0);
   var fixas=d.despesas.filter(function(x){return x.tipo==='fixo'&&x.ativo!==false;}).reduce(function(s,x){return s+Number(x.valor||0);},0);
   var impPct=((d.config.aliquota||6))/100;
   var imp=fat*impPct;
@@ -1180,7 +1244,6 @@ window.addEventListener('mesChanged',function(){
 });
 render('resumo');
 </script>
-<script src="mes-global.js"></script>
 <script src="firebase-sync.js"></script>
 </body>
 </html>

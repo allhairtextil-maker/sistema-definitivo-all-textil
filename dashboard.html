@@ -9,6 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="apple-touch-icon" href="/icon-192.png">
 <meta charset="UTF-8">
+<script src="mes-global.js"></script>
 <meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=0.5">
 <title>ALL HAIR — Dashboard</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -2556,7 +2557,7 @@ main { padding: 24px 28px; }
     const despesasMes=pagamentos.filter(p=>noMes(p.data)).reduce((s,p)=>s+Number(p.valor||0),0)+despesas.filter(d=>d.tipo==='fixo'&&d.ativo).reduce((s,d)=>s+Number(d.valor||0),0);
     const lucro=receitaMes-despesasMes;
     const margem=receitaMes>0?lucro/receitaMes*100:0;
-    const fatBruto=pedidos.filter(p=>{if(!p.data)return false;const d=new Date(p.data+' 00:00');return d.getMonth()===mes&&d.getFullYear()===ano;}).reduce((s,p)=>(p.itens||[]).reduce((ss,i)=>ss+Number(i.total||0),0)+s,0);
+    const fatBruto=pedidos.filter(p=>{const ref=p.entrega||p.data;if(!ref)return false;const d=new Date(ref+' 00:00');return d.getMonth()===mes&&d.getFullYear()===ano;}).reduce((s,p)=>(p.itens||[]).reduce((ss,i)=>ss+Number(i.total||0),0)+s,0);
     const kgHoje=producoes.filter(p=>p.data===hoje&&p.etapa==='maquina').reduce((s,p)=>s+Number(p.kg||0),0);
     const virando=envios.filter(e=>e.status==='enviado');
     const aPagarFacc=envios.filter(e=>e.status==='devolvido'&&!e.pago).reduce((s,e)=>s+Number(e.valor||0),0);
@@ -2748,7 +2749,7 @@ main { padding: 24px 28px; }
     // ===== GRÁFICOS =====
     // Top produtos
     const topProd={};
-    pedidos.filter(p=>{if(!p.data)return false;const d=new Date(p.data+' 00:00');return d.getMonth()===mes&&d.getFullYear()===ano;})
+    pedidos.filter(p=>{const ref=p.entrega||p.data;if(!ref)return false;const d=new Date(ref+' 00:00');return d.getMonth()===mes&&d.getFullYear()===ano;})
       .forEach(p=>(p.itens||[]).forEach(i=>{const pr=produtos.find(x=>x.id===i.prodId);const k=pr?pr.nome:'Outros';if(!topProd[k])topProd[k]=0;topProd[k]+=Number(i.total||0);}));
     const topList=Object.entries(topProd).sort((a,b)=>b[1]-a[1]).slice(0,5);
     const maxTop=topList[0]?.[1]||1;
@@ -3121,7 +3122,7 @@ main { padding: 24px 28px; }
     var eficiencia=capMensal>0?kgMes/capMensal*100:0;
 
     // Clientes
-    var pedsMes=pedidosAll.filter(function(p){return noMes(p.data);});
+    var pedsMes=pedidosAll.filter(function(p){return noMes(p.entrega||p.data);});
     var clientesMes=new Set(pedsMes.map(function(p){return p.clienteId||p.clienteNome;})).size;
     var ticketMedio=pedsMes.length?pedsMes.reduce(function(s,p){return s+(p.itens||[]).reduce(function(s2,i){return s2+Number(i.total||0);},0);},0)/pedsMes.length:0;
     var inadimpl=aReceber.filter(function(r){return r.status!=='pago'&&r.vencimento&&new Date(r.vencimento+' 00:00')<hoje;});
@@ -3604,7 +3605,7 @@ main { padding: 24px 28px; }
     // ===== GRÁFICOS =====
     // Top produtos
     const topProd={};
-    pedidos.filter(p=>{if(!p.data)return false;const d=new Date(p.data+' 00:00');return d.getMonth()===mes&&d.getFullYear()===ano;})
+    pedidos.filter(p=>{const ref=p.entrega||p.data;if(!ref)return false;const d=new Date(ref+' 00:00');return d.getMonth()===mes&&d.getFullYear()===ano;})
       .forEach(p=>(p.itens||[]).forEach(i=>{const pr=produtos.find(x=>x.id===i.prodId);const k=pr?pr.nome:'Outros';if(!topProd[k])topProd[k]=0;topProd[k]+=Number(i.total||0);}));
     const topList=Object.entries(topProd).sort((a,b)=>b[1]-a[1]).slice(0,5);
     const maxTop=topList[0]?.[1]||1;
@@ -3946,8 +3947,9 @@ main { padding: 24px 28px; }
 
   init();
   setInterval(init,60000);
+
+window.addEventListener('mesChanged',function(){init()});
 </script>
-<script src="mes-global.js"></script>
 <script src="firebase-sync.js"></script>
 
 <!-- MODAL AVALIAÇÃO MENSAL -->

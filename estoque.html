@@ -2,6 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
+<script src="mes-global.js"></script>
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Estoque — ALL HAIR</title>
 <link rel="manifest" href="manifest.json">
@@ -631,7 +632,12 @@ function rInsumos(){
 // ──────────────────────────────────────────────
 function rHistorico(){
   var d=D();
-  var movs=d.movimentos.slice().sort(function(a,b){return new Date(b.criadoEm||b.data)-new Date(a.criadoEm||a.data);}).slice(0,100);
+  var _mesEst=typeof MG!=='undefined'?MG.getMesAno():null;
+  var movs=d.movimentos.filter(function(m){
+    if(!_mesEst)return true;
+    var dt=(m.data||m.criadoEm||'');
+    return dt.substring(0,7)===_mesEst;
+  }).slice().sort(function(a,b){return new Date(b.criadoEm||b.data)-new Date(a.criadoEm||a.data);}).slice(0,200);
   var tbody=document.getElementById('hist-tbody');
   var empty=document.getElementById('hist-empty');
   if(!movs.length){tbody.innerHTML='';empty.style.display='block';return;}
@@ -870,8 +876,9 @@ setInterval(tick,1000);tick();
 // INIT
 // ──────────────────────────────────────────────
 R('mp');
+
+window.addEventListener('mesChanged',function(){rHistorico&&rHistorico();});
 </script>
-<script src="mes-global.js"></script>
 <script src="firebase-sync.js"></script>
 </body>
 </html>

@@ -9,6 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="apple-touch-icon" href="/icon-192.png">
 <meta charset="UTF-8">
+<script src="mes-global.js"></script>
 <meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=0.5">
 <title>ALL HAIR — Representantes</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -2656,8 +2657,9 @@ main { padding: 24px 28px; }
 
   // Init
   renderReps();
+
+window.addEventListener('mesChanged',function(){renderReps&&renderReps()});
 </script>
-<script src="mes-global.js"></script>
 <script src="firebase-sync.js"></script>
 </body>
 </html>

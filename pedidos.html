@@ -9,6 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="apple-touch-icon" href="/icon-192.png">
 <meta charset="UTF-8">
+<script src="mes-global.js"></script>
 <meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=0.5">
 <title>ALL HAIR — Pedidos</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -2352,6 +2353,22 @@ main { padding: 24px 28px; }
             <option value="pago">✅ Pago</option>
           </select>
         </div>
+        <!-- Campo data para PIX / Dinheiro / outros -->
+        <div id="campos-pix" style="display:none;grid-column:1/-1">
+          <div class="form-grid">
+            <div class="field">
+              <label>📅 Data prevista de recebimento</label>
+              <input type="date" id="ped-pix-venc">
+            </div>
+            <div class="field">
+              <label>Condição</label>
+              <select id="ped-pix-cond">
+                <option value="avista">💵 À vista (no ato)</option>
+                <option value="prazo">📅 A prazo (data futura)</option>
+              </select>
+            </div>
+          </div>
+        </div>
         <div id="campos-boleto" style="display:none;grid-column:1/-1">
             <div class="form-grid">
               <div class="field">
@@ -3474,7 +3491,10 @@ main { padding: 24px 28px; }
       formaPgto:document.getElementById('ped-forma-pgto').value,
       pgtoStatus:document.getElementById('ped-pgto-status').value,
       entrada:parseFloat(document.getElementById('ped-entrada').value||0),
-      vencimento:document.getElementById('ped-venc-1')?.value||'',
+      vencimento:document.getElementById('ped-forma-pgto').value==='Boleto'
+        ?(document.getElementById('ped-venc-1')?.value||'')
+        :(document.getElementById('ped-pix-venc')?.value||''),
+      pixCond:document.getElementById('ped-pix-cond')?.value||'avista',
       parcelas:(document.getElementById('ped-forma-pgto').value==='Boleto'?parseInt(document.getElementById('ped-parcelas')&&document.getElementById('ped-parcelas').value||1):1),
       vencimentos:(function(){
         var fpEl=document.getElementById('ped-forma-pgto');
@@ -4075,9 +4095,19 @@ main { padding: 24px 28px; }
     var f=document.getElementById('ped-forma-pgto');
     if(!f)return;
     var isBoleto=f.value==='Boleto';
+    var isPix=f.value==='PIX'||f.value==='Dinheiro'||f.value==='Transferência';
     var cb=document.getElementById('campos-boleto');
+    var cp=document.getElementById('campos-pix');
     if(cb)cb.style.display=isBoleto?'block':'none';
+    if(cp)cp.style.display=isPix?'block':'none';
     if(isBoleto)renderParcelasDatas();
+    // Preencher data padrão de hoje para PIX
+    if(isPix){
+      var pixVenc=document.getElementById('ped-pix-venc');
+      if(pixVenc&&!pixVenc.value){
+        pixVenc.value=new Date().toISOString().split('T')[0];
+      }
+    }
   }
 
   function renderParcelasDatas(){
@@ -4130,7 +4160,18 @@ main { padding: 24px 28px; }
   function renderKanban(){
     renderPedDash();
     const q=(document.getElementById('search-kanban').value||'').toLowerCase();
-    const filtered=pedidos.filter(p=>!q||p.clienteNome.toLowerCase().includes(q)||(p.numero||'').toLowerCase().includes(q));
+    // Filtro por mês selecionado
+    var _mesSel2=typeof MG!=='undefined'?MG.getMesAno():null;
+    var _mgIntK=typeof MG!=='undefined'?MG.intervalo():{inicio:'1900-01-01',fim:'2999-12-31'};
+    var _stAberto=['recebido','producao','pronto','enviado','expedido','nf_enviada','boleto_enviado'];
+    var pedMes=_mesSel2?pedidos.filter(function(p){
+      var ref=p.entrega||p.data||'';
+      var mesPed=ref.substring(0,7);
+      if(mesPed===_mesSel2) return true; // do mês
+      if(ref && ref < _mgIntK.inicio && _stAberto.includes(p.status)) return true; // em aberto de mês anterior
+      return false;
+    }):pedidos;
+    const filtered=pedMes.filter(p=>!q||p.clienteNome.toLowerCase().includes(q)||(p.numero||'').toLowerCase().includes(q));
 
     var _el=document.getElementById('tc-kanban');if(_el)_el.textContent=pedidos.length;
     var _el2=document.getElementById('tc-lista');if(_el2)_el2.textContent=pedidos.length;
@@ -4184,7 +4225,21 @@ main { padding: 24px 28px; }
     var q=(document.getElementById('search-lista')?.value||'').toLowerCase();
     var pendentesStatus=['recebido','producao','pronto','expedido','nf_enviada','boleto_enviado'];
 
-    var base=pedidos.filter(function(p){
+    // Filtro por mês selecionado com carryover de pedidos em aberto
+    var _mesSel=typeof MG!=='undefined'?MG.getMesAno():null;
+    var _mgIntP=typeof MG!=='undefined'?MG.intervalo():{inicio:'1900-01-01',fim:'2999-12-31'};
+    var statusAberto=['recebido','producao','pronto','enviado','expedido','nf_enviada','boleto_enviado'];
+    var pedidosMes=_mesSel?pedidos.filter(function(p){
+      var ref=p.entrega||p.data||'';
+      var mesPed=ref.substring(0,7);
+      // 1. Pedido do mês selecionado
+      if(mesPed===_mesSel) return true;
+      // 2. Carryover: pedido em aberto de mês anterior (não finalizado nem cancelado)
+      if(ref && ref < _mgIntP.inicio && statusAberto.includes(p.status)) return true;
+      return false;
+    }):pedidos;
+
+    var base=pedidosMes.filter(function(p){
       if(filtro==='pendentes')return pendentesStatus.includes(p.status);
       if(filtro==='entregues')return p.status==='finalizado'||p.status==='cancelado';
       return true;
@@ -4197,9 +4252,9 @@ main { padding: 24px 28px; }
     ['pendentes','entregues','todos'].forEach(function(f){
       var btn=document.getElementById('filtro-'+f);
       if(!btn)return;
-      var count=f==='pendentes'?pedidos.filter(function(p){return pendentesStatus.includes(p.status);}).length:
-                f==='entregues'?pedidos.filter(function(p){return p.status==='finalizado';}).length:
-                pedidos.length;
+      var count=f==='pendentes'?pedidosMes.filter(function(p){return pendentesStatus.includes(p.status);}).length:
+                f==='entregues'?pedidosMes.filter(function(p){return p.status==='finalizado';}).length:
+                pedidosMes.length;
       btn.textContent=(f==='pendentes'?'⏳ Pendentes':f==='entregues'?'✅ Entregues':'📋 Todos')+' ('+count+')';
       btn.style.cssText=f===filtro?
         'font-size:12px;padding:6px 14px;background:var(--purple);color:#fff;border:none;border-radius:8px;cursor:pointer;font-family:inherit;font-weight:700':
@@ -4495,8 +4550,9 @@ main { padding: 24px 28px; }
   setInterval(calcStatus, 30000);
   window.toggleStatus=toggleStatus;
 })();
+
+window.addEventListener('mesChanged',function(){window.render&&window.render();});
 </script>
-<script src="mes-global.js"></script>
 <script src="firebase-sync.js"></script>
 </body>
 </html>

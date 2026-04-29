@@ -2,6 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
+<script src="mes-global.js"></script>
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Produção — ALL HAIR</title>
 <link rel="manifest" href="manifest.json">
@@ -972,8 +973,12 @@ function rHist(){
   }
   var labels={maquina:'🏭 Máquina',embalagem:'📦 Embalar',envio_facc:'🤝 Envio Facc.',retorno_facc:'📦 Retorno Facc.'};
   var cors2={maquina:'#8b5cf6',embalagem:'#10b981',envio_facc:'#f59e0b',retorno_facc:'#3b82f6'};
-  var prods=d.producoes.filter(function(p){return _hf==='all'||p.etapa===_hf;})
-    .sort(function(a,b){return new Date(b.data||b.criadoEm)-new Date(a.data||a.criadoEm);}).slice(0,60);
+  var _mesProd=typeof MG!=='undefined'?MG.getMesAno():null;
+  var prods=d.producoes.filter(function(p){
+    if(_hf!=='all'&&p.etapa!==_hf)return false;
+    if(_mesProd){var dt=(p.data||p.criadoEm||'');return dt.substring(0,7)===_mesProd;}
+    return true;
+  }).sort(function(a,b){return new Date(b.data||b.criadoEm)-new Date(a.data||a.criadoEm);}).slice(0,100);
   document.getElementById('hist-body').innerHTML=prods.map(function(p){
     var cor=cors2[p.etapa]||'#94a3b8';
     return '<tr><td style="color:var(--t2);font-size:12px">'+(p.data||'—')+'</td>'+
@@ -1399,8 +1404,14 @@ setInterval(tick,1000);tick();
 
 window.render=function(){R(_aba);};
 R('kanban');
+
+window.addEventListener('mesChanged',function(){
+  var active=document.querySelector('.tab.active');
+  if(active){var id=active.getAttribute('data-tab')||active.getAttribute('onclick')||'hoje';
+    var match=id.match(/aba\('([^']+)'\)/);if(match)R(match[1]);else R('hoje');}
+  else R('hoje');
+});
 </script>
-<script src="mes-global.js"></script>
 <script src="firebase-sync.js"></script>
 </body>
 </html>
