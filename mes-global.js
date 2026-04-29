@@ -72,8 +72,6 @@
 
     proximo: function(){
       var s = carregar();
-      var n = new Date();
-      if(s.mes === n.getMonth() && s.ano === n.getFullYear()) return; // não passa do atual
       if(s.mes === 11){ s.mes = 0; s.ano++; }
       else { s.mes++; }
       salvar(s);
@@ -105,17 +103,20 @@
       var el = typeof elOrId === 'string' ? document.getElementById(elOrId) : elOrId;
       if(!el) return;
 
+      var s = carregar();
+      var n = new Date();
       var ehAtual = MG.ehMesAtual();
+      var ehFuturo = (s.ano > n.getFullYear()) || (s.ano === n.getFullYear() && s.mes > n.getMonth());
       var nome = MG.getNome();
 
       el.innerHTML =
-        '<div id="mg-seletor" style="display:flex;align-items:center;gap:4px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:10px;padding:4px 6px;">' +
+        '<div id="mg-seletor" style="display:flex;align-items:center;gap:4px;background:' + (ehFuturo ? '#f0ebff' : '#f1f5f9') + ';border:1px solid ' + (ehFuturo ? '#c4b5fd' : '#e2e8f0') + ';border-radius:10px;padding:4px 6px;">' +
           '<button onclick="MG.anterior()" style="background:none;border:none;cursor:pointer;font-size:18px;color:#8b5cf6;padding:2px 6px;border-radius:6px;font-weight:700;line-height:1;" title="Mês anterior">‹</button>' +
-          '<span id="mg-nome" style="font-size:12px;font-weight:700;color:#1e293b;min-width:120px;text-align:center;text-transform:capitalize;">' + nome + '</span>' +
-          '<button onclick="MG.proximo()" style="background:none;border:none;cursor:pointer;font-size:18px;padding:2px 6px;border-radius:6px;font-weight:700;line-height:1;' +
-            (ehAtual ? 'color:#cbd5e1;cursor:not-allowed;' : 'color:#8b5cf6;') +
-          '" title="Próximo mês" ' + (ehAtual ? 'disabled' : '') + '>›</button>' +
-          (ehAtual ? '' : '<button onclick="MG.irParaHoje()" style="background:#8b5cf6;color:#fff;border:none;cursor:pointer;font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;margin-left:2px;" title="Ir para hoje">Hoje</button>') +
+          '<span id="mg-nome" style="font-size:12px;font-weight:700;color:' + (ehFuturo ? '#7c3aed' : '#1e293b') + ';min-width:130px;text-align:center;text-transform:capitalize;">' +
+            (ehFuturo ? '📅 ' : ehAtual ? '' : '') + nome +
+          '</span>' +
+          '<button onclick="MG.proximo()" style="background:none;border:none;cursor:pointer;font-size:18px;color:#8b5cf6;padding:2px 6px;border-radius:6px;font-weight:700;line-height:1;" title="Próximo mês">›</button>' +
+          (!ehAtual ? '<button onclick="MG.irParaHoje()" style="background:#8b5cf6;color:#fff;border:none;cursor:pointer;font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;margin-left:2px;" title="Ir para mês atual">Hoje</button>' : '') +
         '</div>';
     },
 

@@ -479,38 +479,45 @@ function getAPagar(d){
     });
   });
 
-  // Limite do mês selecionado: itens vencidos antes do fim do mês aparecem
+  // Calcular limites do mês selecionado
   var _mgInt=typeof MG!=='undefined'?MG.intervalo():{inicio:'1900-01-01',fim:'2999-12-31'};
-  var _fimMes=_mgInt.fim; // último dia do mês selecionado
-  var _iniMes=_mgInt.inicio; // primeiro dia do mês selecionado
+  var _fimMes=_mgInt.fim;
+  var _iniMes=_mgInt.inicio;
+  // Verificar se o mês selecionado é futuro, atual ou passado
+  var _hoje=new Date().toISOString().split('T')[0];
+  var _isFuturo=_iniMes > _hoje;
+  var _isPassado=_fimMes < _hoje.substring(0,7)+'-01';
 
-  // 2) DESPESAS VARIÁVEIS: do mês selecionado OU atrasadas (vencimento <= fim do mês, ainda pendentes)
+  // 2) DESPESAS VARIÁVEIS
   d.despesas.filter(function(x){
     return x.tipo==='variavel'&&x.pagto!=='avista'&&x.status!=='pago';
   }).forEach(function(x){
     var venc=x.venc||x.vencimento||x.dataavulso||'';
-    // Inclui se: vence no mês selecionado OU já estava vencida (carryover)
-    if(venc && venc > _fimMes) return; // vence no futuro além do mês, não inclui
+    if(!venc) return;
+    if(venc > _fimMes) return; // vence depois do mês selecionado — não inclui
+    // Mês futuro: só mostra o que vence NESSE mês (sem carryover de passado)
+    // Mês atual/passado: mostra tudo vencido até o fim do mês (carryover)
+    if(_isFuturo && venc < _iniMes) return; // para futuro, não traz carryover
     lista.push({
       id:'var_'+x.id,despesaId:x.id,
       desc:x.desc,cat:x.cat,valor:x.valor,
       tipo:'variavel',dataDivida:x.divida||x.dataavulso||'',
-      vencimento:venc,
-      status:'pendente',pago:false,
-      atrasada:venc && venc < _iniMes, // veio de mês anterior
+      vencimento:venc,status:'pendente',pago:false,
+      atrasada:!_isFuturo && venc < _iniMes,
     });
   });
 
-  // 3) CONTAS A PAGAR MANUAIS: do mês OU atrasadas
+  // 3) CONTAS A PAGAR MANUAIS
   (d.aPagar||[]).forEach(function(x){
     if(x.status==='pago')return;
     var venc=x.vencimento||'';
-    if(venc && venc > _fimMes) return; // vence depois do mês selecionado
+    if(!venc || venc > _fimMes) return;
+    if(_isFuturo && venc < _iniMes) return;
     lista.push({
       id:x.id,desc:x.desc,cat:x.cat,valor:x.valor,
       tipo:'manual',dataDivida:x.dataDivida||'',vencimento:venc,
       status:'pendente',pago:false,obs:x.obs||'',
-      atrasada:venc && venc < _iniMes,
+      atrasada:!_isFuturo && venc < _iniMes,
     });
   });
 
