@@ -438,6 +438,12 @@ function fechar(id){document.getElementById('overlay-'+id).classList.remove('ope
 function abrir(id){document.getElementById('overlay-'+id).classList.add('open');}
 
 // ============================================================
+// MAPAS GLOBAIS (evita JSON.stringify no onclick)
+// ============================================================
+var _mapaAPagar={};
+var _mapaARec={};
+
+// ============================================================
 // RENDER
 // ============================================================
 function render(w){
@@ -679,6 +685,10 @@ function renderAPagar(d){
   }
 
   // Agrupar: vencidas, hoje, próximas, pagas
+  // Popular mapa global
+  _mapaAPagar={};
+  lista.forEach(function(x){_mapaAPagar[x.id]=x;});
+
   var grupos=[
     {titulo:'⚠️ Vencidas',cor:'#fef2f2',items:pendentes.filter(function(x){return diasAte(x.vencimento)<0;})},
     {titulo:'🔴 Vence Hoje',cor:'#fff7ed',items:pendentes.filter(function(x){return diasAte(x.vencimento)===0;})},
@@ -702,7 +712,7 @@ function renderAPagar(d){
         '<div style="text-align:center;margin-right:8px">'+vencBadge(x.vencimento)+'</div>'+
         '<div class="pagar-val" style="color:'+(pago?'var(--green)':'var(--red)')+'">'+fmt(x.valor)+'</div>'+
         '<div class="pagar-actions">'+
-          (!pago?'<button class="btn-sm btn-success" onclick="abrirConfPag('+JSON.stringify(x)+')">✅ Pagar</button>':
+          (!pago?'<button class="btn-sm btn-success" onclick="abrirConfPag(\''+x.id+'\')" >✅ Pagar</button>':
                  '<span style="font-size:11px;color:var(--green);font-weight:700">Pago ✓</span>')+
         '</div>'+
       '</div>';
@@ -732,6 +742,10 @@ function renderAReceber(d){
     el.innerHTML='<div style="padding:40px;text-align:center;color:var(--text2)">✅ Nada a receber</div>';
     return;
   }
+  // Popular mapa global A Receber
+  _mapaARec={};
+  lista.forEach(function(r){_mapaARec[r.id]=r;});
+
   el.innerHTML=lista.map(function(r){
     var atrasado=diasAte(r.vencimento)<0;
     return '<div class="pagar-item">'+
@@ -742,7 +756,7 @@ function renderAReceber(d){
       '</div>'+
       '<div style="margin-right:8px">'+vencBadge(r.vencimento)+'</div>'+
       '<div class="pagar-val" style="color:var(--green)">'+fmt(r.valor)+'</div>'+
-      '<div class="pagar-actions"><button class="btn-sm btn-success" onclick="abrirConfRec('+JSON.stringify(r)+')">✅ Recebido</button></div>'+
+      '<div class="pagar-actions"><button class="btn-sm btn-success" onclick="abrirConfRec(\''+r.id+'\')" >✅ Recebido</button></div>'+
     '</div>';
   }).join('');
 }
@@ -982,7 +996,9 @@ function salvarAReceber(){
 // CONFIRMAR RECEBIMENTO
 // ============================================================
 var _cRec=null;
-function abrirConfRec(item){
+function abrirConfRec(id){
+  var item=_mapaARec[id];
+  if(!item){console.error('Item não encontrado:',id);return;}
   _cRec=item;
   document.getElementById('conf-rec-desc').innerHTML='<strong>'+item.desc+'</strong><br>'+(item.clienteNome?item.clienteNome+'<br>':'')+fmt(item.valor);
   document.getElementById('conf-rec-data').value=hoje();
@@ -1067,7 +1083,9 @@ function salvarAPagar(){
 // CONFIRMAR PAGAMENTO
 // ============================================================
 var _cPag=null;
-function abrirConfPag(item){
+function abrirConfPag(id){
+  var item=_mapaAPagar[id];
+  if(!item){console.error('Item não encontrado:',id);return;}
   _cPag=item;
   document.getElementById('conf-pag-desc').innerHTML='<strong>'+item.desc+'</strong><br>'+(item.cat?item.cat+'<br>':'')+fmt(item.valor);
   document.getElementById('conf-pag-data').value=hoje();
