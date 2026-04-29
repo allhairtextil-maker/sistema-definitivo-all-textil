@@ -37,7 +37,7 @@ a.sl:hover,a.sl.on{background:rgba(255,255,255,.1);color:#fff;}
 #sb-date{font-size:11px;color:rgba(255,255,255,.4);text-align:center;padding-bottom:4px;}
 /* MAIN */
 .main{flex:1;display:flex;flex-direction:column;min-height:100vh;}
-.topbar{display:flex;align-items:center;justify-content:space-between;padding:0 20px;height:52px;background:var(--white);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10;flex-wrap:wrap;gap:6px;}
+.topbar{position:relative;display:flex;align-items:center;justify-content:space-between;padding:0 20px;height:52px;background:var(--white);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10;flex-wrap:wrap;gap:6px;}
 .topbar-title{font-size:15px;font-weight:700;}
 .tabs{display:flex;padding:0 20px;background:var(--white);border-bottom:1px solid var(--border);overflow-x:auto;}
 .tab{padding:12px 14px;font-size:13px;font-weight:600;color:var(--t2);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;user-select:none;}
@@ -112,6 +112,7 @@ tr:last-child td{border-bottom:none;}
 <div class="main">
   <div class="topbar">
     <div class="topbar-title">📦 Estoque</div>
+    <div id="mg-container" style="position:absolute;left:50%;transform:translateX(-50%);"></div>
     <div style="display:flex;gap:6px;flex-wrap:wrap">
       <button class="btn bp" onclick="abrirEntradaMP()">+ Entrada MP</button>
       <button class="btn bgr" onclick="abrirEntradaInsumo()">+ Insumo</button>
@@ -870,6 +871,7 @@ setInterval(tick,1000);tick();
 // ──────────────────────────────────────────────
 R('mp');
 </script>
+<script src="mes-global.js"></script>
 <script src="firebase-sync.js"></script>
 </body>
 </html>

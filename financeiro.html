@@ -138,6 +138,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
 <div class="main">
   <div class="topbar">
     <div class="topbar-title">💰 Financeiro</div>
+    <div id="mg-container" style="margin:0 auto"></div>
     <div style="display:flex;gap:8px">
       <button class="btn btn-primary" onclick="abrirModalReceber()">+ A Receber</button>
       <button class="btn btn-orange" onclick="abrirModalAPagar()">+ A Pagar</button>
@@ -401,7 +402,7 @@ function fmtD(d){return d?new Date(d+'T00:00').toLocaleDateString('pt-BR'):'—'
 function hoje(){return new Date().toISOString().split('T')[0];}
 function diasAte(d){if(!d)return null;var diff=new Date(d+'T00:00')-new Date(hoje()+'T00:00');return Math.round(diff/864e5);}
 function noMes(d,dt){var ref=dt||new Date();return d&&new Date(d+'T00:00').getMonth()===ref.getMonth()&&new Date(d+'T00:00').getFullYear()===ref.getFullYear();}
-function noMesAtual(d){return noMes(d,new Date());}
+function noMesAtual(d){return MG.noMesSel(d);}
 function vencBadge(d){
   if(!d)return '<span class="badge" style="background:#f1f5f9;color:#64748b">Sem data</span>';
   var dias=diasAte(d);
@@ -455,8 +456,9 @@ function render(w){
 function getAPagar(d){
   var lista=[];
   var n=new Date();
-  var mesAtual=n.getMonth();
-  var anoAtual=n.getFullYear();
+  var _mg=MG.getMes();
+  var mesAtual=_mg.mes;
+  var anoAtual=_mg.ano;
 
   // 1) DESPESAS FIXAS — gera entrada para o mês atual
   d.despesas.filter(function(x){return x.tipo==='fixo'&&x.ativo!==false;}).forEach(function(x){
@@ -465,7 +467,7 @@ function getAPagar(d){
     var venc=vencDate.toISOString().split('T')[0];
     // verificar se já foi pago este mês (registro de pagamento com despesaId e mes)
     var jaFoi=d.pagamentos.some(function(p){
-      return p.despesaId===x.id&&noMes(p.data,n);
+      return p.despesaId===x.id&&MG.noMesSel(p.data);
     });
     lista.push({
       id:'fixo_'+x.id+'_'+anoAtual+'_'+mesAtual,
@@ -542,7 +544,7 @@ function renderResumo(d){
   var saldo=d.contas.reduce(function(s,c){return s+Number(c.saldo||0);},0);
   var apagar=getAPagar(d).filter(function(x){return !x.pago;}).reduce(function(s,x){return s+Number(x.valor||0);},0);
   var areceber=getBoletosPendentes(d).reduce(function(s,r){return s+Number(r.valor||0);},0);
-  var recMes=d.recebimentos.filter(function(r){return noMesAtual(r.data);}).reduce(function(s,r){return s+Number(r.valor||0);},0);
+  var recMes=d.recebimentos.filter(function(r){return MG.noMesSel(r.data);}).reduce(function(s,r){return s+Number(r.valor||0);},0);
   var saldoLivre=saldo-apagar;
 
   document.getElementById('kpi-resumo').innerHTML=[
@@ -837,9 +839,9 @@ function renderCaixa(d){
 // DRE
 // ============================================================
 function renderDRE(d){
-  var pedsMes=d.pedidos.filter(function(p){return noMesAtual(p.data)&&p.status!=='cancelado';});
+  var pedsMes=d.pedidos.filter(function(p){return MG.noMesSel(p.data)&&p.status!=='cancelado';});
   var fat=pedsMes.reduce(function(s,p){return s+(p.itens||[]).reduce(function(s2,i){return s2+Number(i.total||0);},0);},0);
-  var mp=d.compras.filter(function(c){return noMesAtual(c.data);}).reduce(function(s,c){return s+Number(c.total||c.valor||0);},0);
+  var mp=d.compras.filter(function(c){return MG.noMesSel(c.data);}).reduce(function(s,c){return s+Number(c.total||c.valor||0);},0);
   var fixas=d.despesas.filter(function(x){return x.tipo==='fixo'&&x.ativo!==false;}).reduce(function(s,x){return s+Number(x.valor||0);},0);
   var impPct=((d.config.aliquota||6))/100;
   var imp=fat*impPct;
@@ -1169,8 +1171,16 @@ function tick(){
   document.getElementById('sb-date').textContent=n.toLocaleDateString('pt-BR',{weekday:'short',day:'numeric',month:'short'});
 }
 setInterval(tick,1000);tick();
+window.addEventListener('mesChanged',function(){
+  var abas=['resumo','apagar','areceber','fluxo','despesas','caixa','dre'];
+  var tabs=document.querySelectorAll('.tab');
+  var abaAtiva='resumo';
+  for(var i=0;i<tabs.length;i++){if(tabs[i].classList.contains('active')){abaAtiva=abas[i]||'resumo';break;}}
+  render(abaAtiva);
+});
 render('resumo');
 </script>
+<script src="mes-global.js"></script>
 <script src="firebase-sync.js"></script>
 </body>
 </html>

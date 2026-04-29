@@ -383,6 +383,8 @@ function fmt(v,d=2){return 'R$ '+Number(v||0).toLocaleString('pt-BR',{minimumFra
   <div class="tb-left">
     <div class="tb-title">Socios e Parceiros</div>
   </div>
+  
+  <div id="mg-container" style="flex:1;display:flex;justify-content:center;align-items:center;"></div>
   <div class="tb-right">
     <div class="tb-datetime">
       <div class="tb-time" id="tb-time">--:--</div>
@@ -889,6 +891,7 @@ function switchTab(t){document.querySelectorAll('.tab').forEach(x=>x.classList.r
 
 
 </script>
+<script src="mes-global.js"></script>
 <script src="firebase-sync.js"></script>
 </body>
 </html>

@@ -2472,9 +2472,7 @@ main { padding: 24px 28px; }
     <div class="topbar-title" id="topbar-saud"></div>
     <div class="topbar-right">
       <div style="display:flex;align-items:center;gap:6px;margin-right:8px">
-        <button onclick="dashMesAnterior()" style="background:var(--purple-light);color:var(--purple);border:none;padding:5px 10px;border-radius:6px;font-size:16px;cursor:pointer;font-weight:700">‹</button>
-        <div id="dash-mes-label" style="font-size:13px;font-weight:700;color:var(--purple);min-width:130px;text-align:center"></div>
-        <button onclick="dashMesProximo()" style="background:var(--purple-light);color:var(--purple);border:none;padding:5px 10px;border-radius:6px;font-size:16px;cursor:pointer;font-weight:700">›</button>
+        <div id="mg-container"></div>
       </div>
       <button onclick="abrirAvaliacaoMes()" style="background:linear-gradient(135deg,#8b5cf6,#ec4899);color:#fff;border:none;padding:7px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">📊 Avaliar Mês</button>
       <div class="mes-badge" id="mes-badge"></div>
@@ -2531,7 +2529,7 @@ main { padding: 24px 28px; }
 
     const now=new Date();
     const hoje=now.toISOString().split('T')[0];
-    const mes=now.getMonth(), ano=now.getFullYear();
+    const _mg=MG.getMes(); const mes=_mg.mes, ano=_mg.ano;
     const diasNoMes=new Date(ano,mes+1,0).getDate();
     const diaAtual=now.getDate();
     const diasPassados=diaAtual;
@@ -3049,7 +3047,7 @@ main { padding: 24px 28px; }
 
   function gerarAvaliacaoMes(body){
     var hoje=new Date();
-    var mes=hoje.getMonth(), ano=hoje.getFullYear();
+    var _mg2=MG.getMes(); var mes=_mg2.mes, ano=_mg2.ano;
     var mesPrev=mes===0?11:mes-1, anoPrev=mes===0?ano-1:ano;
     var nomeMes=hoje.toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
     var noMes=function(d,m,a){if(!d)return false;var s=d.substring(0,7);var mm=(m===undefined?mes:m);var aa=(a===undefined?ano:a);return s===(aa+'-'+(mm+1<10?'0'+(mm+1):(mm+1)));};
@@ -3336,12 +3334,11 @@ main { padding: 24px 28px; }
   }
 
 
-  window.dashMesAnterior=function dashMesAnterior(){
-    if(window._dashMes===0){window._dashMes=11;window._dashAno--;}
-    else window._dashMes--;
+  window.dashMesAnterior=function dashMesAnterior(){MG.anterior();
+    if(true){MG.anterior();return;} // noop
     init();
   }
-  window.dashMesProximo=function dashMesProximo(){
+  window.dashMesProximo=function dashMesProximo(){MG.proximo();
     var hoje=new Date();
     if(window._dashMes===hoje.getMonth()&&window._dashAno===hoje.getFullYear())return;
     if(window._dashMes===11){window._dashMes=0;window._dashAno++;}
@@ -3376,7 +3373,7 @@ main { padding: 24px 28px; }
 
     const now=new Date();
     const hoje=now.toISOString().split('T')[0];
-    const mes=now.getMonth(), ano=now.getFullYear();
+    const _mg=MG.getMes(); const mes=_mg.mes, ano=_mg.ano;
     const diasNoMes=new Date(ano,mes+1,0).getDate();
     const diaAtual=now.getDate();
     const diasPassados=diaAtual;
@@ -3950,6 +3947,7 @@ main { padding: 24px 28px; }
   init();
   setInterval(init,60000);
 </script>
+<script src="mes-global.js"></script>
 <script src="firebase-sync.js"></script>
 
 <!-- MODAL AVALIAÇÃO MENSAL -->
