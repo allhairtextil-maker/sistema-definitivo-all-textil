@@ -719,6 +719,8 @@ function renderAPagar(d){
                   '<button class="btn-sm btn-danger" onclick="excluirAPagar(\''+x.id+'\')">🗑️</button>'
                 : x.tipo==='variavel'
                   ? '<button class="btn-sm" style="background:var(--purple);color:#fff" onclick="editarDespesa(\''+x.despesaId+'\')">✏️</button>'
+                  : x.tipo==='fixo'
+                  ? '<button class="btn-sm" style="background:var(--purple);color:#fff" onclick="editarDespesa(\''+x.despesaId+'\')">✏️</button>'
                   : '')
             : '<span style="font-size:11px;color:var(--green);font-weight:700">Pago ✓</span>')+
         '</div>'+
