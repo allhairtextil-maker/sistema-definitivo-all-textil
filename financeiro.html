@@ -726,6 +726,7 @@ function renderAPagar(d){
                   ? '<button class="btn-sm" style="background:var(--purple);color:#fff" onclick="editarDespesa(\''+x.despesaId+'\')">✏️</button>'
                   : x.tipo==='fixo'
                   ? '<button class="btn-sm" style="background:var(--purple);color:#fff;margin-right:4px" onclick="editarDespesa(\''+x.despesaId+'\')">✏️</button>'+
+                    '<button class="btn-sm" style="background:var(--orange);color:#fff;margin-right:4px" onclick="ignorarFixoMes(\''+x.id+'\')">⏭️ Ignorar mês</button>'+
                     '<button class="btn-sm btn-danger" onclick="excluirDespesa(\''+x.despesaId+'\')">🗑️</button>'
                   : '')
             : '<span style="font-size:11px;color:var(--green);font-weight:700">Pago ✓</span>')+
