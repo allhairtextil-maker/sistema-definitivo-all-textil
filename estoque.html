@@ -372,24 +372,41 @@ function rMP(){
       var coresProd=prod.cores||[];
       var compTipo=prod.compTipo||'simples';
 
-      if(compTipo==='colorido'&&coresProd.length>0){
-        // Produto colorido: usa fioCru (% branco) e fioColorido (% cor) do cadastro
-        var pctCru=(Number(prod.fioCru)||0)/100;       // % fio branco base
-        var pctCol=(Number(prod.fioColorido)||0)/100;  // % fio colorido
+      if(compTipo==='colorido_branco'&&coresProd.length>0){
+        // Mistura: fioCru% PES Branco + fioColorido% cor + elastanoColor% elastano
+        var pctCru=(Number(prod.fioCru)||0)/100;
+        var pctCol=(Number(prod.fioColorido)||0)/100;
         var pctElaC=(Number(prod.elastanoColor)||0)/100;
-        var kgTotal=kg; // kg = pacotes * unid / rendimento
-        // PES Branco: proporção fioCru do total do fio
-        necPed.PES_BRANCO+=kgTotal*pctCru;
-        // Cada cor: divide igualmente o fio colorido entre as cores do produto
+        // Corrige elastano para usar % específico do produto colorido
+        necPed.ELA-=kg*pctEla;
+        necPed.ELA+=kg*pctElaC;
+        // PES Branco: base da mistura
+        necPed.PES_BRANCO+=kg*pctCru;
+        // Fio colorido: divide igualmente entre as cores do produto
         coresProd.forEach(function(cid){
-          necPed.fios[cid]=(necPed.fios[cid]||0)+kgTotal*pctCol/coresProd.length;
+          necPed.fios[cid]=(necPed.fios[cid]||0)+kg*pctCol/coresProd.length;
         });
-        // Elastano já está em necPed.ELA calculado acima com pctEla do produto simples
-        // Para colorido, reajustar elastano
-        necPed.ELA-=kg*pctEla; // desfaz o cálculo anterior
-        necPed.ELA+=kgTotal*pctElaC; // usa % correto do produto colorido
+
+      } else if((compTipo==='colorido_puro'||compTipo==='colorido')&&coresProd.length>0){
+        // Colorido puro: 100% fio da cor, sem PES Branco
+        // Corrige elastano se tiver % específico
+        if(prod.elastanoColor){
+          necPed.ELA-=kg*pctEla;
+          necPed.ELA+=(Number(prod.elastanoColor)||0)/100*kg;
+        }
+        coresProd.forEach(function(cid){
+          necPed.fios[cid]=(necPed.fios[cid]||0)+kg*pctFio/coresProd.length;
+        });
+
+      } else if(coresProd.length>0){
+        // Produto com cores mas sem compTipo definido: comportamento original
+        // tudo vai para os fios de cor
+        coresProd.forEach(function(cid){
+          necPed.fios[cid]=(necPed.fios[cid]||0)+kg*pctFio/coresProd.length;
+        });
+
       } else {
-        // Produto simples (PES Branco + Elastano): 100% fio branco
+        // Produto simples sem cores: 100% PES Branco
         necPed.PES_BRANCO+=kg*pctFio;
       }
       if(prod.embalagem)necPed.emb[prod.embalagem]=(necPed.emb[prod.embalagem]||0)+pct;
