@@ -1113,15 +1113,13 @@ function tick(){
   document.getElementById('sb-date').textContent=n.toLocaleDateString('pt-BR',{weekday:'short',day:'numeric',month:'short'});
 }
 setInterval(tick,1000);tick();
-window.addEventListener('mesChanged',function(){
-  var abas=['resumo','apagar','areceber','fluxo','anual','despesas','caixa','dre'];
-  var tabs=document.querySelectorAll('.tab');
-  var at='resumo';
-  for(var i=0;i<tabs.length;i++){if(tabs[i].classList.contains('active')){at=abas[i]||'resumo';break;}}
-  render(at);
-});
+
 render('resumo');
 </script>
 <script src="firebase-sync.js"></script>
+<script>
+window.addEventListener('mesChanged',function(){try{render(document.querySelector(".tab.active")?.dataset?.tab||"resumo");}catch(e){console.warn('mesChanged:',e);}});
+</script>
+
 </body>
 </html>

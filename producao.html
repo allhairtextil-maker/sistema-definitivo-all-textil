@@ -1401,8 +1401,12 @@ R('kanban');
 </div>
 <script>
 (function(){function _sbt(){var n=new Date();var a=document.getElementById("sb-time");if(a)a.textContent=n.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});var b=document.getElementById("sb-date");if(b)b.textContent=n.toLocaleDateString("pt-BR",{weekday:"short",day:"numeric",month:"short"});}setInterval(_sbt,1000);_sbt();
-window.addEventListener("mesChanged",function(){if(typeof init==="function")init();else if(typeof render==="function")render();else if(typeof renderLista==="function")renderLista();});
+
 })();
 </script>
+<script>
+window.addEventListener('mesChanged',function(){try{R(_aba||"kanban");}catch(e){console.warn('mesChanged:',e);}});
+</script>
+
 </body>
 </html>
