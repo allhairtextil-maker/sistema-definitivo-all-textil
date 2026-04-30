@@ -11,6 +11,13 @@
 <meta charset="UTF-8">
 <script src="mes-global.js"></script>
 <link rel="stylesheet" href="design.css">
+<style>
+.main{flex:1;min-width:0;overflow-x:hidden;}
+.content{padding:20px 24px;max-width:100%;}
+.topbar{position:sticky;top:0;z-index:40;display:flex;align-items:center;justify-content:space-between;}
+.kpi-grid,.bottom-grid,.charts-grid,.bottom3-grid{width:100%;}
+</style>
+
 <meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=0.5">
 <title>ALL HAIR — Dashboard</title>
 </head>
@@ -43,9 +50,9 @@
   </div>
 </div>
 <div class="main">
-  <div class="topbar">
-    <div class="topbar-title" id="topbar-saud">
-    <div id="mg-container" style="position:absolute;left:50%;transform:translateX(-50%)"></div></div>
+  <div class="topbar" style="position:sticky;top:0;z-index:40;">
+    <div class="topbar-title" id="topbar-saud"></div>
+    <div id="mg-container" style="position:absolute;left:50%;transform:translateX(-50%);z-index:5;"></div>
     <div class="topbar-right">
       <div style="display:flex;align-items:center;gap:6px;margin-right:8px">
         <button onclick="dashMesAnterior()" style="background:var(--purple-bg);color:var(--purple);border:none;padding:5px 10px;border-radius:6px;font-size:16px;cursor:pointer;font-weight:700">‹</button>
