@@ -12,10 +12,7 @@
 <body>
 <div class="layout">
 <div class="sidebar">
-  <div class="sb-header">
-    <img src="./logo.png" alt="ALL HAIR">
-    <div><div class="sb-brand-name">ALL HAIR</div><div class="sb-brand-sub">Gestão Industrial</div></div>
-  </div>
+  <div class="sb-header"><img src="./logo.png" alt="ALL HAIR"><div><div class="sb-brand-name">ALL HAIR</div><div class="sb-brand-sub">Gestão Industrial</div></div></div>
   <nav class="sb-nav">
     <div class="sb-section">Principal</div>
     <a class="sb-link" href="dashboard.html"><span class="sb-icon">⊞</span>Início</a>
@@ -41,8 +38,8 @@
 </div>
 <div class="main">
   <div class="topbar">
-    <div class="topbar-title">🏭 Produção
-    <div id="mg-container" style="position:absolute;left:50%;transform:translateX(-50%)"></div></div>
+  <div id="mg-container" style="position:absolute;left:50%;transform:translateX(-50%);z-index:5;"></div>
+    <div class="topbar-title">🏭 Produção</div>
     <div style="display:flex;gap:6px;flex-wrap:wrap">
       <button class="btn bp" onclick="abrirMaquina()">🏭 Lançar Máquina</button>
       <button class="btn bo" onclick="abrirFacc()">🤝 Enviar Facc.</button>
@@ -67,7 +64,7 @@
   <div class="tc" id="tc-capacidade"><div id="cap-wrap"></div></div>
   <div class="tc" id="tc-historico">
     <div style="display:flex;gap:6px;margin-bottom:14px" id="hist-filtros"></div>
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden">
+    <div style="background:var(--white);border:1px solid var(--border);border-radius:var(--r);overflow:hidden">
       <table><thead><tr><th>DATA</th><th>ETAPA</th><th>LOTE</th><th style="text-align:right">QTD</th></tr></thead>
       <tbody id="hist-body"></tbody></table>
     </div>
@@ -81,13 +78,13 @@
   <div class="modal" style="max-width:400px">
     <div class="mh"><h2>🚚 Confirmar Expedição</h2><button class="mx" onclick="X('expedir')">×</button></div>
     <div class="mb">
-      <div style="background:var(--surface-2);border-radius:10px;padding:14px;font-size:13px;margin-bottom:4px" id="exp-ped-info"></div>
+      <div style="background:var(--bg);border-radius:10px;padding:14px;font-size:13px;margin-bottom:4px" id="exp-ped-info"></div>
       <div style="font-size:13px;font-weight:700;color:var(--t2);margin-bottom:8px">Confirme antes de expedir:</div>
-      <label style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--surface-2);border-radius:8px;cursor:pointer;margin-bottom:8px">
+      <label style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--bg);border-radius:8px;cursor:pointer;margin-bottom:8px">
         <input type="checkbox" id="exp-nf" style="width:20px;height:20px;cursor:pointer">
         <div><div style="font-weight:700">🧾 NF enviada ao cliente</div><div style="font-size:11px;color:var(--t2)">Email, WhatsApp ou portal</div></div>
       </label>
-      <label id="exp-boleto-wrap" style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--surface-2);border-radius:8px;cursor:pointer;margin-bottom:4px">
+      <label id="exp-boleto-wrap" style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--bg);border-radius:8px;cursor:pointer;margin-bottom:4px">
         <input type="checkbox" id="exp-boleto" style="width:20px;height:20px;cursor:pointer">
         <div><div style="font-weight:700">📄 Boleto enviado ao cliente</div><div style="font-size:11px;color:var(--t2)">Link ou arquivo enviado</div></div>
       </label>
@@ -363,7 +360,7 @@ function rHoje(){
   virado.forEach(function(l){alertas.push({c:'#3b82f6',m:'📦 Pronto p/ embalar: '+l.corNome+' '+l.prodNome});});
 
   var alertBox=document.createElement('div');
-  alertBox.style.cssText='background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:12px;overflow-y:auto;max-height:140px';
+  alertBox.style.cssText='background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:12px;overflow-y:auto;max-height:140px';
   alertBox.innerHTML='<div style="font-size:10px;font-weight:800;color:var(--t2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">⚠️ Requer ação</div>'+
     (alertas.length?alertas.map(function(a){
       return '<div style="background:'+a.c+'15;border-left:3px solid '+a.c+';border-radius:5px;padding:6px 10px;margin-bottom:4px;font-size:11px;font-weight:700;color:'+a.c+'">'+a.m+'</div>';
@@ -383,7 +380,7 @@ function rHoje(){
     }
   });
   var capBox=document.createElement('div');
-  capBox.style.cssText='background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:12px;overflow-y:auto;max-height:140px';
+  capBox.style.cssText='background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:12px;overflow-y:auto;max-height:140px';
   capBox.innerHTML='<div style="font-size:10px;font-weight:800;color:var(--t2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">🏭 Para produzir hoje</div>'+
     (hojeItems.length?
       hojeItems.map(function(l){
@@ -404,10 +401,10 @@ function rHoje(){
   pedidos_prod.sort(function(a,b){return new Date(a.entrega||'9999')-new Date(b.entrega||'9999');});
 
   var filaWrap=document.createElement('div');
-  filaWrap.style.cssText='background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;flex:1;display:flex;flex-direction:column;min-height:0';
+  filaWrap.style.cssText='background:var(--white);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;flex:1;display:flex;flex-direction:column;min-height:0';
 
   var filaHdr=document.createElement('div');
-  filaHdr.style.cssText='padding:10px 14px;font-size:10px;font-weight:800;color:var(--t2);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border);flex-shrink:0;background:var(--surface-2)';
+  filaHdr.style.cssText='padding:10px 14px;font-size:10px;font-weight:800;color:var(--t2);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border);flex-shrink:0;background:var(--bg)';
   filaHdr.textContent='📋 Fila de Pedidos — Lotes por Etapa';
   filaWrap.appendChild(filaHdr);
 
@@ -427,7 +424,7 @@ function rHoje(){
 
       var row=document.createElement('div');
       row.style.cssText='display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--border);cursor:pointer';
-      row.onmouseover=function(){this.style.background='var(--surface-2)';};
+      row.onmouseover=function(){this.style.background='var(--bg)';};
       row.onmouseout=function(){this.style.background='';};
 
       // Pedido info
@@ -453,7 +450,7 @@ function rHoje(){
           var tc=tipoCor(l.tipo);
           var ic=STATUS_ICON[l.status]||'⬜';
           var chip=document.createElement('div');
-          chip.style.cssText='display:flex;align-items:center;gap:3px;padding:3px 7px;border-radius:20px;background:var(--surface-2);border:1px solid var(--border);font-size:11px;cursor:pointer';
+          chip.style.cssText='display:flex;align-items:center;gap:3px;padding:3px 7px;border-radius:20px;background:var(--bg);border:1px solid var(--border);font-size:11px;cursor:pointer';
           chip.title=STATUS_LABEL[l.status]+' — '+l.corNome+' ('+l.kgPorCor.toFixed(2)+'kg)';
           chip.innerHTML=
             '<span style="font-size:8px;font-weight:900;background:'+tc.bg+';color:'+tc.c+';padding:1px 4px;border-radius:3px">'+l.tipo.toUpperCase()+'</span>'+
@@ -753,7 +750,7 @@ function rKanban(){
                     progWrap.innerHTML=
             '<div style="display:flex;justify-content:space-between;font-size:9px;font-weight:700;margin-bottom:2px">'+
               '<span style="color:var(--t2)">'+feito2+'kg feito</span>'+
-              '<span style="color:'+(pct2>=100?'var(--green)':'var(--amber)')+'">falta '+falta2+'kg · '+pct2+'%</span>'+
+              '<span style="color:'+(pct2>=100?'var(--green)':'var(--orange)')+'">falta '+falta2+'kg · '+pct2+'%</span>'+
             '</div>'+
             '<div style="background:#e2e8f0;border-radius:20px;height:4px;overflow:hidden">'+
               '<div style="height:100%;border-radius:20px;background:'+(pct2>=100?'var(--green)':'var(--purple)')+';width:'+pct2+'%"></div>'+
@@ -1174,7 +1171,7 @@ function abrirEmbalar(){
             '<div style="font-size:15px;font-weight:800">'+l.corNome+' · '+l.prodNome+'</div>'+
             '<div style="font-size:12px;color:var(--t2)">Ped. '+l.pedNum+' — '+l.cliente+' · '+kgDisp.toFixed(2)+'kg disponível</div>'+
           '</div>'+
-          '<div style="text-align:right;font-size:12px;color:var(--amber);font-weight:700">'+pctEmb+'/'+pctTotal+' pct<br>Falta '+pctFalta+' pct</div>'+
+          '<div style="text-align:right;font-size:12px;color:var(--orange);font-weight:700">'+pctEmb+'/'+pctTotal+' pct<br>Falta '+pctFalta+' pct</div>'+
         '</div>'+
         '<div style="background:var(--border);border-radius:20px;height:6px;overflow:hidden;margin-bottom:10px">'+
           '<div style="height:100%;border-radius:20px;background:'+(pct>=100?'var(--green)':'var(--blue)')+';width:'+pct+'%"></div>'+
@@ -1327,9 +1324,13 @@ setInterval(tick,1000);tick();
 
 window.render=function(){R(_aba);};
 R('kanban');
-
-window.addEventListener('mesChanged',function(){if(typeof init==='function')init();else if(typeof render==='function')render();});
 </script>
 <script src="firebase-sync.js"></script>
+</div>
+<script>
+(function(){function _sbt(){var n=new Date();var a=document.getElementById("sb-time");if(a)a.textContent=n.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});var b=document.getElementById("sb-date");if(b)b.textContent=n.toLocaleDateString("pt-BR",{weekday:"short",day:"numeric",month:"short"});}setInterval(_sbt,1000);_sbt();
+window.addEventListener("mesChanged",function(){if(typeof init==="function")init();else if(typeof render==="function")render();else if(typeof renderLista==="function")renderLista();});
+})();
+</script>
 </body>
 </html>

@@ -15,14 +15,9 @@
 </head>
 <body>
 <script src="acesso.js"></script>
-
-
 <div class="layout">
 <div class="sidebar">
-  <div class="sb-header">
-    <img src="./logo.png" alt="ALL HAIR">
-    <div><div class="sb-brand-name">ALL HAIR</div><div class="sb-brand-sub">Gestão Industrial</div></div>
-  </div>
+  <div class="sb-header"><img src="./logo.png" alt="ALL HAIR"><div><div class="sb-brand-name">ALL HAIR</div><div class="sb-brand-sub">Gestão Industrial</div></div></div>
   <nav class="sb-nav">
     <div class="sb-section">Principal</div>
     <a class="sb-link" href="dashboard.html"><span class="sb-icon">⊞</span>Início</a>
@@ -563,5 +558,17 @@ window.addEventListener('mesChanged',function(){if(typeof init==='function')init
 function _sbTick(){var n=new Date();var t=document.getElementById('sb-time');var d=document.getElementById('sb-date');if(t)t.textContent=n.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});if(d)d.textContent=n.toLocaleDateString('pt-BR',{weekday:'short',day:'numeric',month:'short'});}setInterval(_sbTick,1000);_sbTick();
 </script>
 <script src="firebase-sync.js"></script>
+</div>
+<script>
+(function(){function _t(){var n=new Date();var a=document.getElementById("sb-time");if(a)a.textContent=n.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});var b=document.getElementById("sb-date");if(b)b.textContent=n.toLocaleDateString("pt-BR",{weekday:"short",day:"numeric",month:"short"});}setInterval(_t,1000);_t();
+window.addEventListener("mesChanged",function(){if(typeof init==="function")init();else if(typeof render==="function")render();else if(typeof renderLista==="function")renderLista();});
+})();
+</script>
+</div>
+<script>
+(function(){function _sbt(){var n=new Date();var a=document.getElementById("sb-time");if(a)a.textContent=n.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});var b=document.getElementById("sb-date");if(b)b.textContent=n.toLocaleDateString("pt-BR",{weekday:"short",day:"numeric",month:"short"});}setInterval(_sbt,1000);_sbt();
+window.addEventListener("mesChanged",function(){if(typeof init==="function")init();else if(typeof render==="function")render();else if(typeof renderLista==="function")renderLista();});
+})();
+</script>
 </body>
 </html>

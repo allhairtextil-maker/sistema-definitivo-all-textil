@@ -16,14 +16,9 @@
 </head>
 <body>
 <script src="acesso.js"></script>
-
-
 <div class="layout">
 <div class="sidebar">
-  <div class="sb-header">
-    <img src="./logo.png" alt="ALL HAIR">
-    <div><div class="sb-brand-name">ALL HAIR</div><div class="sb-brand-sub">Gestão Industrial</div></div>
-  </div>
+  <div class="sb-header"><img src="./logo.png" alt="ALL HAIR"><div><div class="sb-brand-name">ALL HAIR</div><div class="sb-brand-sub">Gestão Industrial</div></div></div>
   <nav class="sb-nav">
     <div class="sb-section">Principal</div>
     <a class="sb-link" href="dashboard.html"><span class="sb-icon">⊞</span>Início</a>
@@ -49,9 +44,9 @@
 </div>
 <div class="main">
 <div class="topbar">
+  <div id="mg-container" style="position:absolute;left:50%;transform:translateX(-50%);z-index:5;"></div>
   <div class="tb-left">
-    <div class="tb-title">Pedidos
-    <div id="mg-container" style="position:absolute;left:50%;transform:translateX(-50%)"></div></div>
+    <div class="tb-title">Pedidos</div>
   </div>
   <div class="tb-right">
       <button class="status-badge" id="global-status-badge" onclick="toggleStatus()" style="background:#f1f5f9;color:#64748b;border:1.5px solid #e2e8f0">Carregando...</button>
@@ -90,8 +85,8 @@
   <div class="topbar-actions" style="margin-bottom:16px">
     <div style="display:flex;gap:6px">
       <button id="filtro-pendentes" class="btn-primary" onclick="setFiltroLista('pendentes')" style="font-size:12px;padding:6px 14px">⏳ Pendentes</button>
-      <button id="filtro-entregues" onclick="setFiltroLista('entregues')" style="font-size:12px;padding:6px 14px;background:var(--surface-2);color:var(--text);border:1.5px solid var(--border2);border-radius:8px;cursor:pointer;font-family:inherit;font-weight:700">✅ Entregues</button>
-      <button id="filtro-todos" onclick="setFiltroLista('todos')" style="font-size:12px;padding:6px 14px;background:var(--surface-2);color:var(--text);border:1.5px solid var(--border2);border-radius:8px;cursor:pointer;font-family:inherit;font-weight:700">📋 Todos</button>
+      <button id="filtro-entregues" onclick="setFiltroLista('entregues')" style="font-size:12px;padding:6px 14px;background:var(--bg);color:var(--text);border:1.5px solid var(--border2);border-radius:8px;cursor:pointer;font-family:inherit;font-weight:700">✅ Entregues</button>
+      <button id="filtro-todos" onclick="setFiltroLista('todos')" style="font-size:12px;padding:6px 14px;background:var(--bg);color:var(--text);border:1.5px solid var(--border2);border-radius:8px;cursor:pointer;font-family:inherit;font-weight:700">📋 Todos</button>
     </div>
     <div class="spacer"></div>
     <div class="search-box"><span class="search-icon">🔍</span><input type="text" id="search-lista" placeholder="Buscar cliente ou nº..." oninput="renderLista()"></div>
@@ -198,9 +193,9 @@
       </div>
       <div id="nf-breakdown" style="display:none;background:#f8fafc;border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;margin-top:8px;font-size:12px">
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
-          <div><div style="color:var(--ink-2);font-weight:600">Valor na nota</div><div style="font-weight:700;color:var(--blue)" id="nf-valor-nota">—</div></div>
-          <div><div style="color:var(--ink-2);font-weight:600">Imposto estimado</div><div style="font-weight:700;color:var(--red)" id="nf-imposto">—</div></div>
-          <div><div style="color:var(--ink-2);font-weight:600">Líquido após imposto</div><div style="font-weight:700;color:var(--green)" id="nf-liquido">—</div></div>
+          <div><div style="color:var(--text2);font-weight:600">Valor na nota</div><div style="font-weight:700;color:var(--blue)" id="nf-valor-nota">—</div></div>
+          <div><div style="color:var(--text2);font-weight:600">Imposto estimado</div><div style="font-weight:700;color:var(--red)" id="nf-imposto">—</div></div>
+          <div><div style="color:var(--text2);font-weight:600">Líquido após imposto</div><div style="font-weight:700;color:var(--green)" id="nf-liquido">—</div></div>
         </div>
       </div>
 
@@ -209,7 +204,7 @@
       <div id="calc-prazo-box" style="display:none">
         <div id="calc-prazo-content"></div>
       </div>
-      <div id="calc-prazo-empty" style="font-size:12px;color:var(--ink-3);padding:8px 0">Adicione produtos ao pedido para ver a estimativa de prazo.</div>
+      <div id="calc-prazo-empty" style="font-size:12px;color:var(--text3);padding:8px 0">Adicione produtos ao pedido para ver a estimativa de prazo.</div>
 
       <div class="section-label">💰 Pagamento</div>
       <div class="form-grid">
@@ -270,7 +265,7 @@
 
     </div>
     <div class="modal-footer">
-      <div style="font-size:12px;color:var(--ink-2)" id="ped-ordem-info"></div>
+      <div style="font-size:12px;color:var(--text2)" id="ped-ordem-info"></div>
       <div class="modal-footer-right">
         <button class="btn-cancel" onclick="closeModalPedido()">Cancelar</button>
         <button class="btn-primary" onclick="savePedido()">Salvar Pedido</button>
@@ -336,7 +331,7 @@
     
     // Group by week
     if(!abertos.length){
-      semanasEl.innerHTML='<div style="text-align:center;padding:40px;color:var(--ink-2)"><div style="font-size:32px;margin-bottom:8px">📅</div><div>Nenhuma entrega agendada</div></div>';
+      semanasEl.innerHTML='<div style="text-align:center;padding:40px;color:var(--text2)"><div style="font-size:32px;margin-bottom:8px">📅</div><div>Nenhuma entrega agendada</div></div>';
       return;
     }
     
@@ -353,8 +348,8 @@
       var sem=semanas[key];
       var fim=new Date(sem.inicio); fim.setDate(fim.getDate()+6);
       var isPast=fim<hoje;
-      return '<div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden">'+
-        '<div style="padding:12px 16px;background:'+(isPast?'#fee2e2':'var(--purple-bg)')+';border-bottom:1px solid var(--border)">'+
+      return '<div style="background:var(--white);border:1px solid var(--border);border-radius:14px;overflow:hidden">'+
+        '<div style="padding:12px 16px;background:'+(isPast?'#fee2e2':'var(--purple-light)')+';border-bottom:1px solid var(--border)">'+
           '<div style="font-weight:800;font-size:14px;color:'+(isPast?'#ef4444':'var(--purple)')+'">'+
             'Semana de '+sem.inicio.toLocaleDateString('pt-BR')+ ' a '+fim.toLocaleDateString('pt-BR')+
             ' <span style="font-size:12px;font-weight:600">('+sem.pedidos.length+' entrega(s))</span>'+
@@ -368,7 +363,7 @@
             '<div style="width:8px;height:8px;border-radius:50%;background:'+cor+';flex-shrink:0"></div>'+
             '<div style="flex:1">'+
               '<div style="font-weight:700">'+p.clienteNome+'</div>'+
-              '<div style="font-size:12px;color:var(--ink-2)">'+new Date(p.entrega+' 00:00').toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'})+'</div>'+
+              '<div style="font-size:12px;color:var(--text2)">'+new Date(p.entrega+' 00:00').toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'})+'</div>'+
             '</div>'+
             '<div style="text-align:right">'+
               '<div style="font-weight:800;color:var(--purple)">'+fmt(total)+'</div>'+
@@ -392,7 +387,7 @@
     var finalizados=pedidos.filter(function(p){return p.status==='finalizado'&&p.data&&p.entrega;});
     
     if(!finalizados.length){
-      kpisEl.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:30px;color:var(--ink-2)">Nenhum pedido finalizado ainda para calcular ciclo.</div>';
+      kpisEl.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:30px;color:var(--text2)">Nenhum pedido finalizado ainda para calcular ciclo.</div>';
       return;
     }
     
@@ -416,17 +411,17 @@
       {icon:'🐢',label:'Mais lento',val:maxCiclo+' dias',sub:'pior desempenho',cor:'#f59e0b'},
       {icon:'📊',label:'Total analisados',val:finalizados.length+' pedidos',sub:'pedidos finalizados',cor:'var(--blue)'},
     ].map(function(k){
-      return '<div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 18px">'+
-        '<div style="font-size:11px;font-weight:700;color:var(--ink-2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px">'+k.icon+' '+k.label+'</div>'+
+      return '<div style="background:var(--white);border:1px solid var(--border);border-radius:14px;padding:16px 18px">'+
+        '<div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px">'+k.icon+' '+k.label+'</div>'+
         '<div style="font-size:22px;font-weight:900;color:'+k.cor+';margin-bottom:2px">'+k.val+'</div>'+
-        '<div style="font-size:11px;color:var(--ink-2)">'+k.sub+'</div>'+
+        '<div style="font-size:11px;color:var(--text2)">'+k.sub+'</div>'+
       '</div>';
     }).join('');
     
     // Status distribution
     if(garEl){
       var statusLabels={'recebido':'Aguardando produção','producao':'Em produção','pronto':'Pronto p/ envio','finalizado':'Finalizado','cancelado':'Cancelado'};
-      garEl.innerHTML='<div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px">'+
+      garEl.innerHTML='<div style="background:var(--white);border:1px solid var(--border);border-radius:14px;padding:16px">'+
         '<div style="font-weight:800;font-size:14px;margin-bottom:14px">📊 Distribuição por Status</div>'+
         '<div style="display:flex;flex-direction:column;gap:8px">'+
         Object.entries(statusDist).map(function(e){
@@ -435,7 +430,7 @@
           var cor=cores[e[0]]||'#94a3b8';
           return '<div style="display:flex;align-items:center;gap:10px">'+
             '<span style="font-size:13px;font-weight:600;width:160px">'+( statusLabels[e[0]]||e[0])+'</span>'+
-            '<div style="flex:1;background:var(--surface-2);border-radius:20px;height:8px;overflow:hidden">'+
+            '<div style="flex:1;background:var(--bg);border-radius:20px;height:8px;overflow:hidden">'+
               '<div style="height:100%;border-radius:20px;background:'+cor+';width:'+pct+'%"></div>'+
             '</div>'+
             '<span style="font-size:13px;font-weight:700;color:'+cor+';width:50px;text-align:right">'+e[1]+' ('+pct+'%)</span>'+
@@ -446,15 +441,15 @@
     
     // Last 10 finalized with their cycle
     if(listaEl){
-      listaEl.innerHTML='<div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden">'+
+      listaEl.innerHTML='<div style="background:var(--white);border:1px solid var(--border);border-radius:14px;overflow:hidden">'+
         '<div style="padding:12px 16px;border-bottom:1px solid var(--border);font-weight:800">Últimos pedidos finalizados</div>'+
         '<table style="width:100%;border-collapse:collapse">'+
-        '<thead><tr style="background:var(--surface-2)">'+
-          '<th style="padding:8px 12px;text-align:left;font-size:11px;font-weight:700;color:var(--ink-2)">CLIENTE</th>'+
-          '<th style="padding:8px 12px;text-align:center;font-size:11px;font-weight:700;color:var(--ink-2)">ABERTURA</th>'+
-          '<th style="padding:8px 12px;text-align:center;font-size:11px;font-weight:700;color:var(--ink-2)">ENTREGA</th>'+
-          '<th style="padding:8px 12px;text-align:center;font-size:11px;font-weight:700;color:var(--ink-2)">CICLO</th>'+
-          '<th style="padding:8px 12px;text-align:right;font-size:11px;font-weight:700;color:var(--ink-2)">VALOR</th>'+
+        '<thead><tr style="background:var(--bg)">'+
+          '<th style="padding:8px 12px;text-align:left;font-size:11px;font-weight:700;color:var(--text2)">CLIENTE</th>'+
+          '<th style="padding:8px 12px;text-align:center;font-size:11px;font-weight:700;color:var(--text2)">ABERTURA</th>'+
+          '<th style="padding:8px 12px;text-align:center;font-size:11px;font-weight:700;color:var(--text2)">ENTREGA</th>'+
+          '<th style="padding:8px 12px;text-align:center;font-size:11px;font-weight:700;color:var(--text2)">CICLO</th>'+
+          '<th style="padding:8px 12px;text-align:right;font-size:11px;font-weight:700;color:var(--text2)">VALOR</th>'+
         '</tr></thead><tbody>'+
         finalizados.slice(-10).reverse().map(function(p){
           var dias=Math.ceil((new Date(p.entrega+' 00:00')-new Date(p.data+' 00:00'))/(1000*60*60*24));
@@ -462,8 +457,8 @@
           var total=(p.itens||[]).reduce(function(s,i){return s+Number(i.total||0);},0);
           return '<tr style="border-bottom:1px solid var(--border)">'+
             '<td style="padding:10px 12px;font-weight:600">'+p.clienteNome+'</td>'+
-            '<td style="padding:10px 12px;text-align:center;font-size:12px;color:var(--ink-2)">'+new Date(p.data+' 00:00').toLocaleDateString('pt-BR')+'</td>'+
-            '<td style="padding:10px 12px;text-align:center;font-size:12px;color:var(--ink-2)">'+new Date(p.entrega+' 00:00').toLocaleDateString('pt-BR')+'</td>'+
+            '<td style="padding:10px 12px;text-align:center;font-size:12px;color:var(--text2)">'+new Date(p.data+' 00:00').toLocaleDateString('pt-BR')+'</td>'+
+            '<td style="padding:10px 12px;text-align:center;font-size:12px;color:var(--text2)">'+new Date(p.entrega+' 00:00').toLocaleDateString('pt-BR')+'</td>'+
             '<td style="padding:10px 12px;text-align:center"><span style="background:'+cor+'20;color:'+cor+';padding:2px 10px;border-radius:20px;font-size:12px;font-weight:700">'+dias+'d</span></td>'+
             '<td style="padding:10px 12px;text-align:right;font-weight:700">'+fmt(total)+'</td>'+
           '</tr>';
@@ -714,7 +709,7 @@
     const semConfig = itensTemp.filter(i=>i.prodId).some(i=>!modelos[i.prodId]?.maquinaKgDia);
     if(semConfig){
       const aviso = `<div style="background:var(--yellow-light);border:1px solid var(--yellow);border-radius:var(--radius-sm);padding:12px 14px;font-size:12px;font-weight:600;color:#92400e;margin-bottom:10px">
-        ⚠️ Alguns produtos não têm métricas configuradas. <a href="configuracoes.html" target="_blank" style="color:var(--amber);text-decoration:underline">Clique aqui para configurar</a> e os prazos serão calculados automaticamente.
+        ⚠️ Alguns produtos não têm métricas configuradas. <a href="configuracoes.html" target="_blank" style="color:var(--orange);text-decoration:underline">Clique aqui para configurar</a> e os prazos serão calculados automaticamente.
       </div>`;
       document.getElementById('calc-prazo-content').innerHTML = aviso;
     }
@@ -803,20 +798,20 @@
       const cor = cores.find(c=>c.id===item.corId);
       const cor_html = cor?`<span style="display:inline-flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:50%;background:${cor.hex};display:inline-block"></span>${cor.nome}</span>`:'';
 
-      html += `<div style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:10px">
+      html += `<div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:10px">
         <div style="font-weight:800;font-size:13px;margin-bottom:8px">${prod.nome} ${cor_html}</div>
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:8px;font-size:11px">
-          ${doEstEmb>0?`<div style="background:var(--green-bg);border-radius:6px;padding:5px 8px;color:var(--green);font-weight:700">✅ ${Math.floor(doEstEmb/unid)} pct do estoque</div>`:''}
+          ${doEstEmb>0?`<div style="background:var(--green-light);border-radius:6px;padding:5px 8px;color:var(--green);font-weight:700">✅ ${Math.floor(doEstEmb/unid)} pct do estoque</div>`:''}
           ${doEstVirado>0?`<div style="background:var(--blue-light);border-radius:6px;padding:5px 8px;color:var(--blue);font-weight:700">✨ ${Math.round(doEstVirado*100)/100}kg virado</div>`:''}
-          ${doEstCru>0?`<div style="background:var(--purple-bg);border-radius:6px;padding:5px 8px;color:var(--purple);font-weight:700">📦 ${Math.round(doEstCru*100)/100}kg cru</div>`:''}
-          ${produzirDozero>0?`<div style="background:var(--orange-light);border-radius:6px;padding:5px 8px;color:var(--amber);font-weight:700">🏭 ${Math.ceil(produzirDozero)} pçs produzir</div>`:''}
+          ${doEstCru>0?`<div style="background:var(--purple-light);border-radius:6px;padding:5px 8px;color:var(--purple);font-weight:700">📦 ${Math.round(doEstCru*100)/100}kg cru</div>`:''}
+          ${produzirDozero>0?`<div style="background:var(--orange-light);border-radius:6px;padding:5px 8px;color:var(--orange);font-weight:700">🏭 ${Math.ceil(produzirDozero)} pçs produzir</div>`:''}
         </div>
         <div style="display:flex;gap:8px;font-size:11px;flex-wrap:wrap">
-          ${diasFilaExtra>0?`<span style="background:var(--surface-2);border:1px solid var(--border);border-radius:20px;padding:2px 8px">⏳ Fila: +${diasFilaExtra}d</span>`:''}
-          ${diasMaq>0?`<span style="background:var(--purple-bg);color:var(--purple);border-radius:20px;padding:2px 8px;font-weight:700">🏭 ${diasMaq}d máquina</span>`:''}
+          ${diasFilaExtra>0?`<span style="background:var(--bg);border:1px solid var(--border);border-radius:20px;padding:2px 8px">⏳ Fila: +${diasFilaExtra}d</span>`:''}
+          ${diasMaq>0?`<span style="background:var(--purple-light);color:var(--purple);border-radius:20px;padding:2px 8px;font-weight:700">🏭 ${diasMaq}d máquina</span>`:''}
           ${diasVirar>0?`<span style="background:var(--yellow-light);color:#92400e;border-radius:20px;padding:2px 8px;font-weight:700">${m.isCalcinha?'✂️':'🤝'} ${diasVirar}d ${m.isCalcinha?'corte':'virar'}</span>`:''}
           ${diasEmb>0?`<span style="background:var(--teal-light);color:var(--teal);border-radius:20px;padding:2px 8px;font-weight:700">📦 ${diasEmb}d embalar</span>`:''}
-          <span style="font-weight:800;border-radius:20px;padding:2px 10px;background:${totalDias===0?'var(--green-bg)':'#f3f0ff'};color:${totalDias===0?'var(--green)':'var(--purple)'}">Total: ${totalDias===0?'Pronto no estoque!':totalDias+'d úteis'}</span>
+          <span style="font-weight:800;border-radius:20px;padding:2px 10px;background:${totalDias===0?'var(--green-light)':'#f3f0ff'};color:${totalDias===0?'var(--green)':'var(--purple)'}">Total: ${totalDias===0?'Pronto no estoque!':totalDias+'d úteis'}</span>
         </div>
       </div>`;
     });
@@ -829,22 +824,22 @@
       const dataCli = new Date(dataEntrega+' 00:00');
       const diffDias = Math.ceil((dataCli-previsaoDate)/(1000*60*60*24));
       if(diffDias>=0){
-        semaforoHtml=`<div style="background:var(--green-bg);border:1.5px solid var(--green);border-radius:var(--radius-sm);padding:12px 16px;display:flex;align-items:center;gap:10px">
+        semaforoHtml=`<div style="background:var(--green-light);border:1.5px solid var(--green);border-radius:var(--radius-sm);padding:12px 16px;display:flex;align-items:center;gap:10px">
           <span style="font-size:24px">✅</span>
           <div><div style="font-weight:800;color:var(--green)">Consegue cumprir o prazo!</div>
           <div style="font-size:12px;color:var(--green)">Previsão: ${previsaoStr} · Cliente quer: ${new Date(dataEntrega+' 00:00').toLocaleDateString('pt-BR')} · ${diffDias}d de folga</div></div>
         </div>`;
       } else {
-        semaforoHtml=`<div style="background:var(--red-bg);border:1.5px solid var(--red);border-radius:var(--radius-sm);padding:12px 16px;display:flex;align-items:center;gap:10px">
+        semaforoHtml=`<div style="background:var(--red-light);border:1.5px solid var(--red);border-radius:var(--radius-sm);padding:12px 16px;display:flex;align-items:center;gap:10px">
           <span style="font-size:24px">🚨</span>
           <div><div style="font-weight:800;color:var(--red)">Atenção — prazo apertado!</div>
           <div style="font-size:12px;color:var(--red)">Previsão: ${previsaoStr} · Cliente quer: ${new Date(dataEntrega+' 00:00').toLocaleDateString('pt-BR')} · ${Math.abs(diffDias)}d de diferença</div></div>
         </div>`;
       }
     } else {
-      semaforoHtml=`<div style="background:var(--purple-bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 16px">
+      semaforoHtml=`<div style="background:var(--purple-light);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 16px">
         <span style="font-weight:700;color:var(--purple)">📅 Previsão de entrega: <strong>${previsaoStr}</strong> (${maxDiasTotal} dias úteis)</span>
-        <div style="font-size:11px;color:var(--ink-2);margin-top:4px">Sugestão de data para oferecer ao cliente.</div>
+        <div style="font-size:11px;color:var(--text2);margin-top:4px">Sugestão de data para oferecer ao cliente.</div>
       </div>`;
     }
 
@@ -1058,7 +1053,7 @@
           'Cliente pediu: '+dataCliente.toLocaleDateString('pt-BR')+
           ' · '+Math.abs(diasDiff)+' dias '+(ok?'de folga':'de atraso')+
         '</div>'+
-        '<div style="color:var(--ink-2);margin-top:4px;font-size:11px">'+
+        '<div style="color:var(--text2);margin-top:4px;font-size:11px">'+
           '⏱ '+prazo.diasProd+'d produção + '+prazo.diasFacc+'d faccionista + '+prazo.diasEmb+'d embalar + '+prazo.diasEnvio+'d envio'+
         '</div>'+
       '</div>';
@@ -1104,15 +1099,15 @@
             onfocus="mostrarDropdownItem(${i})"
             onblur="setTimeout(()=>fecharDropdownItem(${i}),200)"
             id="prod-search-${i}">
-          <div id="prod-drop-${i}" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1.5px solid var(--purple);border-radius:8px;max-height:200px;overflow-y:auto;z-index:999;box-shadow:0 4px 16px rgba(0,0,0,0.12)">
+          <div id="prod-drop-${i}" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--white);border:1.5px solid var(--purple);border-radius:8px;max-height:200px;overflow-y:auto;z-index:999;box-shadow:0 4px 16px rgba(0,0,0,0.12)">
             ${produtos.filter(p=>p.status==='ativo').map(p=>`
               <div onclick="selecionarProdItem(${i},'${p.id}')"
                 style="padding:8px 12px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--border);display:flex;gap:8px;align-items:center"
-                onmouseover="this.style.background='var(--purple-bg)'"
+                onmouseover="this.style.background='var(--purple-light)'"
                 onmouseout="this.style.background=''">
-                ${p.ref?`<span style="background:var(--purple-bg);color:var(--purple);padding:2px 7px;border-radius:6px;font-size:11px;font-weight:800">${p.ref}</span>`:''}
+                ${p.ref?`<span style="background:var(--purple-light);color:var(--purple);padding:2px 7px;border-radius:6px;font-size:11px;font-weight:800">${p.ref}</span>`:''}
                 <span style="font-weight:700">${p.nome}</span>
-                ${p.codigo?`<span style="color:var(--ink-2);font-size:11px">(${p.codigo})</span>`:''}
+                ${p.codigo?`<span style="color:var(--text2);font-size:11px">(${p.codigo})</span>`:''}
                 <span style="margin-left:auto;font-weight:700;color:var(--purple)">${fmt(p.preco)}</span>
               </div>`).join('')}
           </div>
@@ -1120,7 +1115,7 @@
         </div>
         <div class="field">
           <input type="number" placeholder="Qtd" value="${item.qtd}" min="1" id="qtd-${i}" style="padding:7px 10px;font-size:13px" oninput="updateItem(${i},'qtd',this.value)" onblur="updateItem(${i},'qtd',this.value)">
-          <div style="font-size:10px;color:var(--ink-3);margin-top:3px">pacotes</div>
+          <div style="font-size:10px;color:var(--text3);margin-top:3px">pacotes</div>
         </div>
         <div class="field">
           <input type="number" placeholder="R$ preço" value="${item.preco||precoSugerido}" min="0" step="0.01" id="preco-${i}" style="padding:7px 10px;font-size:13px" oninput="updateItem(${i},'preco',this.value)" onblur="updateItem(${i},'preco',this.value)">
@@ -1570,23 +1565,23 @@
 
       // Progress overall
       const pct=pecasPedidas>0?Math.min(100,Math.round(prontoTotal/pecasPedidas*100)):0;
-      const barColor=pct===100?'var(--green)':pct>50?'var(--yellow)':'var(--amber)';
+      const barColor=pct===100?'var(--green)':pct>50?'var(--yellow)':'var(--orange)';
 
       // Stage display helper
       function stageBox(icon,label,pecas,color,isUrgent){
         if(pecas<=0&&!isUrgent)return '';
-        return '<div style="background:'+(isUrgent?'#fff7ed':'var(--surface)')+';border:1px solid '+(isUrgent?'rgba(234,88,12,.3)':'var(--border)')+';border-radius:8px;padding:8px 12px;min-width:100px;flex:1">' +
-          '<div style="font-size:10px;font-weight:700;color:var(--ink-2);margin-bottom:2px">'+icon+' '+label+'</div>'+
+        return '<div style="background:'+(isUrgent?'#fff7ed':'var(--white)')+';border:1px solid '+(isUrgent?'rgba(234,88,12,.3)':'var(--border)')+';border-radius:8px;padding:8px 12px;min-width:100px;flex:1">' +
+          '<div style="font-size:10px;font-weight:700;color:var(--text2);margin-bottom:2px">'+icon+' '+label+'</div>'+
           '<div style="font-size:15px;font-weight:900;color:'+color+'">'+pecas+'<span style="font-size:11px;font-weight:500"> pçs</span></div>'+
         '</div>';
       }
 
-      return '<div style="background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px">'+
+      return '<div style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px">'+
         // Header
         '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">'+
           '<div>'+
             '<div style="font-weight:800;font-size:14px">'+prod.nome+'</div>'+
-            '<div style="font-size:11px;color:var(--ink-2);margin-top:2px">'+
+            '<div style="font-size:11px;color:var(--text2);margin-top:2px">'+
               (cor?'<span style="display:inline-flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:50%;background:'+cor.hex+';display:inline-block"></span>'+cor.nome+' · </span>':'')+
               i.qtd+' pacotes · '+pecasPedidas+' peças'+
               (isPaleta?' · Paleta '+(prod.cores||[]).length+' cores':'')+
@@ -1598,7 +1593,7 @@
           '</div>'+
         '</div>'+
         // Progress bar
-        '<div style="background:var(--surface);border-radius:20px;height:8px;overflow:hidden;border:1px solid var(--border);margin-bottom:12px">'+
+        '<div style="background:var(--white);border-radius:20px;height:8px;overflow:hidden;border:1px solid var(--border);margin-bottom:12px">'+
           '<div style="height:100%;border-radius:20px;background:'+barColor+';width:'+pct+'%;transition:width .5s"></div>'+
         '</div>'+
         // Stages
@@ -1609,11 +1604,11 @@
           (cruPecas>0?stageBox('📦','Cru (virar)',cruPecas,'var(--purple)'):'')+
           (faltaMaquina>0?
             '<div style="background:#fff7ed;border:1px solid rgba(234,88,12,.3);border-radius:8px;padding:8px 12px;min-width:100px;flex:1">'+
-              '<div style="font-size:10px;font-weight:700;color:var(--ink-2);margin-bottom:2px">🏭 Produzir na máquina</div>'+
-              '<div style="font-size:15px;font-weight:900;color:var(--amber)">'+faltaMaquina+'<span style="font-size:11px;font-weight:500"> pçs</span></div>'+
-              '<div style="font-size:10px;color:var(--ink-2)">~'+(Math.ceil(faltaMaquina/(prod.rendimento||150)*10)/10).toFixed(1)+' kg</div>'+
+              '<div style="font-size:10px;font-weight:700;color:var(--text2);margin-bottom:2px">🏭 Produzir na máquina</div>'+
+              '<div style="font-size:15px;font-weight:900;color:var(--orange)">'+faltaMaquina+'<span style="font-size:11px;font-weight:500"> pçs</span></div>'+
+              '<div style="font-size:10px;color:var(--text2)">~'+(Math.ceil(faltaMaquina/(prod.rendimento||150)*10)/10).toFixed(1)+' kg</div>'+
             '</div>':
-            '<div style="background:var(--green-bg);border:1px solid rgba(22,163,74,.2);border-radius:8px;padding:8px 12px;flex:1;text-align:center">'+
+            '<div style="background:var(--green-light);border:1px solid rgba(22,163,74,.2);border-radius:8px;padding:8px 12px;flex:1;text-align:center">'+
               '<div style="font-weight:800;font-size:13px;color:var(--green)">✅ Produção ok!</div>'+
             '</div>'
           )+
@@ -1621,7 +1616,7 @@
         // Paleta color breakdown
         (isPaleta&&(prod.cores||[]).length>0?(
           '<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">'+
-          '<div style="font-size:11px;font-weight:700;color:var(--ink-2);margin-bottom:8px">🎨 Detalhamento por cor (paleta '+( prod.cores||[]).length+'x)</div>'+
+          '<div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:8px">🎨 Detalhamento por cor (paleta '+( prod.cores||[]).length+'x)</div>'+
           '<div style="display:flex;flex-direction:column;gap:4px">'+
           (prod.cores||[]).map(function(cId){
             var corObj=cores.find(function(x){return x.id===cId;});
@@ -1638,14 +1633,14 @@
             var cDisp=cViradoPecas+cVirPecas+cCruPecas;
             var cFalta=Math.max(0,pecasPorCor-cDisp);
             var cFaltaKg=Math.ceil(cFalta/(prod.rendimento||150)*1000)/1000;
-            return '<div style="display:flex;align-items:center;gap:8px;padding:5px 8px;background:var(--surface);border-radius:6px;font-size:12px">'+
+            return '<div style="display:flex;align-items:center;gap:8px;padding:5px 8px;background:var(--white);border-radius:6px;font-size:12px">'+
               '<span style="width:10px;height:10px;border-radius:50%;background:'+corHex+';display:inline-block;flex-shrink:0;border:1px solid rgba(0,0,0,0.1)"></span>'+
               '<span style="font-weight:700;flex:1">'+corNome+'</span>'+
-              '<span style="color:var(--ink-2)">Precisa: <strong>'+pecasPorCor+' pçs</strong></span>'+
-              (cCruPecas>0?'<span style="color:var(--purple);background:var(--purple-bg);padding:1px 6px;border-radius:10px">📦 Cru: '+cCruPecas+'</span>':'')+
+              '<span style="color:var(--text2)">Precisa: <strong>'+pecasPorCor+' pçs</strong></span>'+
+              (cCruPecas>0?'<span style="color:var(--purple);background:var(--purple-light);padding:1px 6px;border-radius:10px">📦 Cru: '+cCruPecas+'</span>':'')+
               (cVirPecas>0?'<span style="color:var(--yellow);background:var(--yellow-light);padding:1px 6px;border-radius:10px">🤝 Virando: '+cVirPecas+'</span>':'')+
               (cViradoPecas>0?'<span style="color:var(--blue);background:var(--blue-light);padding:1px 6px;border-radius:10px">✨ Virado: '+cViradoPecas+'</span>':'')+
-              (cFalta>0?'<span style="color:var(--amber);font-weight:800">🏭 Falta: '+cFalta+' pçs ('+cFaltaKg.toFixed(3)+' kg)</span>':'<span style="color:var(--green);font-weight:700">✅ ok</span>')+
+              (cFalta>0?'<span style="color:var(--orange);font-weight:800">🏭 Falta: '+cFalta+' pçs ('+cFaltaKg.toFixed(3)+' kg)</span>':'<span style="color:var(--green);font-weight:700">✅ ok</span>')+
             '</div>';
           }).join('')+
           '</div></div>'
@@ -1661,13 +1656,13 @@
       const exp=p.expedicao||{};
       expedicaoHtml=`
         <div class="section-label" style="margin-top:20px">📦 Expedição Confirmada</div>
-        <div style="background:var(--green-bg);border:1.5px solid var(--green);border-radius:var(--radius-sm);padding:14px 16px;margin-bottom:14px;display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px">
-          ${exp.data?'<div><span style="color:var(--ink-2);font-weight:600">Data saída:</span> <strong>'+new Date(exp.data+' 00:00').toLocaleDateString('pt-BR')+'</strong></div>':''}
-          ${exp.tipo?'<div><span style="color:var(--ink-2);font-weight:600">Entrega:</span> <strong>'+(exp.tipo==='motorista'?'🛵 Motorista':exp.tipo==='transportadora'?'🚛 Transportadora':'🏪 Retirada')+'</strong></div>':''}
-          ${exp.nf?'<div><span style="color:var(--ink-2);font-weight:600">NF:</span> <strong>'+exp.nf+'</strong></div>':''}
-          ${exp.numBoleto?'<div><span style="color:var(--ink-2);font-weight:600">Boleto nº:</span> <strong>'+exp.numBoleto+'</strong></div>':''}
-          ${exp.volumes?'<div><span style="color:var(--ink-2);font-weight:600">Volumes:</span> <strong>'+exp.volumes+'</strong></div>':''}
-          ${exp.caixasUsadas||exp.volumes?'<div><span style="color:var(--ink-2);font-weight:600">Caixas:</span> <strong>'+(exp.caixasUsadas||exp.volumes*2)+'</strong></div>':''}
+        <div style="background:var(--green-light);border:1.5px solid var(--green);border-radius:var(--radius-sm);padding:14px 16px;margin-bottom:14px;display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px">
+          ${exp.data?'<div><span style="color:var(--text2);font-weight:600">Data saída:</span> <strong>'+new Date(exp.data+' 00:00').toLocaleDateString('pt-BR')+'</strong></div>':''}
+          ${exp.tipo?'<div><span style="color:var(--text2);font-weight:600">Entrega:</span> <strong>'+(exp.tipo==='motorista'?'🛵 Motorista':exp.tipo==='transportadora'?'🚛 Transportadora':'🏪 Retirada')+'</strong></div>':''}
+          ${exp.nf?'<div><span style="color:var(--text2);font-weight:600">NF:</span> <strong>'+exp.nf+'</strong></div>':''}
+          ${exp.numBoleto?'<div><span style="color:var(--text2);font-weight:600">Boleto nº:</span> <strong>'+exp.numBoleto+'</strong></div>':''}
+          ${exp.volumes?'<div><span style="color:var(--text2);font-weight:600">Volumes:</span> <strong>'+exp.volumes+'</strong></div>':''}
+          ${exp.caixasUsadas||exp.volumes?'<div><span style="color:var(--text2);font-weight:600">Caixas:</span> <strong>'+(exp.caixasUsadas||exp.volumes*2)+'</strong></div>':''}
         </div>
         <button onclick="finalizarPedido('${p.id}')"
           style="width:100%;padding:12px;border:none;border-radius:var(--radius-sm);font-family:inherit;font-weight:800;font-size:14px;cursor:pointer;background:linear-gradient(135deg,var(--green),var(--teal));color:#fff;box-shadow:0 3px 10px rgba(22,163,74,0.3)">
@@ -1692,15 +1687,15 @@
         <div class="section-label" style="margin-top:20px">🚚 Checklist de Expedição</div>
         <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px">
           ${checks.map(c=>`
-            <div onclick="toggleExpCheck('${p.id}','${c.key}')" style="display:flex;align-items:center;gap:10px;padding:11px 14px;background:${exp[c.key]?'var(--green-bg)':'var(--surface-2)'};border:1.5px solid ${exp[c.key]?'var(--green)':'var(--border2)'};border-radius:var(--radius-sm);cursor:pointer;transition:all .15s">
-              <div style="width:22px;height:22px;border-radius:50%;background:${exp[c.key]?'var(--green)':'var(--surface)'};border:2px solid ${exp[c.key]?'var(--green)':'var(--border2)'};display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0">${exp[c.key]?'✓':''}</div>
-              <span style="font-size:13px;font-weight:600;color:${exp[c.key]?'var(--green)':'var(--ink-2)'}">${c.icon} ${c.label}</span>
+            <div onclick="toggleExpCheck('${p.id}','${c.key}')" style="display:flex;align-items:center;gap:10px;padding:11px 14px;background:${exp[c.key]?'var(--green-light)':'var(--bg)'};border:1.5px solid ${exp[c.key]?'var(--green)':'var(--border2)'};border-radius:var(--radius-sm);cursor:pointer;transition:all .15s">
+              <div style="width:22px;height:22px;border-radius:50%;background:${exp[c.key]?'var(--green)':'var(--white)'};border:2px solid ${exp[c.key]?'var(--green)':'var(--border2)'};display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0">${exp[c.key]?'✓':''}</div>
+              <span style="font-size:13px;font-weight:600;color:${exp[c.key]?'var(--green)':'var(--text2)'}">${c.icon} ${c.label}</span>
             </div>`).join('')}
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
           <div style="display:flex;flex-direction:column;gap:5px">
-            <label style="font-size:11px;font-weight:700;color:var(--ink-2)">Tipo de entrega</label>
-            <select id="exp-tipo-ped" onchange="saveExpField('${p.id}','tipo',this.value)" style="background:var(--surface-2);border:1.5px solid var(--border2);color:var(--text);padding:8px 12px;border-radius:var(--radius-sm);font-family:inherit;font-size:13px;font-weight:500;outline:none;">
+            <label style="font-size:11px;font-weight:700;color:var(--text2)">Tipo de entrega</label>
+            <select id="exp-tipo-ped" onchange="saveExpField('${p.id}','tipo',this.value)" style="background:var(--bg);border:1.5px solid var(--border2);color:var(--text);padding:8px 12px;border-radius:var(--radius-sm);font-family:inherit;font-size:13px;font-weight:500;outline:none;">
               <option value="">— Selecionar —</option>
               <option value="motorista" ${exp.tipo==='motorista'?'selected':''}>🛵 Motorista (Lalamove)</option>
               <option value="transportadora" ${exp.tipo==='transportadora'?'selected':''}>🚛 Transportadora</option>
@@ -1708,35 +1703,35 @@
             </select>
           </div>
           <div style="display:flex;flex-direction:column;gap:5px">
-            <label style="font-size:11px;font-weight:700;color:var(--ink-2)">Motorista / Transportadora</label>
+            <label style="font-size:11px;font-weight:700;color:var(--text2)">Motorista / Transportadora</label>
             <input type="text" id="exp-mot-ped" value="${exp.motorista||''}" placeholder="Nome do motorista..." onchange="saveExpField('${p.id}','motorista',this.value)"
-              style="background:var(--surface-2);border:1.5px solid var(--border2);color:var(--text);padding:8px 12px;border-radius:var(--radius-sm);font-family:inherit;font-size:13px;font-weight:500;outline:none;">
+              style="background:var(--bg);border:1.5px solid var(--border2);color:var(--text);padding:8px 12px;border-radius:var(--radius-sm);font-family:inherit;font-size:13px;font-weight:500;outline:none;">
           </div>
           <div style="display:flex;flex-direction:column;gap:5px">
-            <label style="font-size:11px;font-weight:700;color:var(--ink-2)">Número da NF</label>
+            <label style="font-size:11px;font-weight:700;color:var(--text2)">Número da NF</label>
             <input type="text" id="exp-nf-ped" value="${exp.nf||p.nf||''}" placeholder="Ex: NF-e 000123" onchange="saveExpField('${p.id}','nf',this.value)"
-              style="background:var(--surface-2);border:1.5px solid var(--border2);color:var(--text);padding:8px 12px;border-radius:var(--radius-sm);font-family:inherit;font-size:13px;font-weight:500;outline:none;">
+              style="background:var(--bg);border:1.5px solid var(--border2);color:var(--text);padding:8px 12px;border-radius:var(--radius-sm);font-family:inherit;font-size:13px;font-weight:500;outline:none;">
           </div>
           <div style="display:flex;flex-direction:column;gap:5px">
-            <label style="font-size:11px;font-weight:700;color:var(--ink-2)">Número do Boleto</label>
+            <label style="font-size:11px;font-weight:700;color:var(--text2)">Número do Boleto</label>
             <input type="text" id="exp-boleto-ped" value="${exp.numBoleto||''}" placeholder="Ex: 000.0000.00000-0" onchange="saveExpField('${p.id}','numBoleto',this.value)"
-              style="background:var(--surface-2);border:1.5px solid var(--border2);color:var(--text);padding:8px 12px;border-radius:var(--radius-sm);font-family:inherit;font-size:13px;font-weight:500;outline:none;">
+              style="background:var(--bg);border:1.5px solid var(--border2);color:var(--text);padding:8px 12px;border-radius:var(--radius-sm);font-family:inherit;font-size:13px;font-weight:500;outline:none;">
           </div>
           <div style="display:flex;flex-direction:column;gap:5px">
-            <label style="font-size:11px;font-weight:700;color:var(--ink-2)">Volumes</label>
+            <label style="font-size:11px;font-weight:700;color:var(--text2)">Volumes</label>
             <input type="number" id="exp-volumes-ped" value="${exp.volumes||''}" placeholder="Ex: 3" min="1" onchange="saveExpField('${p.id}','volumes',this.value)"
-              style="background:var(--surface-2);border:1.5px solid var(--border2);color:var(--text);padding:8px 12px;border-radius:var(--radius-sm);font-family:inherit;font-size:13px;font-weight:500;outline:none;">
-            <div style="font-size:11px;color:var(--ink-2)">1 volume = 2 caixas de papelão</div>
+              style="background:var(--bg);border:1.5px solid var(--border2);color:var(--text);padding:8px 12px;border-radius:var(--radius-sm);font-family:inherit;font-size:13px;font-weight:500;outline:none;">
+            <div style="font-size:11px;color:var(--text2)">1 volume = 2 caixas de papelão</div>
           </div>
           <div style="display:flex;flex-direction:column;gap:5px">
-            <label style="font-size:11px;font-weight:700;color:var(--ink-2)">Caixas utilizadas</label>
+            <label style="font-size:11px;font-weight:700;color:var(--text2)">Caixas utilizadas</label>
             <input type="number" id="exp-caixas-ped" value="${exp.volumes?exp.volumes*2:''}" placeholder="Auto (volumes × 2)" min="1" onchange="saveExpField('${p.id}','caixasUsadas',this.value)"
-              style="background:var(--surface-2);border:1.5px solid var(--border2);color:var(--text);padding:8px 12px;border-radius:var(--radius-sm);font-family:inherit;font-size:13px;font-weight:500;outline:none;">
+              style="background:var(--bg);border:1.5px solid var(--border2);color:var(--text);padding:8px 12px;border-radius:var(--radius-sm);font-family:inherit;font-size:13px;font-weight:500;outline:none;">
           </div>
           <div style="display:flex;flex-direction:column;gap:5px">
-            <label style="font-size:11px;font-weight:700;color:var(--ink-2)">Data de saída</label>
+            <label style="font-size:11px;font-weight:700;color:var(--text2)">Data de saída</label>
             <input type="date" id="exp-data-ped" value="${exp.data||new Date().toISOString().split('T')[0]}" onchange="saveExpField('${p.id}','data',this.value)"
-              style="background:var(--surface-2);border:1.5px solid var(--border2);color:var(--text);padding:8px 12px;border-radius:var(--radius-sm);font-family:inherit;font-size:13px;font-weight:500;outline:none;">
+              style="background:var(--bg);border:1.5px solid var(--border2);color:var(--text);padding:8px 12px;border-radius:var(--radius-sm);font-family:inherit;font-size:13px;font-weight:500;outline:none;">
           </div>
         </div>
         <button onclick="expedirPedido('${p.id}')"
@@ -1757,7 +1752,7 @@
       ${expedicaoHtml}
       <div class="section-label" style="margin-top:${p.status==='pronto'?'20':'0'}px">📦 Progresso por Item</div>
       ${itensHtml}
-      <div style="display:flex;justify-content:space-between;padding:10px 12px;background:var(--purple-bg);border-radius:var(--radius-sm);margin-top:6px">
+      <div style="display:flex;justify-content:space-between;padding:10px 12px;background:var(--purple-light);border-radius:var(--radius-sm);margin-top:6px">
         <span style="font-weight:700;color:var(--purple)">Total do Pedido</span>
         <span style="font-weight:800;font-size:16px;color:var(--purple)">${fmt(total)}</span>
       </div>
@@ -1774,7 +1769,7 @@
         ${row('Frete',p.frete)} ${row('Data do pedido',p.data?new Date(p.data+' 00:00').toLocaleDateString('pt-BR'):null)}
         ${row('Cadastrado em',p.criadoEm)}
       </div>
-      ${p.obs?`<div class="section-label" style="margin-top:20px">💬 Observações</div><p style="font-size:13px;color:var(--ink-2);background:var(--surface-2);padding:12px;border-radius:8px">${p.obs}</p>`:''}
+      ${p.obs?`<div class="section-label" style="margin-top:20px">💬 Observações</div><p style="font-size:13px;color:var(--text2);background:var(--bg);padding:12px;border-radius:8px">${p.obs}</p>`:''}
     `;
     document.getElementById('overlay-detalhe').classList.add('open');
   }
@@ -1905,9 +1900,9 @@
 
     const card=(icon,label,val,color,sub)=>
       '<div style="background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px 16px;box-shadow:0 1px 3px rgba(0,0,0,.06)">'+
-        '<div style="font-size:11px;font-weight:700;color:var(--ink-2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px">'+icon+' '+label+'</div>'+
+        '<div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px">'+icon+' '+label+'</div>'+
         '<div style="font-size:22px;font-weight:900;color:'+(color||'var(--text)')+'">'+val+'</div>'+
-        (sub?'<div style="font-size:11px;color:var(--ink-2);margin-top:3px">'+sub+'</div>':'')+
+        (sub?'<div style="font-size:11px;color:var(--text2);margin-top:3px">'+sub+'</div>':'')+
       '</div>';
 
     const dash=document.getElementById('ped-dash');
@@ -1916,10 +1911,10 @@
         card('📋','Em Andamento',abertos.length,'var(--blue)',recebidos.length+' recebido · '+emProd.length+' produção · '+prontos.length+' pronto')+
         card('🚨','Em Atraso',atrasados.length,atrasados.length>0?'var(--red)':'var(--green)',atrasados.length>0?atrasados.map(p=>p.clienteNome).join(', '):'Todos em dia ✅')+
         card('📅','Próxima Entrega',diasProxima===null?'—':diasProxima<0?Math.abs(diasProxima)+'d atrasado':diasProxima===0?'Hoje':diasProxima+'d',
-          diasProxima===null?'var(--ink-2)':diasProxima<0?'var(--red)':diasProxima<=3?'var(--amber)':'var(--green)',
+          diasProxima===null?'var(--text2)':diasProxima<0?'var(--red)':diasProxima<=3?'var(--orange)':'var(--green)',
           proximaEntrega?(proximaEntrega.clienteNome+' · '+new Date(proximaEntrega.entrega+' 00:00').toLocaleDateString('pt-BR')):'Sem entregas agendadas')+
-        card('✅','Prontos p/ Entregar',prontos.length,prontos.length>0?'var(--green)':'var(--ink-2)',prontos.length>0?prontos.map(p=>p.clienteNome).join(', '):'Nenhum pronto ainda')+
-        card('💰','A Receber',fmt(totalReceber),'var(--amber)',abertos.length+' pedido(s) em aberto');
+        card('✅','Prontos p/ Entregar',prontos.length,prontos.length>0?'var(--green)':'var(--text2)',prontos.length>0?prontos.map(p=>p.clienteNome).join(', '):'Nenhum pronto ainda')+
+        card('💰','A Receber',fmt(totalReceber),'var(--orange)',abertos.length+' pedido(s) em aberto');
     }
 
     // Banner de atraso
@@ -1968,8 +1963,8 @@
         d.setMonth(d.getMonth()+(i-1));
         ds=d.toISOString().split('T')[0];
       }
-      html+='<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--surface-2);border-radius:8px;border:1px solid var(--border)">'+
-        '<span style="font-size:12px;font-weight:700;color:var(--ink-2);min-width:80px">'+i+'ª parcela</span>'+
+      html+='<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--bg);border-radius:8px;border:1px solid var(--border)">'+
+        '<span style="font-size:12px;font-weight:700;color:var(--text2);min-width:80px">'+i+'ª parcela</span>'+
         '<input type="date" id="ped-venc-'+i+'" value="'+ds+'" style="flex:1;border:1.5px solid var(--border2);padding:7px 10px;border-radius:6px;font-family:inherit;font-size:13px;outline:none;background:#fff">'+
       '</div>';
     }
@@ -2031,7 +2026,7 @@
                 <span class="pc-valor">${fmt(getTotal(p))}</span>
                 ${p.entrega?`<span class="pc-prazo ${prazoClass(p.entrega)}">${prazoLabel(p.entrega)}</span>`:''}
               </div>
-              ${getSaldo(p)>0?`<div style="font-size:10px;color:var(--amber);font-weight:600;margin-top:4px">💰 A receber: ${fmt(getSaldo(p))}</div>`:'<div style="font-size:10px;color:var(--green);font-weight:600;margin-top:4px">✓ Quitado</div>'}
+              ${getSaldo(p)>0?`<div style="font-size:10px;color:var(--orange);font-weight:600;margin-top:4px">💰 A receber: ${fmt(getSaldo(p))}</div>`:'<div style="font-size:10px;color:var(--green);font-weight:600;margin-top:4px">✓ Quitado</div>'}
             </div>
             ${p.status!=='finalizado'?`
             <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
@@ -2047,7 +2042,7 @@
             <span>${STATUS_EMOJI[status]} ${STATUS_LABEL[status]}</span>
             <span class="kanban-count">${cards.length}</span>
           </div>
-          <div class="kanban-body">${cardsHtml||'<div style="font-size:12px;color:var(--ink-3);text-align:center;padding:12px">Nenhum</div>'}</div>
+          <div class="kanban-body">${cardsHtml||'<div style="font-size:12px;color:var(--text3);text-align:center;padding:12px">Nenhum</div>'}</div>
         </div>`;
     }).join('');
     document.getElementById('kanban-board').innerHTML=colunas;
@@ -2078,7 +2073,7 @@
       btn.textContent=(f==='pendentes'?'⏳ Pendentes':f==='entregues'?'✅ Entregues':'📋 Todos')+' ('+count+')';
       btn.style.cssText=f===filtro?
         'font-size:12px;padding:6px 14px;background:var(--purple);color:#fff;border:none;border-radius:8px;cursor:pointer;font-family:inherit;font-weight:700':
-        'font-size:12px;padding:6px 14px;background:var(--surface-2);color:var(--text);border:1.5px solid var(--border2);border-radius:8px;cursor:pointer;font-family:inherit;font-weight:700';
+        'font-size:12px;padding:6px 14px;background:var(--bg);color:var(--text);border:1.5px solid var(--border2);border-radius:8px;cursor:pointer;font-family:inherit;font-weight:700';
     });
 
     var tbody=document.getElementById('tbody-lista');
@@ -2100,20 +2095,20 @@
       var saldo=getSaldo(p);
 
       tr.innerHTML=
-        '<td><div style="font-weight:700">'+(p.numero||'—')+'</div><div style="font-size:11px;color:var(--ink-3)">'+(p.data?new Date(p.data+' 00:00').toLocaleDateString('pt-BR'):'')+'</div></td>'+
+        '<td><div style="font-weight:700">'+(p.numero||'—')+'</div><div style="font-size:11px;color:var(--text3)">'+(p.data?new Date(p.data+' 00:00').toLocaleDateString('pt-BR'):'')+'</div></td>'+
         '<td><div style="font-weight:700">'+(p.clienteNome||'—')+'</div></td>'+
-        '<td style="font-size:12px;font-weight:700">'+(p.nf?'🧾 '+p.nf:'<span style="color:var(--ink-3)">—</span>')+'</td>'+
+        '<td style="font-size:12px;font-weight:700">'+(p.nf?'🧾 '+p.nf:'<span style="color:var(--text3)">—</span>')+'</td>'+
         '<td style="text-align:center">'+(
           p.status==='pronto'||p.status==='expedido'?
             (p.nfEnviada?'<span title="NF enviada" style="color:#10b981;font-size:16px">✅</span>':
             '<span title="NF não enviada" style="color:#ef4444;font-size:16px">🔴</span>')
-          :'<span style="color:var(--ink-3);font-size:12px">—</span>'
+          :'<span style="color:var(--text3);font-size:12px">—</span>'
         )+'</td>'+
         '<td style="text-align:center">'+(
           p.formaPgto==='Boleto'&&(p.status==='pronto'||p.status==='expedido')?
             (p.boletoEnviado?'<span title="Boleto enviado" style="color:#10b981;font-size:16px">✅</span>':
             '<span title="Boleto não enviado" style="color:#ef4444;font-size:16px">🔴</span>')
-          :'<span style="color:var(--ink-3);font-size:12px">—</span>'
+          :'<span style="color:var(--text3);font-size:12px">—</span>'
         )+'</td>'+
         '<td>'+(p.entrega?new Date(p.entrega+' 00:00').toLocaleDateString('pt-BR'):'—')+'</td>'+
         '<td><div style="font-weight:800">'+fmt(total)+'</div>'+(saldo>0?'<div style="font-size:11px;color:#f59e0b">Saldo: '+fmt(saldo)+'</div>':'')+'</td>'+
@@ -2370,11 +2365,13 @@
   setInterval(calcStatus, 30000);
   window.toggleStatus=toggleStatus;
 })();
-
-window.addEventListener('mesChanged',function(){if(typeof init==='function')init();else if(typeof render==='function')render();});
-
-function _sbTick(){var n=new Date();var t=document.getElementById('sb-time');var d=document.getElementById('sb-date');if(t)t.textContent=n.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});if(d)d.textContent=n.toLocaleDateString('pt-BR',{weekday:'short',day:'numeric',month:'short'});}setInterval(_sbTick,1000);_sbTick();
 </script>
 <script src="firebase-sync.js"></script>
+</div>
+<script>
+(function(){function _sbt(){var n=new Date();var a=document.getElementById("sb-time");if(a)a.textContent=n.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});var b=document.getElementById("sb-date");if(b)b.textContent=n.toLocaleDateString("pt-BR",{weekday:"short",day:"numeric",month:"short"});}setInterval(_sbt,1000);_sbt();
+window.addEventListener("mesChanged",function(){if(typeof init==="function")init();else if(typeof render==="function")render();else if(typeof renderLista==="function")renderLista();});
+})();
+</script>
 </body>
 </html>
