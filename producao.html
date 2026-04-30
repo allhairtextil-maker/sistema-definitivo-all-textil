@@ -8,37 +8,41 @@
 <title>Produção — ALL HAIR</title>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="favicon.ico">
-
 </head>
 <body>
+<div class="layout">
 <div class="sidebar">
-  <div class="sb-logo"><img src="./logo.png" alt=""><div><div class="sb-name">ALL HAIR</div><div class="sb-sub">Gestão Industrial</div></div></div>
+  <div class="sb-header">
+    <img src="./logo.png" alt="ALL HAIR">
+    <div><div class="sb-brand-name">ALL HAIR</div><div class="sb-brand-sub">Gestão Industrial</div></div>
+  </div>
   <nav class="sb-nav">
-    <div class="sb-sec">Principal</div>
-    <a class="sl" href="dashboard.html"><span class="si">⊞</span>Início</a>
-    <a class="sl" href="pedidos.html"><span class="si">◫</span>Pedidos</a>
-    <a class="sl on" href="producao.html"><span class="si">◈</span>Produção</a>
-    <a class="sl" href="estoque.html"><span class="si">◧</span>Estoque</a>
-    <a class="sl" href="financeiro.html"><span class="si">◉</span>Financeiro</a>
-    <a class="sl" href="socios.html"><span class="si">◎</span>Sócios</a>
-    <div class="sb-sec">Vendas</div>
-    <a class="sl" href="clientes.html"><span class="si">👥</span>Clientes</a>
-    <a class="sl" href="representantes.html"><span class="si">🤝</span>Representantes</a>
-    <div class="sb-sec">Gestão</div>
-    <a class="sl" href="produtos.html"><span class="si">◈</span>Produtos</a>
-    <a class="sl" href="fornecedores.html"><span class="si">◫</span>Fornecedores</a>
-    <a class="sl" href="configuracoes.html"><span class="si">⚙️</span>Configurações</a>
+    <div class="sb-section">Principal</div>
+    <a class="sb-link" href="dashboard.html"><span class="sb-icon">⊞</span>Início</a>
+    <a class="sb-link" href="pedidos.html"><span class="sb-icon">◫</span>Pedidos</a>
+    <a class="sb-link active" href="producao.html"><span class="sb-icon">◈</span>Produção</a>
+    <a class="sb-link" href="estoque.html"><span class="sb-icon">◧</span>Estoque</a>
+    <a class="sb-link" href="financeiro.html"><span class="sb-icon">◉</span>Financeiro</a>
+    <a class="sb-link" href="socios.html"><span class="sb-icon">◎</span>Sócios</a>
+    <div class="sb-section">Vendas</div>
+    <a class="sb-link" href="clientes.html"><span class="sb-icon">👥</span>Clientes</a>
+    <a class="sb-link" href="representantes.html"><span class="sb-icon">🤝</span>Representantes</a>
+    <a class="sb-link" href="crm.html"><span class="sb-icon">◐</span>CRM</a>
+    <div class="sb-section">Gestão</div>
+    <a class="sb-link" href="produtos.html"><span class="sb-icon">◈</span>Produtos</a>
+    <a class="sb-link" href="fornecedores.html"><span class="sb-icon">◫</span>Fornecedores</a>
+    <a class="sb-link" href="configuracoes.html"><span class="sb-icon">⚙️</span>Configurações</a>
   </nav>
-  <div class="sb-foot">
-    <div class="sb-user"><div class="sb-av">A</div><div style="font-size:12px;font-weight:700">ALL HAIR</div></div>
-    <div id="sb-time">--:--</div><div id="sb-date"></div>
+  <div class="sb-footer">
+    <div class="sb-user"><div class="sb-avatar">A</div><div style="font-size:12px;font-weight:600;color:rgba(255,255,255,.7)">ALL HAIR</div></div>
+    <div class="sb-time" id="sb-time">--:--</div>
+    <div class="sb-date" id="sb-date"></div>
   </div>
 </div>
-
 <div class="main">
   <div class="topbar">
-    <div class="topbar-title">🏭 Produção</div>
-    <div id="mg-container" style="position:absolute;left:50%;transform:translateX(-50%);"></div>
+    <div class="topbar-title">🏭 Produção
+    <div id="mg-container" style="position:absolute;left:50%;transform:translateX(-50%)"></div></div>
     <div style="display:flex;gap:6px;flex-wrap:wrap">
       <button class="btn bp" onclick="abrirMaquina()">🏭 Lançar Máquina</button>
       <button class="btn bo" onclick="abrirFacc()">🤝 Enviar Facc.</button>
@@ -896,12 +900,8 @@ function rHist(){
   }
   var labels={maquina:'🏭 Máquina',embalagem:'📦 Embalar',envio_facc:'🤝 Envio Facc.',retorno_facc:'📦 Retorno Facc.'};
   var cors2={maquina:'#8b5cf6',embalagem:'#10b981',envio_facc:'#f59e0b',retorno_facc:'#3b82f6'};
-  var _mesProd=typeof MG!=='undefined'?MG.getMesAno():null;
-  var prods=d.producoes.filter(function(p){
-    if(_hf!=='all'&&p.etapa!==_hf)return false;
-    if(_mesProd){var dt=(p.data||p.criadoEm||'');return dt.substring(0,7)===_mesProd;}
-    return true;
-  }).sort(function(a,b){return new Date(b.data||b.criadoEm)-new Date(a.data||a.criadoEm);}).slice(0,100);
+  var prods=d.producoes.filter(function(p){return _hf==='all'||p.etapa===_hf;})
+    .sort(function(a,b){return new Date(b.data||b.criadoEm)-new Date(a.data||a.criadoEm);}).slice(0,60);
   document.getElementById('hist-body').innerHTML=prods.map(function(p){
     var cor=cors2[p.etapa]||'#94a3b8';
     return '<tr><td style="color:var(--t2);font-size:12px">'+(p.data||'—')+'</td>'+
@@ -1179,7 +1179,7 @@ function abrirEmbalar(){
         '<div style="background:var(--border);border-radius:20px;height:6px;overflow:hidden;margin-bottom:10px">'+
           '<div style="height:100%;border-radius:20px;background:'+(pct>=100?'var(--green)':'var(--blue)')+';width:'+pct+'%"></div>'+
         '</div>'+
-        '<div class="topbar-actions">'+
+        '<div style="display:flex;gap:8px;align-items:center">'+
           '<input type="number" placeholder="Qtd pacotes" min="1" max="'+pctDisp+'" style="flex:1;padding:8px 12px;border:1.5px solid var(--b2);border-radius:8px;font-family:inherit;font-size:13px" data-lid="'+l.id+'" data-prodid="'+l.prodId+'" data-unid="'+unid+'" data-rend="'+rend+'" data-kgdisp="'+kgDisp.toFixed(3)+'" oninput="embRowPrev(this)">'+
           '<span style="font-size:12px;color:var(--t2)" id="emb-hint-'+l.id+'">máx '+pctDisp+' pct</span>'+
           '<button class="btn bgr" style="font-size:12px;white-space:nowrap" onclick="salvarEmbalarLote(this)">📦 Embalar</button>'+
@@ -1328,12 +1328,7 @@ setInterval(tick,1000);tick();
 window.render=function(){R(_aba);};
 R('kanban');
 
-window.addEventListener('mesChanged',function(){
-  var active=document.querySelector('.tab.active');
-  if(active){var id=active.getAttribute('data-tab')||active.getAttribute('onclick')||'hoje';
-    var match=id.match(/aba\('([^']+)'\)/);if(match)R(match[1]);else R('hoje');}
-  else R('hoje');
-});
+window.addEventListener('mesChanged',function(){if(typeof init==='function')init();else if(typeof render==='function')render();});
 </script>
 <script src="firebase-sync.js"></script>
 </body>

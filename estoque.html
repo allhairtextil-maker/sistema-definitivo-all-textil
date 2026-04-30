@@ -8,39 +8,43 @@
 <title>Estoque — ALL HAIR</title>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="favicon.ico">
-
 </head>
 <body>
 <script src="acesso.js"></script>
 
+<div class="layout">
 <div class="sidebar">
-  <div class="sb-logo"><img src="./logo.png" alt=""><div><div class="sb-name">ALL HAIR</div><div class="sb-sub">Gestão Industrial</div></div></div>
+  <div class="sb-header">
+    <img src="./logo.png" alt="ALL HAIR">
+    <div><div class="sb-brand-name">ALL HAIR</div><div class="sb-brand-sub">Gestão Industrial</div></div>
+  </div>
   <nav class="sb-nav">
-    <div class="sb-sec">Principal</div>
-    <a class="sl" href="dashboard.html"><span class="si">⊞</span>Início</a>
-    <a class="sl" href="pedidos.html"><span class="si">◫</span>Pedidos</a>
-    <a class="sl" href="producao.html"><span class="si">◈</span>Produção</a>
-    <a class="sl on" href="estoque.html"><span class="si">◧</span>Estoque</a>
-    <a class="sl" href="financeiro.html"><span class="si">◉</span>Financeiro</a>
-    <a class="sl" href="socios.html"><span class="si">◎</span>Sócios</a>
-    <div class="sb-sec">Vendas</div>
-    <a class="sl" href="clientes.html"><span class="si">👥</span>Clientes</a>
-    <a class="sl" href="representantes.html"><span class="si">🤝</span>Representantes</a>
-    <div class="sb-sec">Gestão</div>
-    <a class="sl" href="produtos.html"><span class="si">◈</span>Produtos</a>
-    <a class="sl" href="fornecedores.html"><span class="si">◫</span>Fornecedores</a>
-    <a class="sl" href="configuracoes.html"><span class="si">⚙️</span>Configurações</a>
+    <div class="sb-section">Principal</div>
+    <a class="sb-link" href="dashboard.html"><span class="sb-icon">⊞</span>Início</a>
+    <a class="sb-link" href="pedidos.html"><span class="sb-icon">◫</span>Pedidos</a>
+    <a class="sb-link" href="producao.html"><span class="sb-icon">◈</span>Produção</a>
+    <a class="sb-link active" href="estoque.html"><span class="sb-icon">◧</span>Estoque</a>
+    <a class="sb-link" href="financeiro.html"><span class="sb-icon">◉</span>Financeiro</a>
+    <a class="sb-link" href="socios.html"><span class="sb-icon">◎</span>Sócios</a>
+    <div class="sb-section">Vendas</div>
+    <a class="sb-link" href="clientes.html"><span class="sb-icon">👥</span>Clientes</a>
+    <a class="sb-link" href="representantes.html"><span class="sb-icon">🤝</span>Representantes</a>
+    <a class="sb-link" href="crm.html"><span class="sb-icon">◐</span>CRM</a>
+    <div class="sb-section">Gestão</div>
+    <a class="sb-link" href="produtos.html"><span class="sb-icon">◈</span>Produtos</a>
+    <a class="sb-link" href="fornecedores.html"><span class="sb-icon">◫</span>Fornecedores</a>
+    <a class="sb-link" href="configuracoes.html"><span class="sb-icon">⚙️</span>Configurações</a>
   </nav>
-  <div class="sb-foot">
-    <div class="sb-user"><div class="sb-av">A</div><div style="font-size:12px;font-weight:700">ALL HAIR</div></div>
-    <div id="sb-time">--:--</div><div id="sb-date"></div>
+  <div class="sb-footer">
+    <div class="sb-user"><div class="sb-avatar">A</div><div style="font-size:12px;font-weight:600;color:rgba(255,255,255,.7)">ALL HAIR</div></div>
+    <div class="sb-time" id="sb-time">--:--</div>
+    <div class="sb-date" id="sb-date"></div>
   </div>
 </div>
-
 <div class="main">
   <div class="topbar">
-    <div class="topbar-title">📦 Estoque</div>
-    <div id="mg-container" style="position:absolute;left:50%;transform:translateX(-50%);"></div>
+    <div class="topbar-title">📦 Estoque
+    <div id="mg-container" style="position:absolute;left:50%;transform:translateX(-50%)"></div></div>
     <div style="display:flex;gap:6px;flex-wrap:wrap">
       <button class="btn bp" onclick="abrirEntradaMP()">+ Entrada MP</button>
       <button class="btn bgr" onclick="abrirEntradaInsumo()">+ Insumo</button>
@@ -273,7 +277,7 @@ function rMP(){
   var nec=document.getElementById('mp-necessidade');
   nec.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'+
     '<div style="font-size:13px;font-weight:800">Necessidade de Insumos</div>'+
-    '<div class="topbar-actions">'+
+    '<div style="display:flex;gap:8px">'+
       '<div style="font-size:13px;font-weight:700;color:var(--purple)">Total em estoque: <span style="color:var(--green)">R$ '+totalVal.toFixed(2)+'</span></div>'+
       '<button class="btn bg2" style="font-size:12px;padding:5px 12px" onclick="imprimirInsumos()">🖨️ Imprimir</button>'+
     '</div>'+
@@ -559,12 +563,7 @@ function rInsumos(){
 // ──────────────────────────────────────────────
 function rHistorico(){
   var d=D();
-  var _mesEst=typeof MG!=='undefined'?MG.getMesAno():null;
-  var movs=d.movimentos.filter(function(m){
-    if(!_mesEst)return true;
-    var dt=(m.data||m.criadoEm||'');
-    return dt.substring(0,7)===_mesEst;
-  }).slice().sort(function(a,b){return new Date(b.criadoEm||b.data)-new Date(a.criadoEm||a.data);}).slice(0,200);
+  var movs=d.movimentos.slice().sort(function(a,b){return new Date(b.criadoEm||b.data)-new Date(a.criadoEm||a.data);}).slice(0,100);
   var tbody=document.getElementById('hist-tbody');
   var empty=document.getElementById('hist-empty');
   if(!movs.length){tbody.innerHTML='';empty.style.display='block';return;}
@@ -804,7 +803,7 @@ setInterval(tick,1000);tick();
 // ──────────────────────────────────────────────
 R('mp');
 
-window.addEventListener('mesChanged',function(){rHistorico&&rHistorico();});
+window.addEventListener('mesChanged',function(){if(typeof init==='function')init();else if(typeof render==='function')render();});
 </script>
 <script src="firebase-sync.js"></script>
 </body>
