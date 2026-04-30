@@ -2,115 +2,27 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<script src="mes-global.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Financeiro — ALL HAIR</title>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="favicon.ico">
+<script src="mes-global.js"></script>
+<link rel="stylesheet" href="design.css">
 <style>
-:root{--bg:#f8fafc;--white:#fff;--border:#e2e8f0;--border2:#cbd5e1;--text:#1e293b;--text2:#64748b;--text3:#94a3b8;--purple:#8b5cf6;--green:#10b981;--red:#ef4444;--orange:#f59e0b;--blue:#3b82f6;--radius:12px;--shadow:0 2px 8px rgba(0,0,0,.06);}
-*{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh;}
-.sidebar{width:220px;background:#0f172a;color:#fff;display:flex;flex-direction:column;flex-shrink:0;height:100vh;position:sticky;top:0;}
-.sb-header{display:flex;align-items:center;gap:10px;padding:16px;border-bottom:1px solid rgba(255,255,255,.1);}
-.sb-header img{width:36px;height:36px;border-radius:8px;}
-.sb-brand-name{font-size:13px;font-weight:800;}
-.sb-brand-sub{font-size:10px;color:rgba(255,255,255,.4);}
-.sb-nav{flex:1;padding:12px 8px;overflow-y:auto;}
-.sb-section{font-size:10px;font-weight:700;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.8px;padding:12px 8px 4px;}
-.sb-link{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;color:rgba(255,255,255,.7);text-decoration:none;font-size:13px;font-weight:500;margin-bottom:2px;}
-.sb-link:hover,.sb-link.active{background:rgba(255,255,255,.1);color:#fff;}
-.sb-icon{width:18px;text-align:center;}
-.sb-footer{padding:12px;border-top:1px solid rgba(255,255,255,.1);}
-.sb-user{display:flex;align-items:center;gap:8px;padding:8px;border-radius:8px;background:rgba(255,255,255,.06);}
-.sb-avatar{width:30px;height:30px;border-radius:50%;background:var(--purple);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;}
-.sb-time{font-size:20px;font-weight:900;color:#fff;padding:8px;text-align:center;}
-.sb-date{font-size:11px;color:rgba(255,255,255,.4);text-align:center;padding-bottom:8px;}
-.layout{display:flex;flex:1;}
-.main{flex:1;display:flex;flex-direction:column;min-height:100vh;}
-.topbar{display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:52px;background:var(--white);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10;}
-.topbar-title{font-size:15px;font-weight:700;}
-.tabs-bar{display:flex;gap:4px;padding:0 24px;background:var(--white);border-bottom:1px solid var(--border);overflow-x:auto;}
-.tab{padding:12px 16px;font-size:13px;font-weight:600;color:var(--text2);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;}
-.tab.active{color:var(--purple);border-color:var(--purple);}
-.tab-content{display:none;padding:20px 24px;}
-.tab-content.active{display:block;}
-.card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);}
-
-/* KPI SIMPLES — bater o olho */
-.kpi-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin-bottom:20px;}
-.kpi{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;position:relative;overflow:hidden;}
-.kpi-bar{position:absolute;left:0;top:0;bottom:0;width:4px;}
-.kpi-label{font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;}
-.kpi-val{font-size:22px;font-weight:900;line-height:1;}
-.kpi-sub{font-size:11px;color:var(--text2);margin-top:5px;}
-
-/* LISTA PAGAR — visual limpo */
-.pagar-item{display:flex;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid var(--border);transition:background .15s;}
-.pagar-item:hover{background:#f8fafc;}
-.pagar-item:last-child{border-bottom:none;}
-.pagar-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
-.pagar-info{flex:1;min-width:0;}
-.pagar-desc{font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.pagar-meta{font-size:11px;color:var(--text2);margin-top:2px;}
-.pagar-val{font-weight:900;font-size:15px;flex-shrink:0;}
-.pagar-status{flex-shrink:0;width:90px;text-align:right;}
-.pagar-actions{flex-shrink:0;}
-
-/* FLUXO DE CAIXA */
-.fluxo-semana{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:12px;overflow:hidden;}
-.fluxo-semana-header{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:var(--bg);border-bottom:1px solid var(--border);}
-.fluxo-row{display:flex;align-items:center;padding:10px 16px;border-bottom:1px solid var(--border);font-size:13px;}
-.fluxo-row:last-child{border-bottom:none;}
-.fluxo-data{width:90px;color:var(--text2);font-size:12px;}
-.fluxo-desc{flex:1;}
-.fluxo-val{font-weight:700;width:120px;text-align:right;}
-
-/* BADGE */
-.badge{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;display:inline-block;}
-.badge-ok{background:#d1fae5;color:#065f46;}
-.badge-venc{background:#fee2e2;color:#991b1b;}
-.badge-hoje{background:#fef3c7;color:#92400e;}
-.badge-fixo{background:#dbeafe;color:#1e40af;}
-.badge-var{background:#fef9c3;color:#713f12;}
-
-/* BTN */
-.btn{padding:8px 16px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;border:none;font-family:inherit;}
-.btn-primary{background:var(--purple);color:#fff;}
-.btn-sm{padding:5px 12px;font-size:12px;border-radius:6px;cursor:pointer;border:none;font-weight:700;font-family:inherit;}
-.btn-success{background:var(--green);color:#fff;}
-.btn-danger{background:var(--red);color:#fff;}
-.btn-gray{background:var(--bg);color:var(--text2);border:1.5px solid var(--border2);}
-.btn-orange{background:var(--orange);color:#fff;}
-
-/* FORM */
-.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
-.form-full{grid-column:1/-1;}
-.field label{display:block;font-size:12px;font-weight:700;color:var(--text2);margin-bottom:4px;}
-.field input,.field select,.field textarea{width:100%;padding:8px 12px;border:1.5px solid var(--border2);border-radius:8px;font-family:inherit;font-size:13px;background:#fff;color:var(--text);}
-.field input:focus,.field select:focus{outline:none;border-color:var(--purple);}
-.field-hint{font-size:11px;color:var(--text3);margin-top:3px;}
-
-/* OVERLAY/MODAL */
-.overlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,.5);z-index:100;align-items:center;justify-content:center;}
-.overlay.open{display:flex;}
-.modal{background:#fff;border-radius:16px;width:90%;max-width:520px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2);}
-.modal-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border);}
-.modal-header h2{font-size:16px;font-weight:800;}
-.modal-close{background:none;border:none;font-size:22px;cursor:pointer;color:var(--text2);}
-.modal-body{padding:20px;}
-.modal-footer{padding:14px 20px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;}
+.alert-box{border-radius:var(--radius-lg);padding:14px 18px;display:flex;align-items:flex-start;gap:12px;margin-bottom:16px;}
+.alert-icon{font-size:20px;flex-shrink:0;line-height:1.2;}
+.alert-red{background:var(--red-bg);border:1px solid #f5c2c2;}
+.alert-green{background:var(--green-bg);border:1px solid #b5e5d4;}
+.diag-item{display:flex;align-items:flex-start;gap:10px;padding:11px 0;border-bottom:1px solid var(--border);}
+.diag-item:last-child{border-bottom:none;}
+.progress-bar-bg{height:6px;background:var(--surface-3);border-radius:3px;overflow:hidden;margin-top:4px;}
+.progress-bar-fill{height:100%;border-radius:3px;transition:width .4s;}
 </style>
 </head>
 <body>
 <div class="layout">
-
-<!-- SIDEBAR -->
 <div class="sidebar">
-  <div class="sb-header">
-    <img src="./logo.png" alt="ALL HAIR">
-    <div><div class="sb-brand-name">ALL HAIR</div><div class="sb-brand-sub">Gestão Industrial</div></div>
-  </div>
+  <div class="sb-header"><img src="./logo.png" alt="ALL HAIR"><div><div class="sb-brand-name">ALL HAIR</div><div class="sb-brand-sub">Gestão Industrial</div></div></div>
   <nav class="sb-nav">
     <div class="sb-section">Principal</div>
     <a class="sb-link" href="dashboard.html"><span class="sb-icon">⊞</span>Início</a>
@@ -129,257 +41,210 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
     <a class="sb-link" href="configuracoes.html"><span class="sb-icon">⚙️</span>Configurações</a>
   </nav>
   <div class="sb-footer">
-    <div class="sb-user"><div class="sb-avatar">A</div><div style="font-size:12px;font-weight:700">ALL HAIR</div></div>
+    <div class="sb-user"><div class="sb-avatar">A</div><div style="font-size:12px;font-weight:600;color:rgba(255,255,255,.7)">ALL HAIR</div></div>
     <div class="sb-time" id="sb-time">--:--</div>
     <div class="sb-date" id="sb-date"></div>
   </div>
 </div>
-
-<!-- MAIN -->
 <div class="main">
   <div class="topbar">
-    <div class="topbar-title">💰 Financeiro</div>
-    <div id="mg-container" style="margin:0 auto"></div>
-    <div style="display:flex;gap:8px">
-      <button class="btn btn-primary" onclick="abrirModalReceber()">+ A Receber</button>
-      <button class="btn btn-orange" onclick="abrirModalAPagar()">+ A Pagar</button>
-      <button class="btn" style="background:var(--red);color:#fff" onclick="abrirModalDespesa()">+ Despesa</button>
-      <button class="btn btn-gray" onclick="abrirModalConta()">🏦 Conta</button>
-      <button class="btn btn-gray" onclick="exportarDados()" title="Exportar dados para análise">📤 Exportar</button>
+    <div class="flex-center gap-12">
+      <div class="topbar-title">Financeiro</div>
+      <div id="mg-container"></div>
+    </div>
+    <div class="topbar-actions">
+      <button class="btn btn-ghost" onclick="exportarDados()">↑ Exportar</button>
+      <button class="btn btn-ghost" onclick="abrirModalConta()">🏦 Conta</button>
+      <button class="btn btn-green" onclick="abrirModalReceber()">+ A Receber</button>
+      <button class="btn btn-amber" onclick="abrirModalAPagar()">+ A Pagar</button>
+      <button class="btn btn-red" onclick="abrirModalDespesa()">+ Despesa</button>
     </div>
   </div>
-
   <div class="tabs-bar">
-    <div class="tab active" onclick="aba('resumo')">📊 Resumo</div>
-    <div class="tab" onclick="aba('apagar')">🔴 A Pagar</div>
-    <div class="tab" onclick="aba('areceber')">💚 A Receber</div>
-    <div class="tab" onclick="aba('fluxo')">📈 Fluxo de Caixa</div>
-    <div class="tab" onclick="aba('despesas')">📋 Despesas</div>
-    <div class="tab" onclick="aba('caixa')">🏦 Caixa</div>
-    <div class="tab" onclick="aba('dre')">📉 DRE</div>
+    <div class="tab active" onclick="aba('resumo')">Resumo</div>
+    <div class="tab" onclick="aba('apagar')">A Pagar</div>
+    <div class="tab" onclick="aba('areceber')">A Receber</div>
+    <div class="tab" onclick="aba('fluxo')">Fluxo de Caixa</div>
+    <div class="tab" onclick="aba('anual')">Fluxo Anual</div>
+    <div class="tab" onclick="aba('despesas')">Despesas</div>
+    <div class="tab" onclick="aba('caixa')">Caixa</div>
+    <div class="tab" onclick="aba('dre')">DRE</div>
   </div>
-
-  <!-- RESUMO -->
   <div class="tab-content active" id="tab-resumo">
-    <div class="kpi-row" id="kpi-resumo"></div>
-    <!-- Painel rápido -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-      <div class="card">
-        <div style="padding:14px 18px;font-weight:800;border-bottom:1px solid var(--border);display:flex;justify-content:space-between">
-          <span>🔴 Próximos Vencimentos</span>
-          <span style="font-size:12px;color:var(--text2);font-weight:400">próximos 7 dias</span>
-        </div>
-        <div id="resumo-apagar"></div>
+    <div class="kpi-grid" id="kpi-resumo"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
+      <div class="card" style="padding:16px">
+        <div class="card-title mb-12">Entradas × Saídas</div>
+        <div class="chart-wrap" style="height:200px"><canvas id="chart-resumo-mensal" role="img" aria-label="Entradas e saídas do mês"></canvas></div>
       </div>
-      <div class="card">
-        <div style="padding:14px 18px;font-weight:800;border-bottom:1px solid var(--border);display:flex;justify-content:space-between">
-          <span>💚 Próximos Recebimentos</span>
-          <span style="font-size:12px;color:var(--text2);font-weight:400">próximos 7 dias</span>
-        </div>
-        <div id="resumo-areceber"></div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div class="card"><div class="card-header"><span class="card-title">Próximos Vencimentos</span><span class="text-muted" style="font-size:11px">7 dias</span></div><div id="resumo-apagar"></div></div>
+        <div class="card"><div class="card-header"><span class="card-title">Próximos Recebimentos</span><span class="text-muted" style="font-size:11px">7 dias</span></div><div id="resumo-areceber"></div></div>
       </div>
     </div>
   </div>
-
-  <!-- A PAGAR -->
   <div class="tab-content" id="tab-apagar">
-    <div class="kpi-row" id="kpi-apagar"></div>
-    <div class="card" style="margin-bottom:16px">
-      <div style="padding:14px 18px;font-weight:800;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
-        <span>Todas as Contas a Pagar — Mês Atual</span>
-        <button class="btn-sm btn-orange" onclick="abrirModalAPagar()">+ Nova Conta</button>
-      </div>
-      <div id="lista-apagar"></div>
-    </div>
+    <div class="kpi-grid" id="kpi-apagar"></div>
+    <div class="card"><div class="card-header"><span class="card-title">Contas a Pagar</span><button class="btn-sm btn-sm-amber" onclick="abrirModalAPagar()">+ Nova</button></div><div id="lista-apagar"></div></div>
   </div>
-
-  <!-- A RECEBER -->
   <div class="tab-content" id="tab-areceber">
-    <div class="kpi-row" id="kpi-areceber"></div>
-    <div class="card">
-      <div style="padding:14px 18px;font-weight:800;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
-        <span>Boletos e Recebimentos Pendentes</span>
-        <button class="btn-sm btn-primary" onclick="abrirModalReceber()">+ Registrar</button>
+    <div class="kpi-grid" id="kpi-areceber"></div>
+    <div class="card"><div class="card-header"><span class="card-title">Boletos e Recebimentos Pendentes</span><button class="btn-sm btn-sm-green" onclick="abrirModalReceber()">+ Registrar</button></div><div id="lista-areceber"></div></div>
+  </div>
+  <div class="tab-content" id="tab-fluxo">
+    <div class="kpi-grid" id="kpi-fluxo"></div>
+    <div id="fluxo-alerta"></div>
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-header"><span class="card-title">Projeção Semanal — 8 semanas</span></div>
+      <div style="padding:20px">
+        <div style="display:flex;gap:16px;margin-bottom:12px;font-size:12px;color:var(--ink-3)">
+          <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:var(--green)"></span>Entradas</span>
+          <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:var(--red)"></span>Saídas</span>
+          <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:3px;background:var(--blue);display:inline-block"></span>Saldo acumulado</span>
+        </div>
+        <div class="chart-wrap" style="height:260px"><canvas id="chart-fluxo" role="img" aria-label="Fluxo de caixa semanal"></canvas></div>
       </div>
-      <div id="lista-areceber"></div>
+    </div>
+    <div class="card"><div class="card-header"><span class="card-title">Detalhamento por Semana</span></div><div id="fluxo-detalhe"></div></div>
+  </div>
+  <div class="tab-content" id="tab-anual">
+    <div class="kpi-grid" id="kpi-anual"></div>
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-header"><span class="card-title">Projeção Anual — semana a semana</span><span class="text-muted" style="font-size:11px">52 semanas</span></div>
+      <div style="padding:20px">
+        <div style="display:flex;gap:16px;margin-bottom:12px;font-size:12px;color:var(--ink-3)">
+          <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:3px;background:var(--green);display:inline-block"></span>Saldo acumulado</span>
+          <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:var(--red);opacity:.5"></span>Saídas fixas</span>
+        </div>
+        <div class="chart-wrap" style="height:300px"><canvas id="chart-anual" role="img" aria-label="Projeção anual de caixa"></canvas></div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div class="card"><div class="card-header"><span class="card-title">Entradas por Mês</span></div><div style="padding:16px" class="chart-wrap" style="height:220px"><canvas id="chart-anual-bar" role="img" aria-label="Entradas mensais" style="height:200px"></canvas></div></div>
+      <div class="card"><div class="card-header"><span class="card-title">Análise</span></div><div id="anual-analise" style="padding:16px"></div></div>
     </div>
   </div>
-
-  <!-- FLUXO DE CAIXA -->
-  <div class="tab-content" id="tab-fluxo">
-    <div class="kpi-row" id="kpi-fluxo"></div>
-    <div id="fluxo-content"></div>
-  </div>
-
-  <!-- DESPESAS -->
   <div class="tab-content" id="tab-despesas">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-      <div style="font-size:16px;font-weight:800">📋 Despesas Cadastradas</div>
-      <button class="btn btn-primary" onclick="abrirModalDespesa()">+ Nova Despesa</button>
+      <div><div style="font-family:'Sora',sans-serif;font-size:15px;font-weight:700">Despesas</div><div style="font-size:12px;color:var(--ink-3);margin-top:2px">Fixas e variáveis</div></div>
+      <button class="btn btn-primary" onclick="abrirModalDespesa()">+ Nova</button>
     </div>
-    <div class="card">
-      <table style="width:100%;border-collapse:collapse">
-        <thead><tr style="background:var(--bg)">
-          <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:700;color:var(--text2);border-bottom:2px solid var(--border)">Descrição</th>
-          <th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:700;color:var(--text2);border-bottom:2px solid var(--border)">Categoria</th>
-          <th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:700;color:var(--text2);border-bottom:2px solid var(--border)">Tipo</th>
-          <th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:700;color:var(--text2);border-bottom:2px solid var(--border)">Vencimento</th>
-          <th style="padding:10px 14px;text-align:right;font-size:11px;font-weight:700;color:var(--text2);border-bottom:2px solid var(--border)">Valor</th>
-          <th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:700;color:var(--text2);border-bottom:2px solid var(--border)">Status</th>
-          <th style="padding:10px 14px;border-bottom:2px solid var(--border)"></th>
-        </tr></thead>
-        <tbody id="tbody-despesas"></tbody>
-      </table>
-      <div id="empty-despesas" style="text-align:center;padding:40px;color:var(--text2);display:none">Nenhuma despesa cadastrada.</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
+      <div class="card" style="padding:16px"><div class="card-title mb-12">Composição das Fixas</div><div class="chart-wrap" style="height:200px"><canvas id="chart-despesas-pie" role="img" aria-label="Composição das despesas fixas"></canvas></div></div>
+      <div class="card" style="padding:16px"><div class="card-title mb-12">Total Fixo Mensal</div><div id="desp-resumo" style="display:flex;flex-direction:column;gap:8px"></div></div>
     </div>
+    <div class="card"><div class="table-wrap"><table><thead><tr><th>Descrição</th><th>Categoria</th><th>Tipo</th><th>Data dívida</th><th>Vencimento</th><th style="text-align:right">Valor</th><th>Status</th><th></th></tr></thead><tbody id="tbody-despesas"></tbody></table><div id="empty-despesas" style="text-align:center;padding:40px;color:var(--ink-3);display:none">Nenhuma despesa.</div></div></div>
   </div>
-
-  <!-- CAIXA -->
   <div class="tab-content" id="tab-caixa">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-      <div style="font-size:16px;font-weight:800">🏦 Caixa e Contas</div>
+      <div style="font-family:'Sora',sans-serif;font-size:15px;font-weight:700">Caixa e Contas</div>
       <button class="btn btn-primary" onclick="abrirModalConta()">+ Conta</button>
     </div>
     <div id="contas-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-bottom:20px"></div>
-    <div class="card">
-      <div style="padding:14px 18px;font-weight:800;border-bottom:1px solid var(--border)">Histórico de Movimentações</div>
-      <table style="width:100%;border-collapse:collapse">
-        <thead><tr style="background:var(--bg)">
-          <th style="padding:9px 16px;text-align:left;font-size:11px;font-weight:700;color:var(--text2);border-bottom:2px solid var(--border)">Data</th>
-          <th style="padding:9px 14px;text-align:left;font-size:11px;font-weight:700;color:var(--text2);border-bottom:2px solid var(--border)">Descrição</th>
-          <th style="padding:9px 14px;text-align:left;font-size:11px;font-weight:700;color:var(--text2);border-bottom:2px solid var(--border)">Conta</th>
-          <th style="padding:9px 14px;text-align:left;font-size:11px;font-weight:700;color:var(--text2);border-bottom:2px solid var(--border)">Tipo</th>
-          <th style="padding:9px 14px;text-align:right;font-size:11px;font-weight:700;color:var(--text2);border-bottom:2px solid var(--border)">Valor</th>
-        </tr></thead>
-        <tbody id="tbody-movs"></tbody>
-      </table>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
+      <div class="card" style="padding:16px"><div class="card-title mb-12">Entradas × Saídas (90 dias)</div><div class="chart-wrap" style="height:200px"><canvas id="chart-movs" role="img" aria-label="Movimentações 90 dias"></canvas></div></div>
+      <div class="card" style="padding:16px"><div class="card-title mb-12">Saldo por Conta</div><div class="chart-wrap" style="height:200px"><canvas id="chart-contas" role="img" aria-label="Saldo por conta"></canvas></div></div>
     </div>
+    <div class="card"><div class="card-header"><span class="card-title">Histórico de Movimentações</span></div><div class="table-wrap"><table><thead><tr><th>Data</th><th>Descrição</th><th>Conta</th><th>Tipo</th><th style="text-align:right">Valor</th></tr></thead><tbody id="tbody-movs"></tbody></table></div></div>
   </div>
-
-  <!-- DRE -->
   <div class="tab-content" id="tab-dre">
-    <div id="dre-content"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div class="card" style="align-self:start"><div class="card-header"><span class="card-title" id="dre-titulo">DRE</span></div><div id="dre-content"></div></div>
+      <div class="card" style="padding:16px;align-self:start"><div class="card-title mb-12">Composição</div><div class="chart-wrap" style="height:220px"><canvas id="chart-dre" role="img" aria-label="Composição DRE"></canvas></div></div>
+    </div>
   </div>
 </div>
 </div>
 
-<!-- ===== MODAL A RECEBER ===== -->
+<!-- MODALS -->
 <div class="overlay" id="overlay-receber">
-  <div class="modal">
-    <div class="modal-header"><h2>💚 Registrar A Receber</h2><button class="modal-close" onclick="fechar('receber')">×</button></div>
-    <div class="modal-body">
-      <div class="form-row">
-        <div class="field form-full"><label>Tipo</label><select id="rec-tipo" onchange="onRecTipo()"><option value="boleto">📄 Boleto de Pedido</option><option value="avulso">💰 Avulso / PIX</option></select></div>
-        <div class="field form-full" id="rec-pedido-wrap"><label>Pedido</label><select id="rec-pedido-sel"></select></div>
-        <div class="field form-full" id="rec-desc-wrap" style="display:none"><label>Descrição</label><input type="text" id="rec-desc" placeholder="Ex: Recebimento PIX cliente X"></div>
-        <div class="field"><label>Valor (R$)</label><input type="number" id="rec-valor" step="0.01" placeholder="0,00"></div>
-        <div class="field"><label>Data da Venda</label><input type="date" id="rec-data-venda"><div class="field-hint">Quando a venda foi feita</div></div>
-        <div class="field"><label>Vencimento</label><input type="date" id="rec-venc"><div class="field-hint">Quando o boleto vence</div></div>
-        <div class="field"><label>Forma</label><select id="rec-forma"><option>Boleto</option><option>PIX</option><option>Transferência</option><option>Dinheiro</option></select></div>
-        <div class="field"><label>Observação</label><input type="text" id="rec-obs" placeholder="Opcional"></div>
-      </div>
-    </div>
-    <div class="modal-footer"><button class="btn btn-gray" onclick="fechar('receber')">Cancelar</button><button class="btn btn-primary" onclick="salvarAReceber()">💾 Salvar</button></div>
-  </div>
+  <div class="modal"><div class="modal-header"><h2 class="modal-title">Registrar A Receber</h2><button class="modal-close" onclick="fechar('receber')">×</button></div>
+  <div class="modal-body"><div class="form-row">
+    <div class="field form-full"><label>Tipo</label><select id="rec-tipo" onchange="onRecTipo()"><option value="boleto">Boleto de Pedido</option><option value="avulso">Avulso / PIX</option></select></div>
+    <div class="field form-full" id="rec-pedido-wrap"><label>Pedido</label><select id="rec-pedido-sel"></select></div>
+    <div class="field form-full" id="rec-desc-wrap" style="display:none"><label>Descrição</label><input type="text" id="rec-desc" placeholder="Ex: PIX cliente X"></div>
+    <div class="field"><label>Valor (R$)</label><input type="number" id="rec-valor" step="0.01"></div>
+    <div class="field"><label>Data da Venda</label><input type="date" id="rec-data-venda"></div>
+    <div class="field"><label>Vencimento</label><input type="date" id="rec-venc"></div>
+    <div class="field"><label>Forma</label><select id="rec-forma"><option>Boleto</option><option>PIX</option><option>Transferência</option><option>Dinheiro</option></select></div>
+    <div class="field"><label>Observação</label><input type="text" id="rec-obs" placeholder="Opcional"></div>
+  </div></div>
+  <div class="modal-footer"><button class="btn btn-ghost" onclick="fechar('receber')">Cancelar</button><button class="btn btn-green" onclick="salvarAReceber()">Salvar</button></div></div>
 </div>
 
-<!-- ===== MODAL CONFIRMAR RECEBIMENTO ===== -->
 <div class="overlay" id="overlay-conf-rec">
-  <div class="modal" style="max-width:400px">
-    <div class="modal-header"><h2>✅ Confirmar Recebimento</h2><button class="modal-close" onclick="fechar('conf-rec')">×</button></div>
-    <div class="modal-body">
-      <div id="conf-rec-desc" style="padding:12px;background:#f0fdf4;border-radius:8px;border:1px solid #a7f3d0;margin-bottom:16px;font-weight:600;font-size:13px"></div>
-      <div class="form-row">
-        <div class="field form-full"><label>Entrou em qual conta? ⭐</label><select id="conf-rec-conta"><option value="">— Selecionar —</option></select><div class="field-hint">O saldo será atualizado automaticamente</div></div>
-        <div class="field"><label>Data</label><input type="date" id="conf-rec-data"></div>
-        <div class="field"><label>Valor Recebido (R$)</label><input type="number" id="conf-rec-valor" step="0.01"></div>
-        <div class="field form-full"><label>Observação</label><input type="text" id="conf-rec-obs" placeholder="Opcional"></div>
-      </div>
+  <div class="modal" style="max-width:400px"><div class="modal-header"><h2 class="modal-title">Confirmar Recebimento</h2><button class="modal-close" onclick="fechar('conf-rec')">×</button></div>
+  <div class="modal-body">
+    <div id="conf-rec-desc" style="padding:12px;background:var(--green-bg);border-radius:var(--radius);border:1px solid #b5e5d4;margin-bottom:16px;font-weight:600;font-size:13px"></div>
+    <div class="form-row">
+      <div class="field form-full"><label>Entrou em qual conta?</label><select id="conf-rec-conta"><option value="">— Selecionar —</option></select><div class="field-hint">O saldo será atualizado automaticamente</div></div>
+      <div class="field"><label>Data</label><input type="date" id="conf-rec-data"></div>
+      <div class="field"><label>Valor Recebido (R$)</label><input type="number" id="conf-rec-valor" step="0.01"></div>
+      <div class="field form-full"><label>Observação</label><input type="text" id="conf-rec-obs" placeholder="Opcional"></div>
     </div>
-    <div class="modal-footer"><button class="btn btn-gray" onclick="fechar('conf-rec')">Cancelar</button><button class="btn btn-success" onclick="confirmarRecebimento()">✅ Confirmar</button></div>
   </div>
+  <div class="modal-footer"><button class="btn btn-ghost" onclick="fechar('conf-rec')">Cancelar</button><button class="btn btn-green" onclick="confirmarRecebimento()">Confirmar</button></div></div>
 </div>
 
-<!-- ===== MODAL A PAGAR ===== -->
 <div class="overlay" id="overlay-apagar">
-  <div class="modal">
-    <div class="modal-header"><h2 id="apagar-titulo">🔴 Nova Conta a Pagar</h2><button class="modal-close" onclick="fechar('apagar')">×</button></div>
-    <div class="modal-body">
-      <div class="form-row">
-        <div class="field form-full"><label>Descrição ⭐</label><input type="text" id="ap-desc" placeholder="Ex: Fornecedor, Aluguel..."></div>
-        <div class="field"><label>Categoria</label><select id="ap-cat"><option>Fornecedor</option><option>Aluguel</option><option>Energia</option><option>Água</option><option>Internet</option><option>Salário</option><option>Contador</option><option>Transporte</option><option>Manutenção</option><option>Comissão</option><option>Imposto</option><option>Outro</option></select></div>
-        <div class="field"><label>Valor (R$) ⭐</label><input type="number" id="ap-valor" step="0.01" placeholder="0,00"></div>
-        <div class="field"><label>Data da Dívida</label><input type="date" id="ap-data-divida"><div class="field-hint">Quando a dívida foi gerada</div></div>
-        <div class="field"><label>Vencimento ⭐</label><input type="date" id="ap-vencimento"><div class="field-hint">Quando precisa pagar</div></div>
-        <div class="field"><label>Forma</label><select id="ap-forma"><option>PIX</option><option>Boleto</option><option>Transferência</option><option>Dinheiro</option></select></div>
-        <div class="field form-full"><label>Observação</label><input type="text" id="ap-obs" placeholder="Opcional"></div>
-      </div>
-    </div>
-    <div class="modal-footer"><button class="btn btn-gray" onclick="fechar('apagar')">Cancelar</button><button class="btn btn-orange" onclick="salvarAPagar()">💾 Salvar</button></div>
-  </div>
+  <div class="modal"><div class="modal-header"><h2 class="modal-title" id="apagar-titulo">Nova Conta a Pagar</h2><button class="modal-close" onclick="fechar('apagar')">×</button></div>
+  <div class="modal-body"><div class="form-row">
+    <div class="field form-full"><label>Descrição</label><input type="text" id="ap-desc" placeholder="Ex: Fornecedor..."></div>
+    <div class="field"><label>Categoria</label><select id="ap-cat"><option>Fornecedor</option><option>Aluguel</option><option>Energia</option><option>Água</option><option>Internet</option><option>Salário</option><option>Contador</option><option>Transporte</option><option>Manutenção</option><option>Comissão</option><option>Imposto</option><option>Outro</option></select></div>
+    <div class="field"><label>Valor (R$)</label><input type="number" id="ap-valor" step="0.01"></div>
+    <div class="field"><label>Data da Dívida</label><input type="date" id="ap-data-divida"><div class="field-hint">Quando foi gerada</div></div>
+    <div class="field"><label>Vencimento</label><input type="date" id="ap-vencimento"><div class="field-hint">Quando precisa pagar</div></div>
+    <div class="field"><label>Forma</label><select id="ap-forma"><option>PIX</option><option>Boleto</option><option>Transferência</option><option>Dinheiro</option></select></div>
+    <div class="field form-full"><label>Observação</label><input type="text" id="ap-obs" placeholder="Opcional"></div>
+  </div></div>
+  <div class="modal-footer"><button class="btn btn-ghost" onclick="fechar('apagar')">Cancelar</button><button class="btn btn-amber" onclick="salvarAPagar()">Salvar</button></div></div>
 </div>
 
-<!-- ===== MODAL CONFIRMAR PAGAMENTO ===== -->
 <div class="overlay" id="overlay-conf-pag">
-  <div class="modal" style="max-width:400px">
-    <div class="modal-header"><h2>💳 Confirmar Pagamento</h2><button class="modal-close" onclick="fechar('conf-pag')">×</button></div>
-    <div class="modal-body">
-      <div id="conf-pag-desc" style="padding:12px;background:#fff5f5;border-radius:8px;border:1px solid #fca5a5;margin-bottom:16px;font-weight:600;font-size:13px"></div>
-      <div class="form-row">
-        <div class="field form-full"><label>Pago de qual conta? ⭐</label><select id="conf-pag-conta"><option value="">— Selecionar —</option></select><div class="field-hint">O saldo será debitado automaticamente</div></div>
-        <div class="field"><label>Data do Pagamento</label><input type="date" id="conf-pag-data"></div>
-        <div class="field"><label>Valor Pago (R$)</label><input type="number" id="conf-pag-valor" step="0.01"></div>
-        <div class="field form-full"><label>Observação</label><input type="text" id="conf-pag-obs" placeholder="Opcional"></div>
-      </div>
+  <div class="modal" style="max-width:400px"><div class="modal-header"><h2 class="modal-title">Confirmar Pagamento</h2><button class="modal-close" onclick="fechar('conf-pag')">×</button></div>
+  <div class="modal-body">
+    <div id="conf-pag-desc" style="padding:12px;background:var(--red-bg);border-radius:var(--radius);border:1px solid #f5c2c2;margin-bottom:16px;font-weight:600;font-size:13px"></div>
+    <div class="form-row">
+      <div class="field form-full"><label>Pago de qual conta?</label><select id="conf-pag-conta"><option value="">— Selecionar —</option></select><div class="field-hint">O saldo será debitado automaticamente</div></div>
+      <div class="field"><label>Data do Pagamento</label><input type="date" id="conf-pag-data"></div>
+      <div class="field"><label>Valor Pago (R$)</label><input type="number" id="conf-pag-valor" step="0.01"></div>
+      <div class="field form-full"><label>Observação</label><input type="text" id="conf-pag-obs" placeholder="Opcional"></div>
     </div>
-    <div class="modal-footer"><button class="btn btn-gray" onclick="fechar('conf-pag')">Cancelar</button><button class="btn btn-success" onclick="confirmarPagamento()">✅ Confirmar e Debitar</button></div>
   </div>
+  <div class="modal-footer"><button class="btn btn-ghost" onclick="fechar('conf-pag')">Cancelar</button><button class="btn btn-green" onclick="confirmarPagamento()">Confirmar e Debitar</button></div></div>
 </div>
 
-<!-- ===== MODAL DESPESA ===== -->
 <div class="overlay" id="overlay-despesa">
-  <div class="modal">
-    <div class="modal-header"><h2 id="desp-titulo">📋 Nova Despesa</h2><button class="modal-close" onclick="fechar('despesa')">×</button></div>
-    <div class="modal-body">
-      <div class="form-row">
-        <div class="field form-full"><label>Descrição ⭐</label><input type="text" id="desp-desc" placeholder="Ex: Aluguel, Energia..."></div>
-        <div class="field"><label>Categoria</label><select id="desp-cat"><option>Aluguel</option><option>Energia</option><option>Água</option><option>Internet</option><option>Salário</option><option>Contador</option><option>Transporte</option><option>Manutenção</option><option>Fornecedor</option><option>Imposto</option><option>Outro</option></select></div>
-        <div class="field"><label>Tipo</label><select id="desp-tipo" onchange="onDespTipo()"><option value="fixo">🔁 Fixo (todo mês)</option><option value="variavel">📌 Variável (avulso)</option></select></div>
-        <div class="field"><label>Valor (R$) ⭐</label><input type="number" id="desp-valor" step="0.01" placeholder="0,00"></div>
-        <!-- Fixo -->
-        <div class="field" id="desp-dia-wrap"><label>Dia de vencimento (todo mês)</label><input type="number" id="desp-dia" min="1" max="31" placeholder="Ex: 10"></div>
-        <div class="field" id="desp-ativo-wrap"><label>Status</label><select id="desp-ativo"><option value="1">✅ Ativa</option><option value="0">⏸️ Inativa</option></select></div>
-        <!-- Variável -->
-        <div class="field" id="desp-pagto-wrap" style="display:none"><label>Forma de Pagamento</label><select id="desp-pagto" onchange="onDespPagto()"><option value="prazo">📅 A prazo (tem vencimento)</option><option value="avista">💵 À vista (pago na hora)</option></select></div>
-        <div class="field" id="desp-divida-wrap" style="display:none"><label>Data da Dívida</label><input type="date" id="desp-divida"><div class="field-hint">Quando a dívida foi feita</div></div>
-        <div class="field" id="desp-venc-wrap" style="display:none"><label>Vencimento</label><input type="date" id="desp-venc"><div class="field-hint">Quando precisa pagar</div></div>
-        <div class="field" id="desp-avista-wrap" style="display:none"><label>Data do Pagamento</label><input type="date" id="desp-avista"><div class="field-hint">Pago à vista nesta data</div></div>
-        <div class="field form-full"><label>Observação</label><input type="text" id="desp-obs" placeholder="Opcional"></div>
-      </div>
-    </div>
-    <div class="modal-footer"><button class="btn btn-gray" onclick="fechar('despesa')">Cancelar</button><button class="btn btn-primary" onclick="salvarDespesa()">💾 Salvar</button></div>
-  </div>
+  <div class="modal"><div class="modal-header"><h2 class="modal-title" id="desp-titulo">Nova Despesa</h2><button class="modal-close" onclick="fechar('despesa')">×</button></div>
+  <div class="modal-body"><div class="form-row">
+    <div class="field form-full"><label>Descrição</label><input type="text" id="desp-desc" placeholder="Ex: Aluguel..."></div>
+    <div class="field"><label>Categoria</label><select id="desp-cat"><option>Aluguel</option><option>Energia</option><option>Água</option><option>Internet</option><option>Salário</option><option>Contador</option><option>Transporte</option><option>Manutenção</option><option>Fornecedor</option><option>Imposto</option><option>Outro</option></select></div>
+    <div class="field"><label>Tipo</label><select id="desp-tipo" onchange="onDespTipo()"><option value="fixo">Fixo (todo mês)</option><option value="variavel">Variável (avulso)</option></select></div>
+    <div class="field"><label>Valor (R$)</label><input type="number" id="desp-valor" step="0.01"></div>
+    <div class="field" id="desp-dia-wrap"><label>Dia de vencimento</label><input type="number" id="desp-dia" min="1" max="31" placeholder="Ex: 10"></div>
+    <div class="field" id="desp-ativo-wrap"><label>Status</label><select id="desp-ativo"><option value="1">Ativa</option><option value="0">Inativa</option></select></div>
+    <div class="field" id="desp-pagto-wrap" style="display:none"><label>Forma</label><select id="desp-pagto" onchange="onDespPagto()"><option value="prazo">A prazo</option><option value="avista">À vista</option></select></div>
+    <div class="field" id="desp-divida-wrap" style="display:none"><label>Data da Dívida</label><input type="date" id="desp-divida"></div>
+    <div class="field" id="desp-venc-wrap" style="display:none"><label>Vencimento</label><input type="date" id="desp-venc"></div>
+    <div class="field" id="desp-avista-wrap" style="display:none"><label>Data do Pagamento</label><input type="date" id="desp-avista"></div>
+    <div class="field form-full"><label>Observação</label><input type="text" id="desp-obs" placeholder="Opcional"></div>
+  </div></div>
+  <div class="modal-footer"><button class="btn btn-ghost" onclick="fechar('despesa')">Cancelar</button><button class="btn btn-primary" onclick="salvarDespesa()">Salvar</button></div></div>
 </div>
 
-<!-- ===== MODAL CONTA ===== -->
 <div class="overlay" id="overlay-conta">
-  <div class="modal" style="max-width:380px">
-    <div class="modal-header"><h2 id="conta-titulo">🏦 Nova Conta</h2><button class="modal-close" onclick="fechar('conta')">×</button></div>
-    <div class="modal-body">
-      <div class="form-row">
-        <div class="field form-full"><label>Banco / Nome ⭐</label><input type="text" id="conta-banco" placeholder="Ex: Itaú, Nubank, Caixa Físico"></div>
-        <div class="field"><label>Tipo</label><select id="conta-tipo"><option value="corrente">Conta Corrente</option><option value="digital">Banco Digital</option><option value="pj">Conta PJ</option><option value="poupanca">Poupança</option><option value="caixa">Caixa Físico</option></select></div>
-        <div class="field"><label>Saldo Atual (R$)</label><input type="number" id="conta-saldo" step="0.01" placeholder="0,00"></div>
-      </div>
-    </div>
-    <div class="modal-footer"><button class="btn btn-gray" onclick="fechar('conta')">Cancelar</button><button class="btn btn-primary" onclick="salvarConta()">💾 Salvar</button></div>
-  </div>
+  <div class="modal" style="max-width:380px"><div class="modal-header"><h2 class="modal-title" id="conta-titulo">Nova Conta</h2><button class="modal-close" onclick="fechar('conta')">×</button></div>
+  <div class="modal-body"><div class="form-row">
+    <div class="field form-full"><label>Banco / Nome</label><input type="text" id="conta-banco" placeholder="Ex: Itaú, Nubank..."></div>
+    <div class="field"><label>Tipo</label><select id="conta-tipo"><option value="corrente">Conta Corrente</option><option value="digital">Banco Digital</option><option value="pj">Conta PJ</option><option value="poupanca">Poupança</option><option value="caixa">Caixa Físico</option></select></div>
+    <div class="field"><label>Saldo Atual (R$)</label><input type="number" id="conta-saldo" step="0.01"></div>
+  </div></div>
+  <div class="modal-footer"><button class="btn btn-ghost" onclick="fechar('conta')">Cancelar</button><button class="btn btn-primary" onclick="salvarConta()">Salvar</button></div></div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script>
-// ============================================================
-// STORAGE
-// ============================================================
+// ── STORAGE ──────────────────────────────────────────────────
 function load(k,d){try{return JSON.parse(localStorage.getItem(k)||'null')||d;}catch(e){return d;}}
 function save(k,v){localStorage.setItem(k,JSON.stringify(v));}
 function getData(){
@@ -396,190 +261,87 @@ function getData(){
   };
 }
 
-// ============================================================
-// UTILS
-// ============================================================
+// ── UTILS ────────────────────────────────────────────────────
 function fmt(v){return 'R$\u00a0'+Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2});}
+function fmtK(v){return 'R$\u00a0'+Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:0});}
 function fmtD(d){return d?new Date(d+'T00:00').toLocaleDateString('pt-BR'):'—';}
 function hoje(){return new Date().toISOString().split('T')[0];}
-function diasAte(d){if(!d)return null;var diff=new Date(d+'T00:00')-new Date(hoje()+'T00:00');return Math.round(diff/864e5);}
-function noMes(d,dt){var ref=dt||new Date();return d&&new Date(d+'T00:00').getMonth()===ref.getMonth()&&new Date(d+'T00:00').getFullYear()===ref.getFullYear();}
-function noMesAtual(d){return MG.noMesSel(d);}
-function vencBadge(d){
-  if(!d)return '<span class="badge" style="background:#f1f5f9;color:#64748b">Sem data</span>';
-  var dias=diasAte(d);
-  if(dias<0) return '<span class="badge badge-venc">⚠️ '+Math.abs(dias)+'d atrasado</span>';
-  if(dias===0) return '<span class="badge badge-hoje">🔴 Vence hoje</span>';
-  if(dias<=3) return '<span class="badge badge-hoje">⚡ '+dias+'d</span>';
-  return '<span class="badge" style="background:#f1f5f9;color:#475569">'+fmtD(d)+'</span>';
+function diasAte(d){if(!d)return null;return Math.round((new Date(d+'T00:00')-new Date(hoje()+'T00:00'))/864e5);}
+function noMesSel(d){return typeof MG!=='undefined'?MG.noMesSel(d):true;}
+function getMgInt(){return typeof MG!=='undefined'?MG.intervalo():{inicio:'1900-01-01',fim:'2999-12-31'};}
+function selContas(id,ph){
+  var s=document.getElementById(id);if(!s)return;
+  s.innerHTML='<option value="">'+ph+'</option>';
+  getData().contas.forEach(function(c){var o=document.createElement('option');o.value=c.id;o.textContent=c.banco+' ('+fmt(c.saldo||0)+')';s.appendChild(o);});
 }
-function selContas(id,placeholder){
-  var s=document.getElementById(id);
-  s.innerHTML='<option value="">'+placeholder+'</option>';
-  getData().contas.forEach(function(c){
-    var o=document.createElement('option');
-    o.value=c.id;o.textContent=c.banco+' ('+fmt(c.saldo||0)+')';s.appendChild(o);
-  });
+function vencBadge(d){
+  if(!d)return '<span class="venc-badge venc-normal">Sem data</span>';
+  var dias=diasAte(d);
+  if(dias<0) return '<span class="venc-badge venc-vencido">'+Math.abs(dias)+'d atrasado</span>';
+  if(dias===0) return '<span class="venc-badge venc-hoje">Hoje</span>';
+  if(dias<=3)  return '<span class="venc-badge venc-hoje">'+dias+'d</span>';
+  return '<span class="venc-badge venc-normal">'+fmtD(d)+'</span>';
 }
 
-// ============================================================
-// ABA
-// ============================================================
+// ── CHARTS REGISTRY ──────────────────────────────────────────
+var _charts={};
+function mkChart(id,cfg){
+  if(_charts[id]){_charts[id].destroy();delete _charts[id];}
+  var el=document.getElementById(id);if(!el)return;
+  _charts[id]=new Chart(el,cfg);
+  return _charts[id];
+}
+
+// ── ABA ──────────────────────────────────────────────────────
+var _ABAS=['resumo','apagar','areceber','fluxo','anual','despesas','caixa','dre'];
 function aba(id){
-  document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active');});
+  document.querySelectorAll('.tab').forEach(function(t,i){t.classList.toggle('active',_ABAS[i]===id);});
   document.querySelectorAll('.tab-content').forEach(function(t){t.classList.remove('active');});
-  var tabs=['resumo','apagar','areceber','fluxo','despesas','caixa','dre'];
-  var i=tabs.indexOf(id);
-  if(i>=0)document.querySelectorAll('.tab')[i].classList.add('active');
-  var el=document.getElementById('tab-'+id);
-  if(el)el.classList.add('active');
+  var el=document.getElementById('tab-'+id);if(el)el.classList.add('active');
   render(id);
 }
 function fechar(id){document.getElementById('overlay-'+id).classList.remove('open');}
 function abrir(id){document.getElementById('overlay-'+id).classList.add('open');}
 
-// ============================================================
-// MAPAS GLOBAIS (evita JSON.stringify no onclick)
-// ============================================================
-var _mapaAPagar={};
-var _mapaARec={};
-
-// ============================================================
-// RENDER
-// ============================================================
+// ── MAIN RENDER ──────────────────────────────────────────────
 function render(w){
   var d=getData();
-  if(w==='resumo') renderResumo(d);
-  if(w==='apagar') renderAPagar(d);
-  if(w==='areceber') renderAReceber(d);
-  if(w==='fluxo') renderFluxo(d);
-  if(w==='despesas') renderDespesas(d);
-  if(w==='caixa') renderCaixa(d);
-  if(w==='dre') renderDRE(d);
+  if(w==='resumo')  renderResumo(d);
+  if(w==='apagar')  renderAPagar(d);
+  if(w==='areceber')renderAReceber(d);
+  if(w==='fluxo')   renderFluxo(d);
+  if(w==='anual')   renderAnual(d);
+  if(w==='despesas')renderDespesas(d);
+  if(w==='caixa')   renderCaixa(d);
+  if(w==='dre')     renderDRE(d);
 }
 
-// ============================================================
-// CONTAS A PAGAR — agrupa fixas + variáveis + manuais
-// ============================================================
-function getAPagar(d){
-  var lista=[];
-  var n=new Date();
-  var _mg=MG.getMes();
-  var mesAtual=_mg.mes;
-  var anoAtual=_mg.ano;
-
-  // 1) DESPESAS FIXAS — gera entrada para o mês atual
-  d.despesas.filter(function(x){return x.tipo==='fixo'&&x.ativo!==false;}).forEach(function(x){
-    var dia=parseInt(x.dia||1);
-    var vencDate=new Date(anoAtual,mesAtual,dia);
-    var venc=vencDate.toISOString().split('T')[0];
-    // verificar se já foi pago este mês (registro de pagamento com despesaId e mes)
-    var jaFoi=d.pagamentos.some(function(p){
-      return p.despesaId===x.id&&MG.noMesSel(p.data);
-    });
-    var jaIgnorado=d.pagamentos.some(function(p){
-      return p.despesaId===x.id&&p.ignorado===true&&MG.noMesSel(p.data);
-    });
-    lista.push({
-      id:'fixo_'+x.id+'_'+anoAtual+'_'+mesAtual,
-      despesaId:x.id,
-      desc:x.desc,cat:x.cat,valor:x.valor,
-      tipo:'fixo',dataDivida:'',vencimento:venc,
-      status:(jaFoi||jaIgnorado)?'pago':'pendente',
-      pago:jaFoi||jaIgnorado,
-      ignorado:jaIgnorado,
-    });
-  });
-
-  // Calcular limites do mês selecionado
-  var _mgInt=typeof MG!=='undefined'?MG.intervalo():{inicio:'1900-01-01',fim:'2999-12-31'};
-  var _fimMes=_mgInt.fim;
-  var _iniMes=_mgInt.inicio;
-  // Verificar se o mês selecionado é futuro, atual ou passado
-  var _hoje=new Date().toISOString().split('T')[0];
-  var _isFuturo=_iniMes > _hoje;
-  var _isPassado=_fimMes < _hoje.substring(0,7)+'-01';
-
-  // 2) DESPESAS VARIÁVEIS
-  d.despesas.filter(function(x){
-    return x.tipo==='variavel'&&x.pagto!=='avista'&&x.status!=='pago';
-  }).forEach(function(x){
-    var venc=x.venc||x.vencimento||x.dataavulso||'';
-    if(!venc) return;
-    if(venc > _fimMes) return; // vence depois do mês selecionado — não inclui
-    // Mês futuro: só mostra o que vence NESSE mês (sem carryover de passado)
-    // Mês atual/passado: mostra tudo vencido até o fim do mês (carryover)
-    if(_isFuturo && venc < _iniMes) return; // para futuro, não traz carryover
-    lista.push({
-      id:'var_'+x.id,despesaId:x.id,
-      desc:x.desc,cat:x.cat,valor:x.valor,
-      tipo:'variavel',dataDivida:x.divida||x.dataavulso||'',
-      vencimento:venc,status:'pendente',pago:false,
-      atrasada:!_isFuturo && venc < _iniMes,
-    });
-  });
-
-  // 3) CONTAS A PAGAR MANUAIS
-  (d.aPagar||[]).forEach(function(x){
-    if(x.status==='pago')return;
-    var venc=x.vencimento||'';
-    if(!venc || venc > _fimMes) return;
-    if(_isFuturo && venc < _iniMes) return;
-    lista.push({
-      id:x.id,desc:x.desc,cat:x.cat,valor:x.valor,
-      tipo:'manual',dataDivida:x.dataDivida||'',vencimento:venc,
-      status:'pendente',pago:false,obs:x.obs||'',
-      atrasada:!_isFuturo && venc < _iniMes,
-    });
-  });
-
-  // Ordenar: vencidos primeiro, depois por data
-  return lista.sort(function(a,b){
-    var da=new Date((a.vencimento||'9999-12-31')+'T00:00');
-    var db=new Date((b.vencimento||'9999-12-31')+'T00:00');
-    return da-db;
-  });
-}
-
-// Calcula saldo ainda a receber de um pedido
-function getSaldoPedido(p, recebimentos){
+// ── CORE DATA FUNCTIONS ──────────────────────────────────────
+function getSaldoPedido(p,recs){
   var total=(p.itens||[]).reduce(function(s,i){return s+Number(i.total||0);},0);
-  var recebido=(recebimentos||[]).filter(function(r){return r.pedidoId===p.id;})
-    .reduce(function(s,r){return s+Number(r.valor||0);},0);
-  var entrada=Number(p.entrada||0);
-  return Math.max(0, total - recebido - entrada);
+  var recebido=(recs||[]).filter(function(r){return r.pedidoId===p.id;}).reduce(function(s,r){return s+Number(r.valor||0);},0);
+  return Math.max(0,total-recebido-Number(p.entrada||0));
 }
 
 function getBoletosPendentes(d){
   var lista=[];
+  var int=getMgInt();
   d.pedidos.forEach(function(p){
     if(p.status==='cancelado')return;
-    var _fp=(p.formaPgto||'').toLowerCase();
-    
-    // PIX / Transferência / Dinheiro pendentes → aparecem como A Receber
-    if(_fp==='pix'||_fp==='transferência'||_fp==='transferencia'||_fp==='dinheiro'){
-      if(p.pgtoStatus==='pago') return; // já pago, não aparece
-      var _saldoPix=getSaldoPedido(p,d.recebimentos);
-      if(_saldoPix<=0) return;
-      var _vencPix=p.vencimento||p.entrega||p.data||'';
-      // Carryover: só mostra se vence até o fim do mês selecionado
-      var _mgBolPix=typeof MG!=='undefined'?MG.intervalo():{inicio:'1900-01-01',fim:'2999-12-31'};
-      if(_vencPix && _vencPix > _mgBolPix.fim) return;
-      lista.push({
-        id:'pix_'+p.id,tipo:'pix',pedidoId:p.id,
-        clienteNome:p.clienteNome||'—',
-        desc:(p.formaPgto||'PIX')+' – Ped.'+(p.numero||p.id),
-        valor:_saldoPix,
-        vencimento:_vencPix,
-        dataVenda:p.data||'',
-        nf:p.nf||'',
-        formaPgto:p.formaPgto||'PIX',
-        atrasado:_vencPix && _vencPix < _mgBolPix.inicio,
-      });
+    var fp=(p.formaPgto||'').toLowerCase();
+    // PIX/Dinheiro/Transferência pendentes
+    if(fp==='pix'||fp==='transferência'||fp==='transferencia'||fp==='dinheiro'){
+      if(p.pgtoStatus==='pago')return;
+      var saldo=getSaldoPedido(p,d.recebimentos);
+      if(saldo<=0)return;
+      var vp=p.vencimento||p.entrega||p.data||'';
+      if(vp&&vp>int.fim)return;
+      lista.push({id:'pix_'+p.id,tipo:'pix',pedidoId:p.id,clienteNome:p.clienteNome||'—',
+        desc:(p.formaPgto||'PIX')+' – Ped.'+(p.numero||p.id),valor:saldo,vencimento:vp,
+        dataVenda:p.data||'',atrasado:vp&&vp<int.inicio});
       return;
     }
-    
-    if(_fp!=='boleto')return;
+    if(fp!=='boleto')return;
     var venc=p.vencimentos||[];
     if(!venc.length&&p.vencimento)venc=[p.vencimento];
     venc=venc.filter(function(v,i,a){return v&&a.indexOf(v)===i;});
@@ -589,386 +351,462 @@ function getBoletosPendentes(d){
     var vP=nP>0?Math.round(total/nP*100)/100:total;
     venc.forEach(function(dv,ii){
       if(!dv)return;
+      if(dv>int.fim)return;
       var rid='bol_'+p.id+'_p'+(ii+1);
-      var conf=d.aReceber.some(function(r){return r.id===rid&&r.status==='recebido';});
-      if(conf)return;
-      // Carryover: inclui boletos vencidos (atrasados) no mês atual
-      var _mgBol=typeof MG!=='undefined'?MG.intervalo():{inicio:'1900-01-01',fim:'2999-12-31'};
-      if(dv > _mgBol.fim) return; // vence depois do mês selecionado, não mostra ainda
+      if(d.aReceber.some(function(r){return r.id===rid&&r.status==='recebido';}))return;
       lista.push({id:rid,tipo:'boleto',pedidoId:p.id,clienteNome:p.clienteNome||'—',
         desc:'Boleto '+(ii+1)+'/'+nP+(p.numero?' – Ped.'+p.numero:''),
-        valor:vP,vencimento:dv,dataVenda:p.data||'',nf:p.nf||'',
-        atrasado:dv < _mgBol.inicio}); // veio de mês anterior
+        valor:vP,vencimento:dv,dataVenda:p.data||'',nf:p.nf||'',atrasado:dv<int.inicio});
     });
   });
-  // Avulsos manuais: inclui do mês ou atrasados (carryover)
-  var _mgIntR=typeof MG!=='undefined'?MG.intervalo():{inicio:'1900-01-01',fim:'2999-12-31'};
   d.aReceber.filter(function(r){
-    if(r.status!=='pendente') return false;
-    if(r.tipo==='boleto') return false;
-    if(r.id&&r.id.indexOf('bol_')===0) return false;
-    // Inclui se vence até o fim do mês selecionado (carryover de meses anteriores)
-    var venc=r.vencimento||'';
-    if(venc && venc > _mgIntR.fim) return false; // vence depois, não inclui
+    if(r.status!=='pendente')return false;
+    if(r.tipo==='boleto')return false;
+    if(r.id&&r.id.indexOf('bol_')===0)return false;
+    var v=r.vencimento||'';
+    if(v&&v>int.fim)return false;
+    if((typeof MG!=='undefined'&&MG.getMesAno()!==new Date().toISOString().substring(0,7))&&v&&v<int.inicio)return false;
     return true;
   }).forEach(function(r){lista.push(r);});
-  
-  // Boletos de pedidos atrasados: também carregam pro mês
-  // (já incluídos acima pois não têm status 'recebido')
-  
   return lista.sort(function(a,b){return new Date(a.vencimento||'9999')-new Date(b.vencimento||'9999');});
 }
 
-// ============================================================
-// RESUMO
-// ============================================================
-function renderResumo(d){
-  var saldo=d.contas.reduce(function(s,c){return s+Number(c.saldo||0);},0);
-  var apagar=getAPagar(d).filter(function(x){return !x.pago;}).reduce(function(s,x){return s+Number(x.valor||0);},0);
-  var areceber=getBoletosPendentes(d).reduce(function(s,r){return s+Number(r.valor||0);},0);
-  var recMes=d.recebimentos.filter(function(r){return MG.noMesSel(r.data);}).reduce(function(s,r){return s+Number(r.valor||0);},0);
-  var saldoLivre=saldo-apagar;
+function getAPagar(d){
+  var lista=[];
+  var n=new Date();
+  var mg=getMgInt();
+  var hoje2=hoje();
+  var isFut=mg.inicio>hoje2;
+  var mesAtual=(typeof MG!=='undefined'?MG.getMes():{mes:n.getMonth(),ano:n.getFullYear()});
 
-  document.getElementById('kpi-resumo').innerHTML=[
-    {bar:'var(--blue)',label:'💰 Saldo em Caixa',val:fmt(saldo),sub:d.contas.length+' conta(s)'},
-    {bar:'var(--green)',label:'💚 A Receber',val:fmt(areceber),sub:'boletos pendentes'},
-    {bar:'var(--red)',label:'🔴 A Pagar',val:fmt(apagar),sub:'contas pendentes'},
-    {bar:saldoLivre>=0?'var(--purple)':'var(--red)',label:'📊 Saldo Livre',val:fmt(saldoLivre),sub:'caixa − a pagar'},
-    {bar:'var(--green)',label:'✅ Recebido no Mês',val:fmt(recMes),sub:'entradas confirmadas'},
-  ].map(function(k){
-    return '<div class="kpi"><div class="kpi-bar" style="background:'+k.bar+'"></div>'+
-      '<div class="kpi-label">'+k.label+'</div>'+
-      '<div class="kpi-val" style="color:'+k.bar+'">'+k.val+'</div>'+
-      '<div class="kpi-sub">'+k.sub+'</div></div>';
-  }).join('');
-
-  // Próximos 7 dias a pagar
-  var em7=new Date();em7.setDate(em7.getDate()+7);
-  var prxPag=getAPagar(d).filter(function(x){if(x.pago||!x.vencimento)return false;var dv=new Date(x.vencimento+'T00:00');return dv<=em7;});
-  document.getElementById('resumo-apagar').innerHTML=prxPag.length?prxPag.slice(0,5).map(function(x){
-    return '<div class="pagar-item">'+
-      '<div class="pagar-dot" style="background:'+(diasAte(x.vencimento)<=0?'var(--red)':'var(--orange)')+'"></div>'+
-      '<div class="pagar-info"><div class="pagar-desc">'+x.desc+'</div><div class="pagar-meta">'+fmtD(x.vencimento)+' · '+(x.cat||'')+'</div></div>'+
-      '<div class="pagar-val" style="color:var(--red)">'+fmt(x.valor)+'</div></div>';
-  }).join(''):'<div style="padding:20px;color:var(--text2);text-align:center;font-size:13px">✅ Nada vencendo em 7 dias</div>';
-
-  // Próximos 7 dias a receber
-  var prxRec=getBoletosPendentes(d).filter(function(r){if(!r.vencimento)return false;var dv=new Date(r.vencimento+'T00:00');return dv<=em7;});
-  document.getElementById('resumo-areceber').innerHTML=prxRec.length?prxRec.slice(0,5).map(function(r){
-    return '<div class="pagar-item">'+
-      '<div class="pagar-dot" style="background:var(--green)"></div>'+
-      '<div class="pagar-info"><div class="pagar-desc">'+(r.clienteNome||r.desc)+'</div><div class="pagar-meta">Venc: '+fmtD(r.vencimento)+'</div></div>'+
-      '<div class="pagar-val" style="color:var(--green)">'+fmt(r.valor)+'</div></div>';
-  }).join(''):'<div style="padding:20px;color:var(--text2);text-align:center;font-size:13px">Nenhum recebimento previsto</div>';
+  // Fixas
+  d.despesas.filter(function(x){return x.tipo==='fixo'&&x.ativo!==false;}).forEach(function(x){
+    var dia=parseInt(x.dia||1);
+    var venc=new Date(mesAtual.ano,mesAtual.mes,dia).toISOString().split('T')[0];
+    var jaFoi=d.pagamentos.some(function(p){return p.despesaId===x.id&&noMesSel(p.data);});
+    var jaIgn=d.pagamentos.some(function(p){return p.despesaId===x.id&&p.ignorado&&noMesSel(p.data);});
+    lista.push({id:'fixo_'+x.id+'_'+mesAtual.ano+'_'+mesAtual.mes,despesaId:x.id,
+      desc:x.desc,cat:x.cat,valor:x.valor,tipo:'fixo',vencimento:venc,
+      status:(jaFoi||jaIgn)?'pago':'pendente',pago:jaFoi||jaIgn,ignorado:jaIgn});
+  });
+  // Variáveis
+  d.despesas.filter(function(x){return x.tipo==='variavel'&&x.pagto!=='avista'&&x.status!=='pago';}).forEach(function(x){
+    var venc=x.venc||x.vencimento||x.dataavulso||'';
+    if(venc&&venc>mg.fim)return;
+    if(isFut&&venc&&venc<mg.inicio)return;
+    lista.push({id:'var_'+x.id,despesaId:x.id,desc:x.desc,cat:x.cat,valor:x.valor,
+      tipo:'variavel',dataDivida:x.divida||x.dataavulso||'',vencimento:venc,
+      status:'pendente',pago:false,atrasada:!isFut&&venc&&venc<mg.inicio});
+  });
+  // Manuais
+  (d.aPagar||[]).forEach(function(x){
+    if(x.status==='pago')return;
+    var venc=x.vencimento||'';
+    if(venc&&venc>mg.fim)return;
+    if(isFut&&venc&&venc<mg.inicio)return;
+    lista.push({id:x.id,desc:x.desc,cat:x.cat,valor:x.valor,tipo:'manual',
+      dataDivida:x.dataDivida||'',vencimento:venc,status:'pendente',pago:false,
+      atrasada:!isFut&&venc&&venc<mg.inicio});
+  });
+  return lista.sort(function(a,b){return new Date(a.vencimento||'9999')-new Date(b.vencimento||'9999');});
 }
 
-// ============================================================
-// A PAGAR — lista limpa e visual
-// ============================================================
+// ── MAPAS GLOBAIS ─────────────────────────────────────────────
+var _mapaAPagar={};
+var _mapaARec={};
+
+// ── RESUMO ────────────────────────────────────────────────────
+function renderResumo(d){
+  var saldo=d.contas.reduce(function(s,c){return s+Number(c.saldo||0);},0);
+  var aRec=getBoletosPendentes(d).reduce(function(s,r){return s+Number(r.valor||0);},0);
+  var aPag=getAPagar(d).filter(function(x){return !x.pago;}).reduce(function(s,x){return s+Number(x.valor||0);},0);
+  var recMes=d.recebimentos.filter(function(r){return noMesSel(r.data);}).reduce(function(s,r){return s+Number(r.valor||0);},0);
+  var livre=saldo-aPag;
+
+  document.getElementById('kpi-resumo').innerHTML=[
+    {bar:'var(--blue)',l:'Saldo em Caixa',v:fmt(saldo),s:d.contas.length+' conta(s)'},
+    {bar:'var(--green)',l:'A Receber',v:fmt(aRec),s:'boletos pendentes'},
+    {bar:'var(--red)',l:'A Pagar',v:fmt(aPag),s:'contas pendentes'},
+    {bar:livre>=0?'var(--purple)':'var(--red)',l:'Saldo Livre',v:fmt(livre),s:'caixa − a pagar'},
+    {bar:'var(--green)',l:'Recebido no Mês',v:fmt(recMes),s:'entradas confirmadas'},
+  ].map(function(k){return '<div class="kpi"><div class="kpi-bar" style="background:'+k.bar+'"></div><div class="kpi-label">'+k.l+'</div><div class="kpi-val">'+k.v+'</div><div class="kpi-sub">'+k.s+'</div></div>';}).join('');
+
+  // Gráfico mensal entradas x saídas
+  var pagMes=d.pagamentos.filter(function(p){return noMesSel(p.data)&&!p.ignorado;}).reduce(function(s,p){return s+Number(p.valor||0);},0);
+  var fixasMes=d.despesas.filter(function(x){return x.tipo==='fixo'&&x.ativo!==false;}).reduce(function(s,x){return s+Number(x.valor||0);},0);
+  mkChart('chart-resumo-mensal',{type:'bar',data:{labels:['Entradas','Saídas Fixas','A Receber','A Pagar'],
+    datasets:[{data:[recMes,fixasMes,aRec,aPag],backgroundColor:['#0d9373','#d63b3b','#5ca0e0','#e8923b'],borderRadius:6}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{x:{grid:{display:false}},y:{ticks:{callback:function(v){return 'R$'+Math.round(v/1000)+'k';}}}}}});
+
+  // Próximos vencimentos e recebimentos (7 dias)
+  var em7=new Date();em7.setDate(em7.getDate()+7);
+  var prxP=getAPagar(d).filter(function(x){if(x.pago||!x.vencimento)return false;return new Date(x.vencimento+'T00:00')<=em7;});
+  document.getElementById('resumo-apagar').innerHTML=prxP.length?prxP.slice(0,5).map(function(x){
+    return '<div class="item-row"><div class="item-dot" style="background:'+(diasAte(x.vencimento)<=0?'var(--red)':'var(--amber)')+'"></div><div class="item-info"><div class="item-desc">'+x.desc+'</div><div class="item-meta">'+fmtD(x.vencimento)+'</div></div><div class="item-val text-red">'+fmt(x.valor)+'</div></div>';
+  }).join(''):'<div style="padding:16px;color:var(--ink-3);text-align:center;font-size:13px">Nenhum vencimento em 7 dias</div>';
+
+  var prxR=getBoletosPendentes(d).filter(function(r){if(!r.vencimento)return false;return new Date(r.vencimento+'T00:00')<=em7;});
+  document.getElementById('resumo-areceber').innerHTML=prxR.length?prxR.slice(0,5).map(function(r){
+    return '<div class="item-row"><div class="item-dot" style="background:var(--green)"></div><div class="item-info"><div class="item-desc">'+(r.clienteNome||r.desc)+'</div><div class="item-meta">'+fmtD(r.vencimento)+'</div></div><div class="item-val text-green">'+fmt(r.valor)+'</div></div>';
+  }).join(''):'<div style="padding:16px;color:var(--ink-3);text-align:center;font-size:13px">Nenhum recebimento previsto</div>';
+}
+
+// ── A PAGAR ───────────────────────────────────────────────────
 function renderAPagar(d){
   var lista=getAPagar(d);
   var pendentes=lista.filter(function(x){return !x.pago;});
   var total=pendentes.reduce(function(s,x){return s+Number(x.valor||0);},0);
-  var vencidos=pendentes.filter(function(x){return diasAte(x.vencimento)<0;}).length;
+  var venc=pendentes.filter(function(x){return diasAte(x.vencimento)<0;}).length;
   var hj=pendentes.filter(function(x){return diasAte(x.vencimento)===0;}).length;
+  var fixas=lista.filter(function(x){return x.tipo==='fixo';});
 
   document.getElementById('kpi-apagar').innerHTML=[
-    {bar:'var(--red)',label:'🔴 Total Pendente',val:fmt(total),sub:pendentes.length+' conta(s)'},
-    {bar:'var(--red)',label:'⚠️ Vencidas',val:vencidos,sub:'precisam pagar já'},
-    {bar:'var(--orange)',label:'📅 Vencem Hoje',val:hj,sub:'urgente'},
-    {bar:'var(--blue)',label:'🔁 Fixas Mensais',val:lista.filter(function(x){return x.tipo==='fixo';}).length,sub:'todo mês'},
-  ].map(function(k){
-    return '<div class="kpi"><div class="kpi-bar" style="background:'+k.bar+'"></div>'+
-      '<div class="kpi-label">'+k.label+'</div>'+
-      '<div class="kpi-val" style="color:'+k.bar+'">'+k.val+'</div>'+
-      '<div class="kpi-sub">'+k.sub+'</div></div>';
-  }).join('');
+    {bar:'var(--red)',l:'Total Pendente',v:fmt(total),s:pendentes.length+' conta(s)'},
+    {bar:'var(--red)',l:'Vencidas',v:venc,s:'pagar urgente'},
+    {bar:'var(--amber)',l:'Vencem Hoje',v:hj,s:'urgente'},
+    {bar:'var(--blue)',l:'Fixas Mensais',v:fixas.length,s:'todo mês'},
+  ].map(function(k){return '<div class="kpi"><div class="kpi-bar" style="background:'+k.bar+'"></div><div class="kpi-label">'+k.l+'</div><div class="kpi-val">'+k.v+'</div><div class="kpi-sub">'+k.s+'</div></div>';}).join('');
 
-  var el=document.getElementById('lista-apagar');
-  if(!lista.length){
-    el.innerHTML='<div style="padding:40px;text-align:center;color:var(--text2)">✅ Nenhuma conta a pagar</div>';
-    return;
-  }
-
-  // Agrupar: vencidas, hoje, próximas, pagas
-  // Popular mapa global
-  _mapaAPagar={};
-  lista.forEach(function(x){_mapaAPagar[x.id]=x;});
+  _mapaAPagar={};lista.forEach(function(x){_mapaAPagar[x.id]=x;});
 
   var grupos=[
-    {titulo:'⚠️ Vencidas',cor:'#fef2f2',items:pendentes.filter(function(x){return diasAte(x.vencimento)<0;})},
-    {titulo:'🔴 Vence Hoje',cor:'#fff7ed',items:pendentes.filter(function(x){return diasAte(x.vencimento)===0;})},
-    {titulo:'📅 Próximas',cor:'#fff',items:pendentes.filter(function(x){return diasAte(x.vencimento)>0;})},
-    {titulo:'✅ Pagas este mês',cor:'#f0fdf4',items:lista.filter(function(x){return x.pago;})},
+    {t:'Vencidas',bg:'#fef4f4',items:pendentes.filter(function(x){return diasAte(x.vencimento)<0;})},
+    {t:'Vence Hoje',bg:'#fffbf0',items:pendentes.filter(function(x){return diasAte(x.vencimento)===0;})},
+    {t:'Próximas',bg:'var(--surface)',items:pendentes.filter(function(x){return diasAte(x.vencimento)>0;})},
+    {t:'Pagas este mês',bg:'#f4fbf8',items:lista.filter(function(x){return x.pago;})},
   ];
-
+  var el=document.getElementById('lista-apagar');
   el.innerHTML=grupos.map(function(g){
     if(!g.items.length)return '';
-    return '<div style="padding:10px 18px 6px;font-size:11px;font-weight:800;color:var(--text2);text-transform:uppercase;background:'+g.cor+';letter-spacing:.5px">'+g.titulo+'</div>'+
-    g.items.map(function(x){
+    return '<div class="group-label" style="background:'+g.bg+'">'+g.t+'</div>'+g.items.map(function(x){
       var pago=x.pago;
-      var tipoBadge=x.tipo==='fixo'?(x.ignorado?'<span class="badge" style="background:#fff3cd;color:#856404">⏭️ Ignorado este mês</span>':'<span class="badge badge-fixo">🔁 Fixo</span>'):x.tipo==='manual'?'<span class="badge badge-var">📌 Manual</span>':'<span class="badge badge-var">📌 Variável</span>';
-      if(x.atrasada) tipoBadge+=' <span class="badge" style="background:#fff3cd;color:#856404;font-size:10px">↩ Mês anterior</span>';
-      return '<div class="pagar-item" style="background:'+g.cor+'">'+
-        '<div class="pagar-dot" style="background:'+(pago?'var(--green)':diasAte(x.vencimento)<0?'var(--red)':diasAte(x.vencimento)===0?'var(--orange)':'var(--blue)')+'"></div>'+
-        '<div class="pagar-info">'+
-          '<div class="pagar-desc">'+(pago?'<s style="opacity:.5">':'')+x.desc+(pago?'</s>':'')+'&nbsp;'+tipoBadge+'</div>'+
-          '<div class="pagar-meta">'+(x.cat||'')+(x.dataDivida?' · Dívida: '+fmtD(x.dataDivida):'')+'</div>'+
-        '</div>'+
-        '<div style="text-align:center;margin-right:8px">'+vencBadge(x.vencimento)+'</div>'+
-        '<div class="pagar-val" style="color:'+(pago?'var(--green)':'var(--red)')+'">'+fmt(x.valor)+'</div>'+
-        '<div class="pagar-actions">'+
-          (!pago
-            ? (x.ignorado ? '' : '<button class="btn-sm btn-success" onclick="abrirConfPag(\''+x.id+'\')" >✅ Pagar</button> ')+
-              (x.tipo==='manual'
-                ? '<button class="btn-sm" style="background:var(--purple);color:#fff" onclick="abrirModalAPagar(\''+x.id+'\')">✏️</button> '+
-                  '<button class="btn-sm btn-danger" onclick="excluirAPagar(\''+x.id+'\')">🗑️</button>'
-                : x.tipo==='variavel'
-                  ? '<button class="btn-sm" style="background:var(--purple);color:#fff" onclick="editarDespesa(\''+x.despesaId+'\')">✏️</button>'
-                  : x.tipo==='fixo'
-                  ? '<button class="btn-sm" style="background:var(--purple);color:#fff;margin-right:4px" onclick="editarDespesa(\''+x.despesaId+'\')">✏️</button>'+
-                    '<button class="btn-sm" style="background:var(--orange);color:#fff;margin-right:4px" onclick="ignorarFixoMes(\''+x.id+'\')">⏭️ Ignorar mês</button>'+
-                    '<button class="btn-sm btn-danger" onclick="excluirDespesa(\''+x.despesaId+'\')">🗑️</button>'
-                  : '')
-            : '<span style="font-size:11px;color:var(--green);font-weight:700">Pago ✓</span>')+
-        '</div>'+
-      '</div>';
+      var tipoBadge=x.tipo==='fixo'?'<span class="badge badge-blue">'+(x.ignorado?'Ignorado':'Fixo')+'</span>':x.tipo==='manual'?'<span class="badge badge-gray">Manual</span>':'<span class="badge badge-gray">Variável</span>';
+      if(x.atrasada)tipoBadge+=' <span class="badge badge-amber">Mês anterior</span>';
+      return '<div class="item-row" style="background:'+g.bg+'">'+
+        '<div class="item-dot" style="background:'+(pago?'var(--green)':diasAte(x.vencimento)<0?'var(--red)':diasAte(x.vencimento)===0?'var(--amber)':'var(--blue)')+'"></div>'+
+        '<div class="item-info"><div class="item-desc">'+(pago?'<s style="opacity:.4">':'')+x.desc+(pago?'</s>':'')+' '+tipoBadge+'</div><div class="item-meta">'+(x.cat||'')+(x.dataDivida?' · Dívida: '+fmtD(x.dataDivida):'')+'</div></div>'+
+        '<div>'+vencBadge(x.vencimento)+'</div>'+
+        '<div class="item-val" style="color:'+(pago?'var(--green)':'var(--red)')+'">'+fmt(x.valor)+'</div>'+
+        '<div class="item-actions">'+(!pago?
+          (x.ignorado?'<span style="font-size:11px;color:var(--green)">Ignorado ✓</span>'
+            :'<button class="btn-sm btn-sm-green" onclick="abrirConfPag(\''+x.id+'\')">Pagar</button>')+
+          ' <button class="btn-sm btn-sm-purple" onclick="'+(x.tipo==='fixo'||x.tipo==='variavel'?'editarDespesa(\''+x.despesaId+'\')':'abrirModalAPagar(\''+x.id+'\')')+'">✏️</button>'+
+          (x.tipo==='fixo'?' <button class="btn-sm btn-sm-amber" onclick="ignorarFixoMes(\''+x.id+'\')">⏭️</button> <button class="btn-sm btn-sm-red" onclick="excluirDespesa(\''+x.despesaId+'\')">🗑️</button>':'')
+          :'<span style="font-size:11px;color:var(--green);font-weight:600">Pago ✓</span>')+
+        '</div></div>';
     }).join('');
   }).join('');
+  if(!lista.length)el.innerHTML='<div style="padding:40px;text-align:center;color:var(--ink-3)">Nenhuma conta a pagar</div>';
 }
 
-// ============================================================
-// A RECEBER
-// ============================================================
+// ── A RECEBER ─────────────────────────────────────────────────
 function renderAReceber(d){
   var lista=getBoletosPendentes(d);
   var total=lista.reduce(function(s,r){return s+Number(r.valor||0);},0);
   var venc=lista.filter(function(r){return diasAte(r.vencimento)<0;}).length;
+
   document.getElementById('kpi-areceber').innerHTML=[
-    {bar:'var(--green)',label:'💚 Total a Receber',val:fmt(total),sub:lista.length+' boleto(s)'},
-    {bar:'var(--red)',label:'⚠️ Vencidos',val:venc,sub:'cobrar urgente'},
-  ].map(function(k){
-    return '<div class="kpi"><div class="kpi-bar" style="background:'+k.bar+'"></div>'+
-      '<div class="kpi-label">'+k.label+'</div>'+
-      '<div class="kpi-val" style="color:'+k.bar+'">'+k.val+'</div>'+
-      '<div class="kpi-sub">'+k.sub+'</div></div>';
-  }).join('');
+    {bar:'var(--green)',l:'Total a Receber',v:fmt(total),s:lista.length+' boleto(s)'},
+    {bar:'var(--red)',l:'Vencidos',v:venc,s:'cobrar urgente'},
+  ].map(function(k){return '<div class="kpi"><div class="kpi-bar" style="background:'+k.bar+'"></div><div class="kpi-label">'+k.l+'</div><div class="kpi-val">'+k.v+'</div><div class="kpi-sub">'+k.s+'</div></div>';}).join('');
 
+  _mapaARec={};lista.forEach(function(r){_mapaARec[r.id]=r;});
   var el=document.getElementById('lista-areceber');
-  if(!lista.length){
-    el.innerHTML='<div style="padding:40px;text-align:center;color:var(--text2)">✅ Nada a receber</div>';
-    return;
-  }
-  // Popular mapa global A Receber
-  _mapaARec={};
-  lista.forEach(function(r){_mapaARec[r.id]=r;});
-
+  if(!lista.length){el.innerHTML='<div style="padding:40px;text-align:center;color:var(--ink-3)">Nenhum valor a receber</div>';return;}
   el.innerHTML=lista.map(function(r){
-    var atrasado=diasAte(r.vencimento)<0;
-    return '<div class="pagar-item">'+
-      '<div class="pagar-dot" style="background:'+(atrasado?'var(--red)':'var(--green)')+'"></div>'+
-      '<div class="pagar-info">'+
-        '<div class="pagar-desc">'+r.desc+(r.atrasado?' <span class="badge" style="background:#fff3cd;color:#856404;font-size:10px">↩ Mês anterior</span>':'')+'</div>'+
-        '<div class="pagar-meta">'+(r.clienteNome||'')+(r.dataVenda?' · Venda: '+fmtD(r.dataVenda):'')+'</div>'+
+    var at=diasAte(r.vencimento)<0;
+    return '<div class="item-row">'+
+      '<div class="item-dot" style="background:'+(at?'var(--red)':'var(--green)')+'"></div>'+
+      '<div class="item-info">'+
+        '<div class="item-desc">'+r.desc+(r.atrasado?' <span class="badge badge-amber">Mês anterior</span>':'')+'</div>'+
+        '<div class="item-meta">'+(r.clienteNome||'')+(r.dataVenda?' · Venda: '+fmtD(r.dataVenda):'')+'</div>'+
       '</div>'+
-      '<div style="margin-right:8px">'+vencBadge(r.vencimento)+'</div>'+
-      '<div class="pagar-val" style="color:var(--green)">'+fmt(r.valor)+'</div>'+
-      '<div class="pagar-actions"><button class="btn-sm btn-success" onclick="abrirConfRec(\''+r.id+'\')" >✅ Recebido</button></div>'+
+      '<div>'+vencBadge(r.vencimento)+'</div>'+
+      '<div class="item-val text-green">'+fmt(r.valor)+'</div>'+
+      '<div class="item-actions"><button class="btn-sm btn-sm-green" onclick="abrirConfRec(\''+r.id+'\')">Recebido</button></div>'+
     '</div>';
   }).join('');
 }
 
-// ============================================================
-// FLUXO DE CAIXA — semana a semana, 6 semanas
-// ============================================================
+// ── FLUXO DE CAIXA (8 semanas) ───────────────────────────────
 function renderFluxo(d){
-  var saldoAtual=d.contas.reduce(function(s,c){return s+Number(c.saldo||0);},0);
-  var apagar=getAPagar(d).filter(function(x){return !x.pago;});
-  var areceber=getBoletosPendentes(d);
+  var saldo=d.contas.reduce(function(s,c){return s+Number(c.saldo||0);},0);
+  var aPag=getAPagar(d).filter(function(x){return !x.pago;});
+  var aRec=getBoletosPendentes(d);
+  var necCaixa=aPag.reduce(function(s,x){return s+Number(x.valor||0);},0);
+  var folga=saldo-necCaixa;
+  var recTot=aRec.reduce(function(s,r){return s+Number(r.valor||0);},0);
+  var fixas=d.despesas.filter(function(x){return x.tipo==='fixo'&&x.ativo!==false;}).reduce(function(s,x){return s+Number(x.valor||0);},0);
 
-  // Semanas
-  var semanas=[];
-  var inicio=new Date(hoje()+'T00:00');
-  for(var s=0;s<6;s++){
-    var ini=new Date(inicio);ini.setDate(ini.getDate()+s*7);
-    var fim=new Date(ini);fim.setDate(fim.getDate()+6);
-    var entradas=areceber.filter(function(r){if(!r.vencimento)return false;var dv=new Date(r.vencimento+'T00:00');return dv>=ini&&dv<=fim;});
-    var saidas=apagar.filter(function(x){if(!x.vencimento)return false;var dv=new Date(x.vencimento+'T00:00');return dv>=ini&&dv<=fim;});
-    var totalE=entradas.reduce(function(t,r){return t+Number(r.valor||0);},0);
-    var totalS=saidas.reduce(function(t,x){return t+Number(x.valor||0);},0);
-    semanas.push({ini:ini,fim:fim,entradas:entradas,saidas:saidas,totalE:totalE,totalS:totalS,saldo:totalE-totalS});
-  }
-
-  // Projeção acumulada
-  var acum=saldoAtual;
-  var projecoes=semanas.map(function(sw){acum+=sw.saldo;return acum;});
-
-  // KPIs
-  var totalE30=semanas.slice(0,4).reduce(function(s,sw){return s+sw.totalE;},0);
-  var totalS30=semanas.slice(0,4).reduce(function(s,sw){return s+sw.totalS;},0);
-  var necCaixa=apagar.reduce(function(s,x){return s+Number(x.valor||0);},0);
-  var folga=saldoAtual-necCaixa;
   document.getElementById('kpi-fluxo').innerHTML=[
-    {bar:'var(--blue)',label:'🏦 Saldo Atual',val:fmt(saldoAtual),sub:'nas contas agora'},
-    {bar:'var(--green)',label:'📥 Entradas 30d',val:fmt(totalE30),sub:'a receber'},
-    {bar:'var(--red)',label:'📤 Saídas 30d',val:fmt(totalS30),sub:'a pagar'},
-    {bar:folga>=0?'var(--purple)':'var(--red)',label:'🎯 Necessidade de Caixa',val:fmt(necCaixa),sub:'total pendente'},
-    {bar:folga>=0?'var(--green)':'var(--red)',label:folga>=0?'✅ Folga de Caixa':'⚠️ Déficit de Caixa',val:fmt(Math.abs(folga)),sub:folga>=0?'sobra após pagar tudo':'falta para pagar tudo'},
-  ].map(function(k){
-    return '<div class="kpi"><div class="kpi-bar" style="background:'+k.bar+'"></div>'+
-      '<div class="kpi-label">'+k.label+'</div>'+
-      '<div class="kpi-val" style="color:'+k.bar+'">'+k.val+'</div>'+
-      '<div class="kpi-sub">'+k.sub+'</div></div>';
-  }).join('');
+    {bar:'var(--blue)',l:'Saldo Atual',v:fmt(saldo),s:'nas contas'},
+    {bar:'var(--green)',l:'Entradas 30d',v:fmt(recTot),s:'a receber'},
+    {bar:'var(--red)',l:'Necessidade de Caixa',v:fmt(necCaixa),s:'total pendente'},
+    {bar:folga>=0?'var(--green)':'var(--red)',l:folga>=0?'Folga de Caixa':'Déficit',v:fmt(Math.abs(folga)),s:folga>=0?'sobra':'falta'},
+  ].map(function(k){return '<div class="kpi"><div class="kpi-bar" style="background:'+k.bar+'"></div><div class="kpi-label">'+k.l+'</div><div class="kpi-val">'+k.v+'</div><div class="kpi-sub">'+k.s+'</div></div>';}).join('');
 
-  // Alerta de necessidade
-  var alertaHtml='';
-  if(folga<0){
-    alertaHtml='<div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:10px;padding:14px 18px;margin-bottom:16px;display:flex;gap:12px;align-items:center">'+
-      '<div style="font-size:28px">🚨</div>'+
-      '<div><div style="font-weight:800;color:#dc2626;font-size:14px">Atenção: Caixa Insuficiente</div>'+
-      '<div style="color:#dc2626;font-size:13px;margin-top:2px">Você tem <strong>'+fmt(saldoAtual)+'</strong> em caixa mas precisa de <strong>'+fmt(necCaixa)+'</strong> para pagar todas as contas pendentes. Déficit de <strong>'+fmt(Math.abs(folga))+'</strong>.</div></div>'+
-    '</div>';
-  } else {
-    alertaHtml='<div style="background:#f0fdf4;border:1px solid #a7f3d0;border-radius:10px;padding:14px 18px;margin-bottom:16px;display:flex;gap:12px;align-items:center">'+
-      '<div style="font-size:28px">✅</div>'+
-      '<div><div style="font-weight:800;color:#065f46;font-size:14px">Caixa Suficiente</div>'+
-      '<div style="color:#065f46;font-size:13px;margin-top:2px">Você tem <strong>'+fmt(saldoAtual)+'</strong> em caixa para cobrir <strong>'+fmt(necCaixa)+'</strong> de contas. Sobram <strong>'+fmt(folga)+'</strong> de folga.</div></div>'+
-    '</div>';
+  // Alerta
+  document.getElementById('fluxo-alerta').innerHTML=folga<0
+    ?'<div class="alert-box alert-red"><div class="alert-icon">⚠️</div><div><strong>Caixa Insuficiente:</strong> Você tem '+fmt(saldo)+' mas precisa de '+fmt(necCaixa)+'. Déficit de '+fmt(Math.abs(folga))+'.</div></div>'
+    :'<div class="alert-box alert-green"><div class="alert-icon">✅</div><div><strong>Caixa Suficiente:</strong> '+fmt(saldo)+' cobre '+fmt(necCaixa)+' de contas. Folga de '+fmt(folga)+'.</div></div>';
+
+  // 8 semanas
+  var semanas=[];
+  var base=new Date(hoje()+'T00:00');
+  for(var sw=0;sw<8;sw++){
+    var ini=new Date(base);ini.setDate(ini.getDate()+sw*7);
+    var fim=new Date(ini);fim.setDate(fim.getDate()+6);
+    var iStr=ini.toISOString().split('T')[0];
+    var fStr=fim.toISOString().split('T')[0];
+    var ent=aRec.filter(function(r){return r.vencimento>=iStr&&r.vencimento<=fStr;});
+    var sai=aPag.filter(function(x){return x.vencimento>=iStr&&x.vencimento<=fStr;});
+    semanas.push({ini:ini,fim:fim,iStr:iStr,fStr:fStr,
+      entTotal:ent.reduce(function(s,r){return s+r.valor;},0),
+      saiTotal:sai.reduce(function(s,x){return s+x.valor;},0),
+      ent:ent,sai:sai});
   }
+  var labels=semanas.map(function(sw){return sw.ini.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})+'-'+sw.fim.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});});
+  var acum=saldo;
+  var saldoLinha=semanas.map(function(sw){acum+=sw.entTotal-sw.saiTotal;return Math.round(acum);});
 
-  // Semanas
-  var semanasHtml=semanas.map(function(sw,i){
-    var saldoAcum=projecoes[i];
-    var ok=saldoAcum>=0;
-    var dataLabel=sw.ini.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})+' – '+sw.fim.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
-    return '<div class="fluxo-semana">'+
-      '<div class="fluxo-semana-header">'+
-        '<div style="font-weight:800;font-size:13px">'+(i===0?'📍 Esta semana':'Semana '+(i+1))+' · '+dataLabel+'</div>'+
-        '<div style="display:flex;gap:20px;font-size:13px">'+
-          '<span style="color:var(--green);font-weight:700">+'+fmt(sw.totalE)+'</span>'+
-          '<span style="color:var(--red);font-weight:700">−'+fmt(sw.totalS)+'</span>'+
-          '<span style="font-weight:900;color:'+(sw.saldo>=0?'var(--green)':'var(--red)')+'">'+(sw.saldo>=0?'▲':'▼')+fmt(Math.abs(sw.saldo))+'</span>'+
-          '<span style="font-weight:700;color:'+(ok?'var(--blue)':'var(--red)')+'">Saldo proj: '+fmt(saldoAcum)+'</span>'+
-        '</div>'+
-      '</div>'+
-      (sw.entradas.length+sw.saidas.length===0?
-        '<div style="padding:14px 18px;color:var(--text2);font-size:13px">Nenhum lançamento previsto</div>':
-        sw.entradas.map(function(r){
-          return '<div class="fluxo-row">'+
-            '<div class="fluxo-data">'+fmtD(r.vencimento)+'</div>'+
-            '<div class="fluxo-desc" style="color:var(--green)">💚 '+r.desc+(r.clienteNome?' · '+r.clienteNome:'')+'</div>'+
-            '<div class="fluxo-val" style="color:var(--green)">+'+fmt(r.valor)+'</div>'+
-          '</div>';
-        }).join('')+
-        sw.saidas.map(function(x){
-          return '<div class="fluxo-row">'+
-            '<div class="fluxo-data">'+fmtD(x.vencimento)+'</div>'+
-            '<div class="fluxo-desc" style="color:var(--red)">🔴 '+x.desc+(x.cat?' · '+x.cat:'')+'</div>'+
-            '<div class="fluxo-val" style="color:var(--red)">−'+fmt(x.valor)+'</div>'+
-          '</div>';
-        }).join('')
-      )+
+  mkChart('chart-fluxo',{
+    data:{labels:labels,datasets:[
+      {type:'bar',label:'Entradas',data:semanas.map(function(s){return s.entTotal;}),backgroundColor:'rgba(13,147,115,.75)',borderRadius:4},
+      {type:'bar',label:'Saídas',data:semanas.map(function(s){return s.saiTotal;}),backgroundColor:'rgba(214,59,59,.75)',borderRadius:4},
+      {type:'line',label:'Saldo',data:saldoLinha,borderColor:'#2563eb',backgroundColor:'rgba(37,99,235,.08)',fill:true,tension:.3,pointRadius:4,pointBackgroundColor:'#2563eb',borderWidth:2,yAxisID:'y2'},
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},annotation:{}},
+      scales:{x:{ticks:{font:{size:10},maxRotation:30},grid:{display:false}},
+        y:{ticks:{callback:function(v){return 'R$'+Math.round(v/1000)+'k';}},grid:{color:'rgba(0,0,0,.04)'}},
+        y2:{position:'right',ticks:{callback:function(v){return 'R$'+Math.round(v/1000)+'k';}},grid:{display:false}}}}
+  });
+
+  // Detalhe semanas
+  document.getElementById('fluxo-detalhe').innerHTML=semanas.map(function(sw,i){
+    if(!sw.ent.length&&!sw.sai.length)return '';
+    var lbl=sw.ini.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})+' – '+sw.fim.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
+    return '<div style="border-bottom:1px solid var(--border);padding:12px 18px">'+
+      '<div class="flex-between mb-8"><span style="font-size:12px;font-weight:600">'+(i===0?'Esta semana':'Semana '+(i+1))+' · '+lbl+'</span>'+
+      '<div style="display:flex;gap:16px;font-size:12px"><span class="text-green">+'+fmt(sw.entTotal)+'</span><span class="text-red">−'+fmt(sw.saiTotal)+'</span><span style="font-weight:600;color:'+(saldoLinha[i]>=0?'var(--blue)':'var(--red)')+'">Saldo: '+fmt(saldoLinha[i])+'</span></div></div>'+
+      sw.ent.map(function(r){return '<div style="display:flex;justify-content:space-between;font-size:12px;color:var(--ink-2);padding:2px 0"><span class="text-green">↑ '+r.clienteNome.split(' ')[0]+' · '+r.desc+'</span><span class="text-green">'+fmt(r.valor)+'</span></div>';}).join('')+
+      sw.sai.map(function(x){return '<div style="display:flex;justify-content:space-between;font-size:12px;color:var(--ink-2);padding:2px 0"><span class="text-red">↓ '+x.desc+'</span><span class="text-red">'+fmt(x.valor)+'</span></div>';}).join('')+
     '</div>';
   }).join('');
-
-  document.getElementById('fluxo-content').innerHTML=alertaHtml+semanasHtml;
 }
 
-// ============================================================
-// DESPESAS
-// ============================================================
+// ── FLUXO ANUAL ───────────────────────────────────────────────
+function renderAnual(d){
+  var fixasMes=d.despesas.filter(function(x){return x.tipo==='fixo'&&x.ativo!==false;}).reduce(function(s,x){return s+Number(x.valor||0);},0);
+  var aRec=getBoletosPendentes(d);
+  var saldoInicial=d.contas.reduce(function(s,c){return s+Number(c.saldo||0);},0);
+
+  // Construir 52 semanas a partir de hoje
+  var base=new Date(hoje()+'T00:00');
+  var semanas=[];
+  for(var i=0;i<52;i++){
+    var ini=new Date(base);ini.setDate(ini.getDate()+i*7);
+    var fim=new Date(ini);fim.setDate(fim.getDate()+6);
+    var iStr=ini.toISOString().split('T')[0];
+    var fStr=fim.toISOString().split('T')[0];
+    // Entradas: boletos confirmados nessa semana
+    var ent=aRec.filter(function(r){return r.vencimento&&r.vencimento>=iStr&&r.vencimento<=fStr;});
+    var entTotal=ent.reduce(function(s,r){return s+r.valor;},0);
+    // Saídas: fixas mensais na semana que contém o dia 5
+    var temDia5=false;
+    for(var dd=new Date(ini);dd<=fim;dd.setDate(dd.getDate()+1)){if(dd.getDate()===5){temDia5=true;break;}}
+    var saiTotal=temDia5?fixasMes:0;
+    semanas.push({ini:ini,fim:fim,entTotal:entTotal,saiTotal:saiTotal,label:ini.toLocaleDateString('pt-BR',{month:'2-digit',day:'2-digit'})});
+  }
+
+  var acum=saldoInicial;
+  var saldoData=semanas.map(function(s){acum+=s.entTotal-s.saiTotal;return Math.round(acum);});
+  var labels=semanas.map(function(s){return s.label;});
+
+  // KPIs anuais
+  var totEntAnual=semanas.reduce(function(s,sw){return s+sw.entTotal;},0);
+  var totSaiAnual=fixasMes*12;
+  var projecaoFim=saldoData[51];
+  var mesesNegativos=saldoData.filter(function(v){return v<0;}).length;
+
+  document.getElementById('kpi-anual').innerHTML=[
+    {bar:'var(--green)',l:'Entradas Previstas (ano)',v:fmt(totEntAnual),s:'boletos lançados'},
+    {bar:'var(--red)',l:'Saídas Fixas (ano)',v:fmt(totSaiAnual),s:'projeção 12 meses'},
+    {bar:projecaoFim>=0?'var(--blue)':'var(--red)',l:'Saldo Projetado (52 sem.)',v:fmt(projecaoFim),s:'com dados atuais'},
+    {bar:mesesNegativos===0?'var(--green)':'var(--red)',l:'Semanas no Negativo',v:mesesNegativos,s:mesesNegativos===0?'nenhuma':'atenção'},
+  ].map(function(k){return '<div class="kpi"><div class="kpi-bar" style="background:'+k.bar+'"></div><div class="kpi-label">'+k.l+'</div><div class="kpi-val">'+k.v+'</div><div class="kpi-sub">'+k.s+'</div></div>';}).join('');
+
+  // Gráfico anual semanal
+  mkChart('chart-anual',{
+    data:{labels:labels,datasets:[
+      {type:'bar',label:'Saídas',data:semanas.map(function(s){return -s.saiTotal;}),backgroundColor:'rgba(214,59,59,.3)',borderRadius:2},
+      {type:'bar',label:'Entradas',data:semanas.map(function(s){return s.entTotal;}),backgroundColor:'rgba(13,147,115,.4)',borderRadius:2},
+      {type:'line',label:'Saldo acumulado',data:saldoData,borderColor:'#2563eb',backgroundColor:'rgba(37,99,235,.06)',fill:true,tension:.4,pointRadius:0,borderWidth:2,yAxisID:'y2'},
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{x:{ticks:{font:{size:9},autoSkip:true,maxTicksLimit:26,maxRotation:45},grid:{display:false}},
+        y:{ticks:{callback:function(v){return 'R$'+Math.round(v/1000)+'k';}},grid:{color:'rgba(0,0,0,.03)'}},
+        y2:{position:'right',ticks:{callback:function(v){return 'R$'+Math.round(v/1000)+'k';}},grid:{display:false}}}}
+  });
+
+  // Gráfico barras por mês
+  var mesesLabels=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  var entPorMes=new Array(12).fill(0);
+  aRec.forEach(function(r){if(r.vencimento){var m=parseInt(r.vencimento.split('-')[1])-1;if(m>=0&&m<12)entPorMes[m]+=r.valor;}});
+
+  mkChart('chart-anual-bar',{type:'bar',
+    data:{labels:mesesLabels,datasets:[
+      {label:'Entradas',data:entPorMes,backgroundColor:'rgba(13,147,115,.7)',borderRadius:4},
+      {label:'Fixas',data:new Array(12).fill(fixasMes),backgroundColor:'rgba(214,59,59,.5)',borderRadius:4},
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{x:{grid:{display:false}},y:{ticks:{callback:function(v){return 'R$'+Math.round(v/1000)+'k';}}}}}
+  });
+
+  // Análise textual
+  var melhorMes=entPorMes.indexOf(Math.max.apply(null,entPorMes));
+  var mesesSemEntrada=entPorMes.filter(function(v){return v<fixasMes;}).length;
+  document.getElementById('anual-analise').innerHTML=
+    '<div class="diag-item"><div><div style="font-size:12px;font-weight:600">Melhor mês projetado</div><div style="font-size:12px;color:var(--ink-3);margin-top:2px">'+mesesLabels[melhorMes]+' — '+fmt(entPorMes[melhorMes])+'</div></div></div>'+
+    '<div class="diag-item"><div><div style="font-size:12px;font-weight:600">Meses abaixo das fixas</div><div style="font-size:12px;color:var(--ink-3);margin-top:2px">'+mesesSemEntrada+' de 12 meses precisam de novos pedidos</div></div></div>'+
+    '<div class="diag-item"><div><div style="font-size:12px;font-weight:600">Fixas mensais cadastradas</div><div style="font-size:12px;color:var(--ink-3);margin-top:2px">'+fmt(fixasMes)+' / mês</div></div></div>'+
+    '<div class="diag-item"><div><div style="font-size:12px;font-weight:600">Saldo projetado em 52 semanas</div><div style="font-size:12px;color:'+(projecaoFim>=0?'var(--green)':'var(--red)')+';margin-top:2px;font-weight:600">'+fmt(projecaoFim)+'</div></div></div>';
+}
+
+// ── DESPESAS ─────────────────────────────────────────────────
 function renderDespesas(d){
+  var fixas=d.despesas.filter(function(x){return x.tipo==='fixo'&&x.ativo!==false;});
+  var totalFixas=fixas.reduce(function(s,x){return s+Number(x.valor||0);},0);
+
+  // Pizza de composição
+  mkChart('chart-despesas-pie',{type:'doughnut',
+    data:{labels:fixas.map(function(x){return x.desc;}),
+      datasets:[{data:fixas.map(function(x){return x.valor;}),backgroundColor:['#2563eb','#0d9373','#d63b3b','#c97a00','#7c3aed','#e8923b','#5ca0e0'],borderWidth:0,hoverOffset:4}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{font:{size:11},boxWidth:12}}}}
+  });
+
+  var dr=document.getElementById('desp-resumo');
+  dr.innerHTML=fixas.map(function(x){
+    var pct=(x.valor/totalFixas*100).toFixed(0);
+    return '<div style="display:flex;justify-content:space-between;align-items:center;font-size:13px">'+
+      '<span>'+x.desc+'</span><div style="display:flex;align-items:center;gap:8px"><div style="width:60px;background:var(--surface-3);border-radius:3px;height:4px;overflow:hidden"><div style="width:'+pct+'%;height:100%;background:var(--blue);border-radius:3px"></div></div>'+
+      '<span style="font-family:\'DM Mono\',monospace;font-weight:500;color:var(--red)">'+fmt(x.valor)+'</span></div></div>';
+  }).join('')+'<div style="border-top:1px solid var(--border);padding-top:8px;margin-top:8px;display:flex;justify-content:space-between;font-size:13px;font-weight:600"><span>Total</span><span style="color:var(--red)">'+fmt(totalFixas)+'</span></div>';
+
   var tbody=document.getElementById('tbody-despesas');
   var empty=document.getElementById('empty-despesas');
   if(!d.despesas.length){tbody.innerHTML='';empty.style.display='block';return;}
   empty.style.display='none';
   tbody.innerHTML=d.despesas.map(function(x){
-    var isFixo=x.tipo==='fixo';
-    var avista=x.pagto==='avista';
-    var vencTxt=isFixo?'Todo dia '+(x.dia||'?'):avista?fmtD(x.avista):fmtD(x.venc||x.vencimento||x.dataavulso||'');
-    var atrasado=!isFixo&&!avista&&x.status!=='pago'&&diasAte(x.venc||x.vencimento||x.dataavulso||'')<0;
-    return '<tr>'+
-      '<td style="padding:11px 16px"><div style="font-weight:700">'+x.desc+'</div>'+(x.obs?'<div style="font-size:11px;color:var(--text2)">'+x.obs+'</div>':'')+'</td>'+
-      '<td style="padding:11px 14px;color:var(--text2);font-size:13px">'+x.cat+'</td>'+
-      '<td style="padding:11px 14px"><span class="badge '+(isFixo?'badge-fixo':'badge-var')+'">'+(isFixo?'🔁 Fixo':'📌 Variável')+'</span></td>'+
-      '<td style="padding:11px 14px;font-size:12px;color:'+(atrasado?'var(--red)':'var(--text2)')+'">'+vencTxt+(atrasado?' 🔴':'')+'</td>'+
-      '<td style="padding:11px 14px;text-align:right;font-weight:800;color:var(--red)">'+fmt(x.valor)+'</td>'+
-      '<td style="padding:11px 14px"><span class="badge '+(isFixo?(x.ativo!==false?'badge-ok':''):(x.status==='pago'?'badge-ok':''))+'">'+
-        (isFixo?(x.ativo!==false?'✅ Ativa':'⏸️ Inativa'):(avista?'💵 À vista':x.status==='pago'?'✅ Pago':'⏳ Pendente'))+'</span></td>'+
-      '<td style="padding:11px 14px;white-space:nowrap">'+
-        '<button class="btn-sm" style="background:var(--purple);color:#fff;margin-right:4px" onclick="editarDespesa(\''+x.id+'\')">✏️</button>'+
-        '<button class="btn-sm btn-danger" onclick="excluirDespesa(\''+x.id+'\')">🗑️</button>'+
-      '</td>'+
-    '</tr>';
+    var isF=x.tipo==='fixo';
+    var av=x.pagto==='avista';
+    var vencTxt=isF?'Todo dia '+(x.dia||'?'):av?fmtD(x.avista):fmtD(x.venc||x.vencimento||x.dataavulso||'');
+    var st=isF?(x.ativo!==false?'<span class="badge badge-green">Ativa</span>':'<span class="badge badge-gray">Inativa</span>'):av?'<span class="badge badge-blue">À vista</span>':(x.status==='pago'?'<span class="badge badge-green">Pago</span>':'<span class="badge badge-amber">Pendente</span>');
+    return '<tr><td><div style="font-weight:600">'+x.desc+'</div>'+(x.obs?'<div style="font-size:11px;color:var(--ink-3)">'+x.obs+'</div>':'')+'</td>'+
+      '<td><span class="badge badge-gray">'+x.cat+'</span></td>'+
+      '<td><span class="badge '+(isF?'badge-blue':'badge-gray')+'">'+(isF?'Fixo':'Variável')+'</span></td>'+
+      '<td style="color:var(--ink-3);font-size:12px">'+fmtD(x.dataDivida||x.dataavulso||x.data||'')+'</td>'+
+      '<td style="color:var(--ink-3);font-size:12px">'+vencTxt+'</td>'+
+      '<td style="text-align:right;font-family:\'DM Mono\',monospace;font-weight:500;color:var(--red)">'+fmt(x.valor)+'</td>'+
+      '<td>'+st+'</td>'+
+      '<td><div style="display:flex;gap:4px">'+
+        '<button class="btn-sm btn-sm-purple" onclick="editarDespesa(\''+x.id+'\')">✏️</button>'+
+        '<button class="btn-sm btn-sm-red" onclick="excluirDespesa(\''+x.id+'\')">🗑️</button>'+
+      '</div></td></tr>';
   }).join('');
 }
 
-// ============================================================
-// CAIXA
-// ============================================================
+// ── CAIXA ────────────────────────────────────────────────────
 function renderCaixa(d){
   var grid=document.getElementById('contas-grid');
-  grid.innerHTML=!d.contas.length?'<div style="color:var(--text2)">Nenhuma conta. Clique em "+ Conta".</div>':
+  grid.innerHTML=!d.contas.length?'<div style="color:var(--ink-3)">Nenhuma conta. Clique em "+ Conta".</div>':
     d.contas.map(function(c){
       return '<div class="card" style="padding:18px">'+
-        '<div style="display:flex;justify-content:space-between;margin-bottom:6px">'+
-          '<div style="font-weight:800">'+c.banco+'</div>'+
-          '<div>'+
-            '<button class="btn-sm" style="background:var(--purple);color:#fff;margin-right:4px" onclick="editarConta(\''+c.id+'\')">✏️</button>'+
-            '<button class="btn-sm btn-danger" onclick="excluirConta(\''+c.id+'\')">🗑️</button>'+
-          '</div>'+
-        '</div>'+
-        '<div style="color:var(--text2);font-size:12px;margin-bottom:6px">'+c.tipo+'</div>'+
-        '<div style="font-size:26px;font-weight:900;color:'+(Number(c.saldo||0)>=0?'var(--green)':'var(--red)')+'">'+fmt(c.saldo||0)+'</div>'+
+        '<div class="flex-between mb-8"><div style="font-family:\'Sora\',sans-serif;font-weight:700">'+c.banco+'</div>'+
+        '<div style="display:flex;gap:6px">'+
+          '<button class="btn-sm btn-sm-purple" onclick="editarConta(\''+c.id+'\')">✏️</button>'+
+          '<button class="btn-sm btn-sm-red" onclick="excluirConta(\''+c.id+'\')">🗑️</button>'+
+        '</div></div>'+
+        '<div style="font-size:11px;color:var(--ink-3);margin-bottom:6px">'+c.tipo+'</div>'+
+        '<div style="font-family:\'Sora\',sans-serif;font-size:24px;font-weight:700;color:'+(Number(c.saldo||0)>=0?'var(--green)':'var(--red)')+'">'+fmt(c.saldo||0)+'</div>'+
       '</div>';
     }).join('');
 
-  var movs=d.recebimentos.concat(d.pagamentos).sort(function(a,b){return new Date(b.data||'0')-new Date(a.data||'0');}).slice(0,30);
-  document.getElementById('tbody-movs').innerHTML=movs.length?movs.map(function(m){
-    var isSaida=!!m._saida||(d.pagamentos.indexOf(m)>=0);
-    return '<tr>'+
-      '<td style="padding:10px 16px;font-size:13px">'+fmtD(m.data)+'</td>'+
-      '<td style="padding:10px 14px;font-size:13px">'+( m.desc||'—')+'</td>'+
-      '<td style="padding:10px 14px;font-size:12px;color:var(--text2)">'+(m.contaNome||'—')+'</td>'+
-      '<td style="padding:10px 14px"><span class="badge" style="background:'+(isSaida?'#fee2e2':'#d1fae5')+';color:'+(isSaida?'var(--red)':'var(--green)')+'">'+( isSaida?'Saída':'Entrada')+'</span></td>'+
-      '<td style="padding:10px 14px;text-align:right;font-weight:800;color:'+(isSaida?'var(--red)':'var(--green)')+'">'+( isSaida?'−':'+')+fmt(m.valor)+'</td>'+
-    '</tr>';
-  }).join(''):'<tr><td colspan="5" style="padding:30px;text-align:center;color:var(--text2)">Nenhuma movimentação</td></tr>';
+  // Gráficos de movimentações
+  var movs90=d.recebimentos.concat(d.pagamentos).filter(function(m){return m.data&&new Date(m.data+'T00:00')>new Date(Date.now()-90*864e5);});
+  var meses={};
+  movs90.forEach(function(m){
+    var k=m.data.substring(0,7);
+    if(!meses[k])meses[k]={ent:0,sai:0};
+    if(d.recebimentos.indexOf(m)>=0)meses[k].ent+=Number(m.valor||0);
+    else meses[k].sai+=Number(m.valor||0);
+  });
+  var mKeys=Object.keys(meses).sort();
+  mkChart('chart-movs',{type:'bar',
+    data:{labels:mKeys.map(function(k){var p=k.split('-');return p[1]+'/'+p[0];}),
+      datasets:[
+        {label:'Entradas',data:mKeys.map(function(k){return meses[k].ent;}),backgroundColor:'rgba(13,147,115,.7)',borderRadius:4},
+        {label:'Saídas',data:mKeys.map(function(k){return meses[k].sai;}),backgroundColor:'rgba(214,59,59,.6)',borderRadius:4},
+      ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{ticks:{callback:function(v){return 'R$'+Math.round(v/1000)+'k';}}}}}
+  });
+
+  mkChart('chart-contas',{type:'bar',
+    data:{labels:d.contas.map(function(c){return c.banco;}),
+      datasets:[{data:d.contas.map(function(c){return c.saldo||0;}),backgroundColor:d.contas.map(function(c){return Number(c.saldo||0)>=0?'rgba(13,147,115,.7)':'rgba(214,59,59,.7)';}),borderRadius:6}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{ticks:{callback:function(v){return 'R$'+Math.round(v/1000)+'k';}}}}}
+  });
+
+  var tbody=document.getElementById('tbody-movs');
+  var all=d.recebimentos.concat(d.pagamentos).sort(function(a,b){return new Date(b.data||'0')-new Date(a.data||'0');}).slice(0,40);
+  tbody.innerHTML=all.length?all.map(function(m){
+    var isSai=d.pagamentos.indexOf(m)>=0&&!d.recebimentos.some(function(r){return r.id===m.id;});
+    return '<tr><td>'+fmtD(m.data)+'</td><td>'+( m.desc||'—')+'</td><td style="color:var(--ink-3)">'+( m.contaNome||'—')+'</td>'+
+      '<td><span class="badge '+(isSai?'badge-red':'badge-green')+'">'+(isSai?'Saída':'Entrada')+'</span></td>'+
+      '<td style="text-align:right;font-family:\'DM Mono\',monospace;font-weight:500;color:'+(isSai?'var(--red)':'var(--green)')+'">'+( isSai?'−':'')+fmt(m.valor)+'</td></tr>';
+  }).join(''):'<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--ink-3)">Nenhuma movimentação</td></tr>';
 }
 
-// ============================================================
-// DRE
-// ============================================================
+// ── DRE ──────────────────────────────────────────────────────
 function renderDRE(d){
-  var pedsMes=d.pedidos.filter(function(p){return MG.noMesSel(p.entrega||p.data)&&p.status!=='cancelado';});
-  var fat=pedsMes.reduce(function(s,p){return s+(p.itens||[]).reduce(function(s2,i){return s2+Number(i.total||0);},0);},0);
-  var mp=d.compras.filter(function(c){return MG.noMesSel(c.data||c.criadoEm);}).reduce(function(s,c){return s+Number(c.total||c.valor||0);},0);
+  var pedsMes=d.pedidos.filter(function(p){return noMesSel(p.entrega||p.data)&&p.status!=='cancelado';});
+  var fat=pedsMes.reduce(function(s,p){return s+(p.itens||[]).reduce(function(ss,i){return ss+Number(i.total||0);},0);},0);
+  var mp=d.compras.filter(function(c){return noMesSel(c.data||c.criadoEm);}).reduce(function(s,c){return s+Number(c.total||c.valor||0);},0);
   var fixas=d.despesas.filter(function(x){return x.tipo==='fixo'&&x.ativo!==false;}).reduce(function(s,x){return s+Number(x.valor||0);},0);
-  var impPct=((d.config.aliquota||6))/100;
+  var impPct=(d.config.aliquota||6)/100;
   var imp=fat*impPct;
   var mc=fat-mp-imp;
   var lucro=mc-fixas;
-  function row(l,v,bold,cor,ind){
-    return '<div style="display:flex;justify-content:space-between;padding:'+(bold?'12px 18px':'8px 18px')+';background:'+(bold?'var(--bg)':'transparent')+';border-bottom:1px solid var(--border)">'+
-      '<span style="font-weight:'+(bold?800:400)+';padding-left:'+(ind?20:0)+'px;font-size:13px">'+l+'</span>'+
-      '<span style="font-weight:'+(bold?900:600)+';font-size:'+(bold?15:13)+'px;color:'+(cor||'var(--text)')+'">'+fmt(v)+'</span></div>';
+  var mg=fat>0?mc/fat*100:0;
+  var ml=fat>0?lucro/fat*100:0;
+
+  document.getElementById('dre-titulo').textContent='DRE — '+(typeof MG!=='undefined'?MG.getNome():new Date().toLocaleDateString('pt-BR',{month:'long',year:'numeric'}));
+
+  function dreRow(l,v,bold,cor,ind){
+    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:'+(bold?'12':'8')+'px 18px;background:'+(bold?'var(--surface-2)':'transparent')+';border-bottom:1px solid var(--border)">'+
+      '<span style="font-size:13px;font-weight:'+(bold?'600':'400')+';padding-left:'+(ind?16:0)+'px;color:var(--ink'+(ind?'-2':'')+')">'+l+'</span>'+
+      '<span style="font-family:\'DM Mono\',monospace;font-size:'+(bold?'14':'13')+'px;font-weight:'+(bold?'600':'400')+';color:'+(cor||'var(--ink)')+'">'+fmt(v)+'</span>'+
+    '</div>';
   }
   document.getElementById('dre-content').innerHTML=
-    '<div style="font-size:16px;font-weight:800;margin-bottom:16px">📉 DRE — '+new Date().toLocaleDateString('pt-BR',{month:'long',year:'numeric'})+'</div>'+
-    '<div class="card" style="overflow:hidden">'+
-      row('(+) Faturamento Bruto',fat,true,'var(--purple)')+
-      row('(−) Custo MP / Compras',mp,false,'var(--red)',true)+
-      row('(−) Impostos ('+(impPct*100).toFixed(0)+'%)',imp,false,'var(--red)',true)+
-      row('(=) Margem de Contribuição',mc,true,mc>=0?'var(--blue)':'var(--red)')+
-      row('(−) Despesas Fixas',fixas,false,'var(--red)',true)+
-      row('(=) Lucro Líquido',lucro,true,lucro>=0?'var(--green)':'var(--red)')+
-    '</div>';
+    dreRow('(+) Faturamento Bruto',fat,true,'var(--purple)')+
+    dreRow('(−) Custo de MP',mp,false,'var(--red)',true)+
+    dreRow('(−) Impostos ('+(impPct*100).toFixed(0)+'%)',imp,false,'var(--red)',true)+
+    dreRow('(=) Margem de Contribuição ('+mg.toFixed(1)+'%)',mc,true,mc>=0?'var(--blue)':'var(--red)')+
+    dreRow('(−) Despesas Fixas',fixas,false,'var(--red)',true)+
+    dreRow('(=) Lucro Líquido ('+ml.toFixed(1)+'%)',lucro,true,lucro>=0?'var(--green)':'var(--red)');
+
+  mkChart('chart-dre',{type:'doughnut',
+    data:{labels:['MP','Impostos','Despesas Fixas','Lucro'],
+      datasets:[{data:[Math.max(0,mp),Math.max(0,imp),Math.max(0,fixas),Math.max(0,lucro)],backgroundColor:['#d63b3b','#c97a00','#2563eb','#0d9373'],borderWidth:0,hoverOffset:4}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:11},boxWidth:12}}}}
+  });
 }
 
-// ============================================================
-// MODALS — A RECEBER
-// ============================================================
+// ── MODALS A RECEBER ─────────────────────────────────────────
 function abrirModalReceber(){
   var d=getData();
   var sel=document.getElementById('rec-pedido-sel');
@@ -996,27 +834,19 @@ function salvarAReceber(){
   var d=getData();
   var pedId=document.getElementById('rec-pedido-sel').value;
   var ped=pedId?d.pedidos.find(function(p){return p.id===pedId;}):null;
-  var aRec=d.aReceber;
-  aRec.push({
-    id:'rec_'+Date.now(),tipo:tipo==='avulso'?'avulso':'manual',pedidoId:pedId||'',
+  d.aReceber.push({id:'rec_'+Date.now(),tipo:tipo==='avulso'?'avulso':'manual',pedidoId:pedId||'',
     clienteNome:ped?ped.clienteNome||'':'',
     desc:tipo==='boleto'?'Boleto'+(ped?' – Ped.'+(ped.numero||''):''):document.getElementById('rec-desc').value||'Avulso',
     valor:valor,dataVenda:document.getElementById('rec-data-venda').value,vencimento:venc,
     forma:document.getElementById('rec-forma').value,obs:document.getElementById('rec-obs').value,
-    status:'pendente',criadoEm:new Date().toISOString()
-  });
-  save('allhair_a_receber',aRec);
+    status:'pendente',criadoEm:new Date().toISOString()});
+  save('allhair_a_receber',d.aReceber);
   fechar('receber');render('areceber');render('resumo');render('fluxo');
 }
 
-// ============================================================
-// CONFIRMAR RECEBIMENTO
-// ============================================================
 var _cRec=null;
 function abrirConfRec(id){
-  var item=_mapaARec[id];
-  if(!item){console.error('Item não encontrado:',id);return;}
-  _cRec=item;
+  var item=_mapaARec[id];if(!item)return;_cRec=item;
   document.getElementById('conf-rec-desc').innerHTML='<strong>'+item.desc+'</strong><br>'+(item.clienteNome?item.clienteNome+'<br>':'')+fmt(item.valor);
   document.getElementById('conf-rec-data').value=hoje();
   document.getElementById('conf-rec-valor').value=item.valor;
@@ -1030,35 +860,27 @@ function confirmarRecebimento(){
   var valor=parseFloat(document.getElementById('conf-rec-valor').value||0);
   var contaId=document.getElementById('conf-rec-conta').value;
   if(!data||!valor){alert('Preencha data e valor!');return;}
-  if(!contaId){alert('Selecione a conta onde o dinheiro entrou!');return;}
+  if(!contaId){alert('Selecione a conta!');return;}
   var d=getData();
-  // Atualizar conta
-  var contas=d.contas;
-  var conta=contas.find(function(c){return c.id===contaId;});
-  if(conta){conta.saldo=Number(conta.saldo||0)+valor;save('allhair_contas_bancarias',contas);}
-  // Marcar recebido
-  var aRec=d.aReceber;
-  var ex=aRec.find(function(r){return r.id===_cRec.id;});
+  var conta=d.contas.find(function(c){return c.id===contaId;});
+  if(conta){conta.saldo=Number(conta.saldo||0)+valor;save('allhair_contas_bancarias',d.contas);}
+  var ex=d.aReceber.find(function(r){return r.id===_cRec.id;});
   if(ex){ex.status='recebido';ex.dataRecebimento=data;ex.valorRecebido=valor;ex.contaId=contaId;}
-  else{aRec.push(Object.assign({},_cRec,{status:'recebido',dataRecebimento:data,valorRecebido:valor,contaId:contaId}));}
-  save('allhair_a_receber',aRec);
-  // Registrar movimentação
+  else{d.aReceber.push(Object.assign({},_cRec,{status:'recebido',dataRecebimento:data,valorRecebido:valor,contaId:contaId}));}
+  save('allhair_a_receber',d.aReceber);
   d.recebimentos.push({id:'rec_'+Date.now(),desc:_cRec.desc,clienteNome:_cRec.clienteNome||'',
     pedidoId:_cRec.pedidoId||'',valor:valor,data:data,contaId:contaId,contaNome:conta?conta.banco:'',
     obs:document.getElementById('conf-rec-obs').value,criadoEm:new Date().toISOString()});
   save('allhair_recebimentos',d.recebimentos);
-  fechar('conf-rec');
-  render('areceber');render('resumo');render('caixa');render('fluxo');
-  alert('✅ '+fmt(valor)+' creditado em: '+(conta?conta.banco:'conta'));
+  fechar('conf-rec');render('areceber');render('resumo');render('caixa');render('fluxo');
+  alert('Recebimento confirmado!\n'+fmt(valor)+' creditado em: '+(conta?conta.banco:'conta'));
 }
 
-// ============================================================
-// MODAL A PAGAR MANUAL
-// ============================================================
+// ── MODALS A PAGAR ───────────────────────────────────────────
 var _editAPId=null;
 function abrirModalAPagar(id){
   _editAPId=id||null;
-  document.getElementById('apagar-titulo').textContent=id?'✏️ Editar Conta a Pagar':'🔴 Nova Conta a Pagar';
+  document.getElementById('apagar-titulo').textContent=id?'Editar Conta a Pagar':'Nova Conta a Pagar';
   if(id){
     var x=(getData().aPagar||[]).find(function(x){return x.id===id;});
     if(x){
@@ -1095,15 +917,15 @@ function salvarAPagar(){
   save('allhair_a_pagar',ap);
   fechar('apagar');render('apagar');render('resumo');render('fluxo');
 }
+function excluirAPagar(id){
+  if(!confirm('Excluir esta conta?'))return;
+  var d=getData();save('allhair_a_pagar',(d.aPagar||[]).filter(function(x){return x.id!==id;}));
+  render('apagar');
+}
 
-// ============================================================
-// CONFIRMAR PAGAMENTO
-// ============================================================
 var _cPag=null;
 function abrirConfPag(id){
-  var item=_mapaAPagar[id];
-  if(!item){console.error('Item não encontrado:',id);return;}
-  _cPag=item;
+  var item=_mapaAPagar[id];if(!item)return;_cPag=item;
   document.getElementById('conf-pag-desc').innerHTML='<strong>'+item.desc+'</strong><br>'+(item.cat?item.cat+'<br>':'')+fmt(item.valor);
   document.getElementById('conf-pag-data').value=hoje();
   document.getElementById('conf-pag-valor').value=item.valor;
@@ -1111,28 +933,6 @@ function abrirConfPag(id){
   selContas('conf-pag-conta','— De qual conta sai? —');
   abrir('conf-pag');
 }
-// Ignorar despesa fixa neste mês (não paga, mas remove da lista)
-function ignorarFixoMes(id){
-  var item=_mapaAPagar[id];
-  if(!item)return;
-  if(!confirm('Ignorar "'+item.desc+'" neste mes? A despesa continua ativa para os proximos meses.'))return;
-  var d=getData();
-  d.pagamentos.push({
-    id:'pag_'+Date.now(),
-    desc:'[IGNORADO] '+item.desc,
-    cat:item.cat,
-    despesaId:item.despesaId,
-    valor:0,
-    data:hoje(),
-    ignorado:true,
-    contaNome:'—',
-    criadoEm:new Date().toISOString(),
-    _saida:false,
-  });
-  save('allhair_pagamentos',d.pagamentos);
-  render('apagar');render('resumo');
-}
-
 function confirmarPagamento(){
   if(!_cPag)return;
   var data=document.getElementById('conf-pag-data').value;
@@ -1141,47 +941,50 @@ function confirmarPagamento(){
   if(!data||!valor){alert('Preencha data e valor!');return;}
   if(!contaId){alert('Selecione a conta!');return;}
   var d=getData();
-  // Debitar conta
-  var contas=d.contas;
-  var conta=contas.find(function(c){return c.id===contaId;});
-  if(conta){conta.saldo=Number(conta.saldo||0)-valor;save('allhair_contas_bancarias',contas);}
-  // Marcar como pago
+  var conta=d.contas.find(function(c){return c.id===contaId;});
+  if(conta){conta.saldo=Number(conta.saldo||0)-valor;save('allhair_contas_bancarias',d.contas);}
   if(_cPag.tipo==='fixo'&&_cPag.despesaId){
-    // Registrar pagamento de fixo (para controle do mês)
     d.pagamentos.push({id:'pag_'+Date.now(),desc:_cPag.desc,cat:_cPag.cat,despesaId:_cPag.despesaId,
       valor:valor,data:data,contaId:contaId,contaNome:conta?conta.banco:'',
       obs:document.getElementById('conf-pag-obs').value,criadoEm:new Date().toISOString(),_saida:true});
     save('allhair_pagamentos',d.pagamentos);
   } else if(_cPag.tipo==='variavel'&&_cPag.despesaId){
-    var desps=d.despesas;
-    var dep=desps.find(function(x){return x.id===_cPag.despesaId;});
-    if(dep){dep.status='pago';save('allhair_despesas',desps);}
+    var dep=d.despesas.find(function(x){return x.id===_cPag.despesaId;});
+    if(dep){dep.status='pago';save('allhair_despesas',d.despesas);}
     d.pagamentos.push({id:'pag_'+Date.now(),desc:_cPag.desc,cat:_cPag.cat,despesaId:_cPag.despesaId,
       valor:valor,data:data,contaId:contaId,contaNome:conta?conta.banco:'',
       obs:document.getElementById('conf-pag-obs').value,criadoEm:new Date().toISOString(),_saida:true});
     save('allhair_pagamentos',d.pagamentos);
-  } else if(_cPag.tipo==='manual'){
+  } else {
     var ap=d.aPagar||[];
     var apItem=ap.find(function(x){return x.id===_cPag.id;});
-    if(apItem){apItem.status='pago';}
+    if(apItem)apItem.status='pago';
     save('allhair_a_pagar',ap);
     d.pagamentos.push({id:'pag_'+Date.now(),desc:_cPag.desc,cat:_cPag.cat,
       valor:valor,data:data,contaId:contaId,contaNome:conta?conta.banco:'',
       obs:document.getElementById('conf-pag-obs').value,criadoEm:new Date().toISOString(),_saida:true});
     save('allhair_pagamentos',d.pagamentos);
   }
-  fechar('conf-pag');
-  render('apagar');render('resumo');render('caixa');render('fluxo');
-  alert('✅ Pagamento de '+fmt(valor)+' debitado de: '+(conta?conta.banco:'conta')+'\nNovo saldo: '+fmt(conta?conta.saldo:0));
+  fechar('conf-pag');render('apagar');render('resumo');render('caixa');render('fluxo');
+  alert('Pagamento de '+fmt(valor)+' debitado de: '+(conta?conta.banco:'conta'));
 }
 
-// ============================================================
-// DESPESAS
-// ============================================================
+function ignorarFixoMes(id){
+  var item=_mapaAPagar[id];if(!item)return;
+  if(!confirm('Ignorar "'+item.desc+'" neste mes? A despesa continua ativa para os proximos meses.'))return;
+  var d=getData();
+  d.pagamentos.push({id:'pag_'+Date.now(),desc:'[IGNORADO] '+item.desc,cat:item.cat,
+    despesaId:item.despesaId,valor:0,data:hoje(),ignorado:true,
+    contaNome:'—',criadoEm:new Date().toISOString(),_saida:false});
+  save('allhair_pagamentos',d.pagamentos);
+  render('apagar');render('resumo');
+}
+
+// ── MODAL DESPESA ─────────────────────────────────────────────
 var _editDespId=null;
 function abrirModalDespesa(id){
   _editDespId=id||null;
-  document.getElementById('desp-titulo').textContent=id?'✏️ Editar Despesa':'📋 Nova Despesa';
+  document.getElementById('desp-titulo').textContent=id?'Editar Despesa':'Nova Despesa';
   if(id){
     var x=getData().despesas.find(function(x){return x.id===id;});
     if(x){
@@ -1206,16 +1009,15 @@ function abrirModalDespesa(id){
     document.getElementById('desp-venc').value='';
     document.getElementById('desp-avista').value=hoje();
   }
-  onDespTipo();
-  abrir('despesa');
+  onDespTipo();abrir('despesa');
 }
 function onDespTipo(){
   var fixo=document.getElementById('desp-tipo').value==='fixo';
   document.getElementById('desp-dia-wrap').style.display=fixo?'':'none';
   document.getElementById('desp-ativo-wrap').style.display=fixo?'':'none';
   document.getElementById('desp-pagto-wrap').style.display=fixo?'none':'';
-  if(!fixo) onDespPagto();
-  else{document.getElementById('desp-divida-wrap').style.display='none';document.getElementById('desp-venc-wrap').style.display='none';document.getElementById('desp-avista-wrap').style.display='none';}
+  if(!fixo)onDespPagto();
+  else{['desp-divida-wrap','desp-venc-wrap','desp-avista-wrap'].forEach(function(i){document.getElementById(i).style.display='none';});}
 }
 function onDespPagto(){
   var av=document.getElementById('desp-pagto').value==='avista';
@@ -1231,38 +1033,28 @@ function salvarDespesa(){
   var d=getData();
   var tipo=document.getElementById('desp-tipo').value;
   var pagto=tipo==='variavel'?document.getElementById('desp-pagto').value:'';
-  var obj={
-    desc:desc,cat:document.getElementById('desp-cat').value,tipo:tipo,valor:valor,
-    dia:document.getElementById('desp-dia').value,
-    ativo:document.getElementById('desp-ativo').value==='1',
-    pagto:pagto,
-    divida:document.getElementById('desp-divida').value,
-    venc:document.getElementById('desp-venc').value,
-    avista:document.getElementById('desp-avista').value,
-    obs:document.getElementById('desp-obs').value,
-    status:pagto==='avista'?'pago':'pendente',
-  };
-  var desps=d.despesas;
-  if(_editDespId){var i=desps.findIndex(function(x){return x.id===_editDespId;});obj.id=_editDespId;if(i>=0)desps[i]=obj;}
-  else{obj.id='desp_'+Date.now();desps.push(obj);}
-  save('allhair_despesas',desps);
+  var obj={desc:desc,cat:document.getElementById('desp-cat').value,tipo:tipo,valor:valor,
+    dia:document.getElementById('desp-dia').value,ativo:document.getElementById('desp-ativo').value==='1',
+    pagto:pagto,divida:document.getElementById('desp-divida').value,
+    venc:document.getElementById('desp-venc').value,avista:document.getElementById('desp-avista').value,
+    obs:document.getElementById('desp-obs').value,status:pagto==='avista'?'pago':'pendente'};
+  if(_editDespId){var i=d.despesas.findIndex(function(x){return x.id===_editDespId;});obj.id=_editDespId;if(i>=0)d.despesas[i]=obj;}
+  else{obj.id='desp_'+Date.now();d.despesas.push(obj);}
+  save('allhair_despesas',d.despesas);
   fechar('despesa');render('despesas');render('apagar');render('resumo');render('fluxo');
 }
 function editarDespesa(id){abrirModalDespesa(id);}
 function excluirDespesa(id){
   if(!confirm('Excluir esta despesa?'))return;
-  var d=getData();
-  save('allhair_despesas',d.despesas.filter(function(x){return x.id!==id;}));
+  var d=getData();save('allhair_despesas',d.despesas.filter(function(x){return x.id!==id;}));
   render('despesas');render('apagar');
 }
 
-// ============================================================
-// CONTAS BANCÁRIAS
-// ============================================================
+// ── CONTAS ────────────────────────────────────────────────────
 var _editContaId=null;
 function abrirModalConta(id){
   _editContaId=id||null;
-  document.getElementById('conta-titulo').textContent=id?'✏️ Editar Conta':'🏦 Nova Conta';
+  document.getElementById('conta-titulo').textContent=id?'Editar Conta':'Nova Conta';
   if(id){
     var c=getData().contas.find(function(c){return c.id===id;});
     if(c){document.getElementById('conta-banco').value=c.banco||'';document.getElementById('conta-tipo').value=c.tipo||'corrente';document.getElementById('conta-saldo').value=c.saldo||'';}
@@ -1275,99 +1067,46 @@ function salvarConta(){
   var banco=document.getElementById('conta-banco').value.trim();
   if(!banco){alert('Informe o banco!');return;}
   var d=getData();
-  var contas=d.contas;
   var obj={banco:banco,tipo:document.getElementById('conta-tipo').value,saldo:parseFloat(document.getElementById('conta-saldo').value||0)};
-  if(_editContaId){var i=contas.findIndex(function(c){return c.id===_editContaId;});obj.id=_editContaId;if(i>=0)contas[i]=obj;}
-  else{obj.id='conta_'+Date.now();contas.push(obj);}
-  save('allhair_contas_bancarias',contas);
+  if(_editContaId){var i=d.contas.findIndex(function(c){return c.id===_editContaId;});obj.id=_editContaId;if(i>=0)d.contas[i]=obj;}
+  else{obj.id='conta_'+Date.now();d.contas.push(obj);}
+  save('allhair_contas_bancarias',d.contas);
   fechar('conta');render('caixa');render('resumo');
 }
 function editarConta(id){abrirModalConta(id);}
 function excluirConta(id){
   if(!confirm('Excluir esta conta?'))return;
-  var d=getData();
-  save('allhair_contas_bancarias',d.contas.filter(function(c){return c.id!==id;}));
+  var d=getData();save('allhair_contas_bancarias',d.contas.filter(function(c){return c.id!==id;}));
   render('caixa');
 }
 
-// ============================================================
-// EXPORTAR DADOS
-// ============================================================
+// ── EXPORTAR ─────────────────────────────────────────────────
 function exportarDados(){
-  var d = getData();
-  var n = new Date();
-  var mesNome = n.toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
-
-  // Montar relatório completo
-  var relatorio = {
-    exportadoEm: n.toISOString(),
-    empresa: 'ALL TEXTIL CONFECCOES LTDA',
-    mesReferencia: mesNome,
-
-    resumo: {
-      saldoCaixa: d.contas.reduce(function(s,c){return s+Number(c.saldo||0);},0),
-      totalContas: d.contas.length,
-      totalAPagar: getAPagar(d).filter(function(x){return !x.pago;}).reduce(function(s,x){return s+Number(x.valor||0);},0),
-      totalAReceber: getBoletosPendentes(d).reduce(function(s,r){return s+Number(r.valor||0);},0),
-      despesasFixasMensais: d.despesas.filter(function(x){return x.tipo==='fixo'&&x.ativo!==false;}).reduce(function(s,x){return s+Number(x.valor||0);},0),
-      totalPedidos: d.pedidos.length,
-      pedidosAtivos: d.pedidos.filter(function(p){return p.status!=='cancelado'&&p.status!=='finalizado';}).length,
-    },
-
-    contas: d.contas.map(function(c){return {banco:c.banco,tipo:c.tipo,saldo:c.saldo};}),
-
-    despesasFixas: d.despesas.filter(function(x){return x.tipo==='fixo';}).map(function(x){
-      return {desc:x.desc,cat:x.cat,valor:x.valor,dia:x.dia,ativo:x.ativo!==false};
-    }),
-
-    despesasVariaveis: d.despesas.filter(function(x){return x.tipo==='variavel';}).map(function(x){
-      return {desc:x.desc,cat:x.cat,valor:x.valor,vencimento:x.venc||x.vencimento||x.dataavulso,status:x.status,pagto:x.pagto};
-    }),
-
-    contasAPagar: getAPagar(d).filter(function(x){return !x.pago;}).map(function(x){
-      return {desc:x.desc,cat:x.cat,tipo:x.tipo,valor:x.valor,vencimento:x.vencimento,dataDivida:x.dataDivida||''};
-    }),
-
-    aReceber: getBoletosPendentes(d).map(function(r){
-      return {desc:r.desc,cliente:r.clienteNome,valor:r.valor,vencimento:r.vencimento,tipo:r.tipo||'boleto'};
-    }),
-
-    pedidos: d.pedidos.map(function(p){
-      var total=(p.itens||[]).reduce(function(s,i){return s+Number(i.total||0);},0);
-      return {
-        numero:p.numero,cliente:p.clienteNome,status:p.status,
-        data:p.data,entrega:p.entrega,formaPgto:p.formaPgto,
-        total:total,pgtoStatus:p.pgtoStatus||'pendente',
-      };
-    }),
-
-    recebimentosUltimos90dias: d.recebimentos.filter(function(r){
-      return r.data && new Date(r.data+'T00:00') > new Date(Date.now()-90*864e5);
-    }).map(function(r){return {desc:r.desc,cliente:r.clienteNome,valor:r.valor,data:r.data,conta:r.contaNome};}),
-
-    pagamentosUltimos90dias: d.pagamentos.filter(function(p){
-      return p.data && new Date(p.data+'T00:00') > new Date(Date.now()-90*864e5) && !p.ignorado;
-    }).map(function(p){return {desc:p.desc,cat:p.cat,valor:p.valor,data:p.data,conta:p.contaNome};}),
+  var d=getData();var n=new Date();
+  var rel={exportadoEm:n.toISOString(),empresa:'ALL TEXTIL CONFECCOES LTDA',
+    mesReferencia:n.toLocaleDateString('pt-BR',{month:'long',year:'numeric'}),
+    resumo:{saldoCaixa:d.contas.reduce(function(s,c){return s+Number(c.saldo||0);},0),
+      totalContas:d.contas.length,totalAPagar:getAPagar(d).filter(function(x){return !x.pago;}).reduce(function(s,x){return s+Number(x.valor||0);},0),
+      totalAReceber:getBoletosPendentes(d).reduce(function(s,r){return s+Number(r.valor||0);},0),
+      despesasFixasMensais:d.despesas.filter(function(x){return x.tipo==='fixo'&&x.ativo!==false;}).reduce(function(s,x){return s+Number(x.valor||0);},0),
+      totalPedidos:d.pedidos.length,pedidosAtivos:d.pedidos.filter(function(p){return p.status!=='cancelado'&&p.status!=='finalizado';}).length},
+    contas:d.contas.map(function(c){return {banco:c.banco,tipo:c.tipo,saldo:c.saldo};}),
+    despesasFixas:d.despesas.filter(function(x){return x.tipo==='fixo';}).map(function(x){return {desc:x.desc,cat:x.cat,valor:x.valor,dia:x.dia,ativo:x.ativo!==false};}),
+    despesasVariaveis:d.despesas.filter(function(x){return x.tipo==='variavel';}).map(function(x){return {desc:x.desc,cat:x.cat,valor:x.valor,vencimento:x.venc||x.vencimento||x.dataavulso,status:x.status,pagto:x.pagto};}),
+    contasAPagar:getAPagar(d).filter(function(x){return !x.pago;}).map(function(x){return {desc:x.desc,cat:x.cat,tipo:x.tipo,valor:x.valor,vencimento:x.vencimento,dataDivida:x.dataDivida||''};}),
+    aReceber:getBoletosPendentes(d).map(function(r){return {desc:r.desc,cliente:r.clienteNome,valor:r.valor,vencimento:r.vencimento,tipo:r.tipo||'boleto'};}),
+    pedidos:d.pedidos.map(function(p){var t=(p.itens||[]).reduce(function(s,i){return s+Number(i.total||0);},0);return {numero:p.numero,cliente:p.clienteNome,status:p.status,data:p.data,entrega:p.entrega,formaPgto:p.formaPgto,total:t,pgtoStatus:p.pgtoStatus||'pendente'};}),
+    recebimentosUltimos90dias:d.recebimentos.filter(function(r){return r.data&&new Date(r.data+'T00:00')>new Date(Date.now()-90*864e5);}).map(function(r){return {desc:r.desc,cliente:r.clienteNome,valor:r.valor,data:r.data,conta:r.contaNome};}),
+    pagamentosUltimos90dias:d.pagamentos.filter(function(p){return p.data&&new Date(p.data+'T00:00')>new Date(Date.now()-90*864e5)&&!p.ignorado;}).map(function(p){return {desc:p.desc,cat:p.cat,valor:p.valor,data:p.data,conta:p.contaNome};}),
   };
-
-  // Gerar arquivo JSON
-  var json = JSON.stringify(relatorio, null, 2);
-  var blob = new Blob([json], {type:'application/json'});
-  var url = URL.createObjectURL(blob);
-  var a = document.createElement('a');
-  a.href = url;
-  a.download = 'allhair-financeiro-'+n.toISOString().split('T')[0]+'.json';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-
-  alert('✅ Dados exportados!\n\nArquivo: allhair-financeiro-'+n.toISOString().split('T')[0]+'.json\n\nEnvie esse arquivo para análise do fluxo de caixa.');
+  var blob=new Blob([JSON.stringify(rel,null,2)],{type:'application/json'});
+  var url=URL.createObjectURL(blob);var a=document.createElement('a');
+  a.href=url;a.download='allhair-financeiro-'+n.toISOString().split('T')[0]+'.json';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+  alert('Dados exportados!');
 }
 
-// ============================================================
-// CLOCK + INIT
-// ============================================================
+// ── CLOCK + INIT ──────────────────────────────────────────────
 function tick(){
   var n=new Date();
   document.getElementById('sb-time').textContent=n.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
@@ -1375,11 +1114,11 @@ function tick(){
 }
 setInterval(tick,1000);tick();
 window.addEventListener('mesChanged',function(){
-  var abas=['resumo','apagar','areceber','fluxo','despesas','caixa','dre'];
+  var abas=['resumo','apagar','areceber','fluxo','anual','despesas','caixa','dre'];
   var tabs=document.querySelectorAll('.tab');
-  var abaAtiva='resumo';
-  for(var i=0;i<tabs.length;i++){if(tabs[i].classList.contains('active')){abaAtiva=abas[i]||'resumo';break;}}
-  render(abaAtiva);
+  var at='resumo';
+  for(var i=0;i<tabs.length;i++){if(tabs[i].classList.contains('active')){at=abas[i]||'resumo';break;}}
+  render(at);
 });
 render('resumo');
 </script>
