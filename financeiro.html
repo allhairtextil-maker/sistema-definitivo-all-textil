@@ -476,12 +476,17 @@ function getAPagar(d){
     var jaFoi=d.pagamentos.some(function(p){
       return p.despesaId===x.id&&MG.noMesSel(p.data);
     });
+    var jaIgnorado=d.pagamentos.some(function(p){
+      return p.despesaId===x.id&&p.ignorado===true&&MG.noMesSel(p.data);
+    });
     lista.push({
       id:'fixo_'+x.id+'_'+anoAtual+'_'+mesAtual,
       despesaId:x.id,
       desc:x.desc,cat:x.cat,valor:x.valor,
       tipo:'fixo',dataDivida:'',vencimento:venc,
-      status:jaFoi?'pago':'pendente',pago:jaFoi,
+      status:(jaFoi||jaIgnorado)?'pago':'pendente',
+      pago:jaFoi||jaIgnorado,
+      ignorado:jaIgnorado,
     });
   });
 
@@ -701,7 +706,7 @@ function renderAPagar(d){
     return '<div style="padding:10px 18px 6px;font-size:11px;font-weight:800;color:var(--text2);text-transform:uppercase;background:'+g.cor+';letter-spacing:.5px">'+g.titulo+'</div>'+
     g.items.map(function(x){
       var pago=x.pago;
-      var tipoBadge=x.tipo==='fixo'?'<span class="badge badge-fixo">🔁 Fixo</span>':x.tipo==='manual'?'<span class="badge badge-var">📌 Manual</span>':'<span class="badge badge-var">📌 Variável</span>';
+      var tipoBadge=x.tipo==='fixo'?(x.ignorado?'<span class="badge" style="background:#fff3cd;color:#856404">⏭️ Ignorado este mês</span>':'<span class="badge badge-fixo">🔁 Fixo</span>'):x.tipo==='manual'?'<span class="badge badge-var">📌 Manual</span>':'<span class="badge badge-var">📌 Variável</span>';
       if(x.atrasada) tipoBadge+=' <span class="badge" style="background:#fff3cd;color:#856404;font-size:10px">↩ Mês anterior</span>';
       return '<div class="pagar-item" style="background:'+g.cor+'">'+
         '<div class="pagar-dot" style="background:'+(pago?'var(--green)':diasAte(x.vencimento)<0?'var(--red)':diasAte(x.vencimento)===0?'var(--orange)':'var(--blue)')+'"></div>'+
@@ -713,14 +718,15 @@ function renderAPagar(d){
         '<div class="pagar-val" style="color:'+(pago?'var(--green)':'var(--red)')+'">'+fmt(x.valor)+'</div>'+
         '<div class="pagar-actions">'+
           (!pago
-            ? '<button class="btn-sm btn-success" onclick="abrirConfPag(\''+x.id+'\')" >✅ Pagar</button> '+
+            ? (x.ignorado ? '' : '<button class="btn-sm btn-success" onclick="abrirConfPag(\''+x.id+'\')" >✅ Pagar</button> ')+
               (x.tipo==='manual'
                 ? '<button class="btn-sm" style="background:var(--purple);color:#fff" onclick="abrirModalAPagar(\''+x.id+'\')">✏️</button> '+
                   '<button class="btn-sm btn-danger" onclick="excluirAPagar(\''+x.id+'\')">🗑️</button>'
                 : x.tipo==='variavel'
                   ? '<button class="btn-sm" style="background:var(--purple);color:#fff" onclick="editarDespesa(\''+x.despesaId+'\')">✏️</button>'
                   : x.tipo==='fixo'
-                  ? '<button class="btn-sm" style="background:var(--purple);color:#fff" onclick="editarDespesa(\''+x.despesaId+'\')">✏️</button>'
+                  ? '<button class="btn-sm" style="background:var(--purple);color:#fff;margin-right:4px" onclick="editarDespesa(\''+x.despesaId+'\')">✏️</button>'+
+                    '<button class="btn-sm btn-danger" onclick="excluirDespesa(\''+x.despesaId+'\')">🗑️</button>'
                   : '')
             : '<span style="font-size:11px;color:var(--green);font-weight:700">Pago ✓</span>')+
         '</div>'+
@@ -1103,6 +1109,28 @@ function abrirConfPag(id){
   selContas('conf-pag-conta','— De qual conta sai? —');
   abrir('conf-pag');
 }
+// Ignorar despesa fixa neste mês (não paga, mas remove da lista)
+function ignorarFixoMes(id){
+  var item=_mapaAPagar[id];
+  if(!item)return;
+  if(!confirm('Ignorar "'+item.desc+'" neste mes? A despesa continua ativa para os proximos meses.'))return;
+  var d=getData();
+  d.pagamentos.push({
+    id:'pag_'+Date.now(),
+    desc:'[IGNORADO] '+item.desc,
+    cat:item.cat,
+    despesaId:item.despesaId,
+    valor:0,
+    data:hoje(),
+    ignorado:true,
+    contaNome:'—',
+    criadoEm:new Date().toISOString(),
+    _saida:false,
+  });
+  save('allhair_pagamentos',d.pagamentos);
+  render('apagar');render('resumo');
+}
+
 function confirmarPagamento(){
   if(!_cPag)return;
   var data=document.getElementById('conf-pag-data').value;
