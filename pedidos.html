@@ -1997,11 +1997,20 @@
     }
   }
 
+  var _kbMap={};
   function renderKanban(){
     renderPedDash();
     const q=(document.getElementById('search-kanban').value||'').toLowerCase();
-    const filtered=pedidos.filter(p=>!q||p.clienteNome.toLowerCase().includes(q)||(p.numero||'').toLowerCase().includes(q));
-
+    var _mesSel2=typeof MG!=='undefined'?MG.getMesAno():null;
+    var _mgIntK=typeof MG!=='undefined'?MG.intervalo():{inicio:'1900-01-01',fim:'2999-12-31'};
+    var _stAberto=['recebido','producao','pronto','enviado','expedido','nf_enviada','boleto_enviado'];
+    var pedMes=_mesSel2?pedidos.filter(function(p){
+      var ref=p.entrega||p.data||'';
+      if(ref.substring(0,7)===_mesSel2) return true;
+      if(ref && ref < _mgIntK.inicio && _stAberto.includes(p.status)) return true;
+      return false;
+    }):pedidos;
+    const filtered=pedMes.filter(p=>!q||p.clienteNome.toLowerCase().includes(q)||(p.numero||'').toLowerCase().includes(q));
     var _el=document.getElementById('tc-kanban');if(_el)_el.textContent=pedidos.length;
     var _el2=document.getElementById('tc-lista');if(_el2)_el2.textContent=pedidos.length;
     var _el3=document.getElementById('st-total');if(_el3)_el3.textContent=pedidos.length;
@@ -2011,42 +2020,80 @@
     const aReceber=pedidos.filter(p=>p.status!=='finalizado').reduce((s,p)=>s+getSaldo(p),0);
     var _el6=document.getElementById('st-receber');if(_el6)_el6.textContent=fmt(aReceber);
 
+    const STATUS_CFG={
+      recebido:  {label:'Recebido',     cor:'#3b82f6',bg:'#eff6ff',borda:'#bfdbfe'},
+      producao:  {label:'Em Produção',  cor:'#8b5cf6',bg:'#f5f3ff',borda:'#ddd6fe'},
+      pronto:    {label:'Pronto',       cor:'#0d9373',bg:'#ecfdf5',borda:'#a7f3d0'},
+      enviado:   {label:'Enviado',      cor:'#f59e0b',bg:'#fffbeb',borda:'#fde68a'},
+      finalizado:{label:'Finalizado',   cor:'#64748b',bg:'#f8fafc',borda:'#e2e8f0'},
+    };
+
     const colunas=STATUS_ORDER.map(status=>{
+      const cfg=STATUS_CFG[status]||{label:status,cor:'#64748b',bg:'#f8fafc',borda:'#e2e8f0'};
       const cards=filtered.filter(p=>p.status===status).sort((a,b)=>new Date(a.data)-new Date(b.data));
+      const nextStatus=STATUS_ORDER[STATUS_ORDER.indexOf(status)+1];
+
       const cardsHtml=cards.map(p=>{
-        const itensResume=(p.itens||[]).slice(0,2).map(i=>{const pr=produtos.find(x=>x.id===i.prodId);return `${i.qtd}× ${pr?pr.nome:i.prodId}`;}).join('<br>')+((p.itens||[]).length>2?`<br>+${(p.itens||[]).length-2} mais`:'');
-        const canal={WhatsApp:'💬',Email:'📧',Representante:'🤝',Telefone:'📞',Presencial:'🏠'}[p.canal]||'';
-        return `
-          <div class="pedido-card">
-            <div onclick="openDetalhe('${p.id}')" style="cursor:pointer">
-              <div class="pc-num">${p.numero||'—'} ${canal}</div>
-              <div class="pc-cliente">${p.clienteNome||'—'}</div>
-              <div class="pc-items">${itensResume}</div>
-              <div class="pc-footer-card">
-                <span class="pc-valor">${fmt(getTotal(p))}</span>
-                ${p.entrega?`<span class="pc-prazo ${prazoClass(p.entrega)}">${prazoLabel(p.entrega)}</span>`:''}
-              </div>
-              ${getSaldo(p)>0?`<div style="font-size:10px;color:var(--orange);font-weight:600;margin-top:4px">💰 A receber: ${fmt(getSaldo(p))}</div>`:'<div style="font-size:10px;color:var(--green);font-weight:600;margin-top:4px">✓ Quitado</div>'}
-            </div>
-            ${p.status!=='finalizado'?`
-            <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
-              <button onclick="event.stopPropagation();avancarStatus('${p.id}')" style="width:100%;background:var(--purple);color:#fff;border:none;padding:6px 10px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">
-                ${STATUS_EMOJI[STATUS_ORDER[STATUS_ORDER.indexOf(p.status)+1]]||'🏁'} Avançar para ${STATUS_LABEL[STATUS_ORDER[STATUS_ORDER.indexOf(p.status)+1]]||'Concluído'}
-              </button>
-            </div>`:''}
-          </div>`;
+        const total=getTotal(p);
+        const saldo=getSaldo(p);
+        const itens=p.itens||[];
+        const itensTexto=itens.slice(0,2).map(i=>{
+          const pr=produtos.find(x=>x.id===i.prodId);
+          return (i.qtd||0)+'x '+(pr?pr.nome.substring(0,28):i.prodId||'');
+        }).join('<br>')+(itens.length>2?'<br><span style="color:#94a3b8">+'+(itens.length-2)+' item(ns)</span>':'');
+
+        const diasAte=p.entrega?Math.round((new Date(p.entrega+'T00:00')-new Date())/(864e5)):null;
+        const prazoHtml=p.entrega?'<div style="font-size:11px;font-weight:600;color:'+(diasAte<0?'#dc2626':diasAte<=3?'#d97706':'#059669')+'">'+(diasAte<0?('⚠️ '+Math.abs(diasAte)+'d atrasado'):diasAte===0?'🔴 Hoje':('📅 '+diasAte+'d'))+'</div>':'';
+
+        const saldoHtml=saldo>0
+          ?'<div style="font-size:11px;color:#d97706;font-weight:600;margin-top:6px;padding:4px 8px;background:#fffbeb;border-radius:4px">💰 A receber: '+fmt(saldo)+'</div>'
+          :'<div style="font-size:11px;color:#059669;font-weight:600;margin-top:6px">✓ Quitado</div>';
+
+        const nfHtml=p.nf?'<div style="font-size:10px;color:#64748b;margin-top:4px">🧾 NF: '+p.nf+'</div>':'';
+
+        const avancarHtml=status!=='finalizado'&&nextStatus
+          ?'<button class="btn-kbav" data-pid="'+p.id+'" style="width:100%;margin-top:10px;background:'+cfg.cor+';color:#fff;border:none;padding:7px 10px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">'+(STATUS_EMOJI[nextStatus]||'→')+' Avançar para '+(STATUS_LABEL[nextStatus]||'Concluído')+'</button>':'';
+
+        return '<div style="background:#fff;border:1.5px solid '+cfg.borda+';border-radius:10px;padding:14px;margin-bottom:10px;cursor:pointer" onclick="openDetalhe(\'' + p.id + '\')">'
+          +'<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">'
+            +'<div style="font-size:12px;font-weight:700;color:'+cfg.cor+'">'+( p.numero||'—')+'</div>'
+            +prazoHtml
+          +'</div>'
+          +'<div style="font-size:13px;font-weight:700;color:#1e293b;margin-bottom:6px;line-height:1.3">'+(p.clienteNome||'—')+'</div>'
+          +'<div style="font-size:11px;color:#64748b;line-height:1.6;margin-bottom:8px">'+itensTexto+'</div>'
+          +'<div style="display:flex;justify-content:space-between;align-items:center;padding-top:8px;border-top:1px solid #f1f5f9">'
+            +'<div style="font-size:14px;font-weight:700;color:#1e293b">'+fmt(total)+'</div>'
+            +'<div style="font-size:11px;color:#94a3b8">'+(p.formaPgto||'')+'</div>'
+          +'</div>'
+          +saldoHtml+nfHtml+avancarHtml
+        +'</div>';
       }).join('');
-      return `
-        <div class="kanban-col">
-          <div class="kanban-header ${status}">
-            <span>${STATUS_EMOJI[status]} ${STATUS_LABEL[status]}</span>
-            <span class="kanban-count">${cards.length}</span>
-          </div>
-          <div class="kanban-body">${cardsHtml||'<div style="font-size:12px;color:var(--text3);text-align:center;padding:12px">Nenhum</div>'}</div>
-        </div>`;
+
+      const totalCol=cards.reduce((s,p)=>s+getTotal(p),0);
+      const emptyHtml='<div style="text-align:center;padding:24px 12px;color:#94a3b8;font-size:12px;border:1.5px dashed #e2e8f0;border-radius:10px">Nenhum pedido</div>';
+
+      return '<div style="flex:0 0 270px;min-width:270px;display:flex;flex-direction:column">'
+        +'<div style="padding:10px 14px;background:'+cfg.bg+';border:1.5px solid '+cfg.borda+';border-radius:10px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between">'
+          +'<div style="display:flex;align-items:center;gap:8px">'
+            +'<div style="width:10px;height:10px;border-radius:50%;background:'+cfg.cor+'"></div>'
+            +'<span style="font-size:13px;font-weight:700;color:'+cfg.cor+'">'+cfg.label+'</span>'
+          +'</div>'
+          +'<div style="display:flex;align-items:center;gap:8px">'
+            +'<span style="background:'+cfg.cor+';color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px">'+cards.length+'</span>'
+            +(totalCol>0?'<span style="font-size:11px;color:'+cfg.cor+';font-weight:600">'+fmt(totalCol)+'</span>':'')
+          +'</div>'
+        +'</div>'
+        +'<div style="flex:1">'+(cardsHtml||emptyHtml)+'</div>'
+      +'</div>';
     }).join('');
-    document.getElementById('kanban-board').innerHTML=colunas;
+
+    document.getElementById('kanban-board').innerHTML=
+      '<div style="display:flex;gap:14px;overflow-x:auto;padding-bottom:16px;align-items:flex-start">'+colunas+'</div>';
+    document.getElementById('kanban-board').querySelectorAll('.btn-avancar').forEach(function(btn){
+      btn.addEventListener('click',function(e){e.stopPropagation();avancarStatus(this.dataset.pid);});
+    });
   }
+
 
   /* ===== LISTA ===== */
   function renderLista(){
