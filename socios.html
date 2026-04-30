@@ -9,305 +9,11 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="apple-touch-icon" href="/icon-192.png">
 <meta charset="UTF-8">
-<script src="mes-global.js"></script><meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=0.5">
+<script src="mes-global.js"></script>
+<link rel="stylesheet" href="design.css"><meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=0.5">
 <title>ALL HAIR — Socios e Parceiros</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-<style>
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
-:root {
-  --navy:#0f172a;
-  --bg: #f8fafc;
-  --white: #ffffff;
-  --border: #e2e8f0;
-  --border2: #cbd5e1;
-  --accent: #f59e0b;
-  --accent2: #3b82f6;
-  --sidebar: #0f172a;
-  --text: #0f172a;
-  --text2: #64748b;
-  --text3: #94a3b8;
-  --green: #10b981;
-  --green-light: #d1fae5;
-  --red: #ef4444;
-  --red-light: #fee2e2;
-  --orange: #f97316;
-  --orange-light: #ffedd5;
-  --blue: #3b82f6;
-  --blue-light: #dbeafe;
-  --yellow: #f59e0b;
-  --yellow-light: #fef3c7;
-  --pink: #ec4899;
-  --pink-light: #fce7f3;
-  --purple: #8b5cf6;
-  --purple-light: #ede9fe;
-  --teal: #14b8a6;
-  --teal-light: #ccfbf1;
-  --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
-  --shadow-md: 0 4px 6px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.05);
-  --shadow-lg: 0 20px 40px rgba(0,0,0,0.12);
-  --radius: 12px;
-  --radius-sm: 8px;
-}
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { height: 100%; }
-body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: 'DM Sans', system-ui, sans-serif;
-  font-size: 14px;
-  line-height: 1.5;
-  min-height: 100vh;
-  display: flex;
-}
 
-/* ─── SIDEBAR ─── */
-.sidebar {
-  position: fixed; left: 0; top: 0; bottom: 0; width: 240px;
-  background: var(--sidebar);
-  display: flex; flex-direction: column;
-  z-index: 200;
-  border-right: 1px solid rgba(255,255,255,0.06);
-}
-.sb-header {
-  padding: 20px 16px 16px;
-  border-bottom: 1px solid rgba(255,255,255,0.07);
-  display: flex; align-items: center; gap: 12px;
-}
-.sb-header img { height: 38px; width: auto; object-fit: contain; }
-.sb-brand { display: flex; flex-direction: column; }
-.sb-brand-name { font-size: 15px; font-weight: 700; color: #fff; letter-spacing: -.3px; }
-.sb-brand-sub { font-size: 11px; color: rgba(255,255,255,0.3); font-weight: 400; margin-top: 1px; }
-.sb-nav { flex: 1; padding: 12px 10px; display: flex; flex-direction: column; gap: 1px; overflow-y: auto; }
-.sb-nav::-webkit-scrollbar { width: 4px; }
-.sb-nav::-webkit-scrollbar-track { background: transparent; }
-.sb-nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
-.sb-section { font-size: 10px; font-weight: 600; color: rgba(255,255,255,0.25); letter-spacing: 1px; text-transform: uppercase; padding: 14px 12px 5px; }
-.sb-link {
-  display: flex; align-items: center; gap: 10px;
-  padding: 9px 12px; border-radius: 8px;
-  color: rgba(255,255,255,0.45);
-  font-size: 13.5px; font-weight: 500;
-  text-decoration: none;
-  transition: all .15s;
-}
-.sb-link:hover { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.85); }
-.sb-link.active {
-  background: rgba(245,158,11,0.15);
-  color: #fbbf24;
-  border-left: 3px solid #f59e0b;
-  padding-left: 9px;
-}
-.sb-icon { width: 20px; text-align: center; font-size: 15px; flex-shrink: 0; opacity: .7; }
-.sb-link.active .sb-icon { opacity: 1; }
-.sb-footer {
-  padding: 14px 16px;
-  border-top: 1px solid rgba(255,255,255,0.07);
-  display: flex; flex-direction: column; gap: 10px;
-}
-.sb-user {
-  display: flex; align-items: center; gap: 10px;
-  padding: 8px 10px; background: rgba(255,255,255,0.06);
-  border-radius: 8px;
-}
-.sb-avatar {
-  width: 30px; height: 30px; border-radius: 50%;
-  background: linear-gradient(135deg,#f59e0b,#ec4899);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 13px; font-weight: 700; color: #fff; flex-shrink: 0;
-}
-.sb-user-info { flex: 1; min-width: 0; }
-.sb-user-name { font-size: 13px; font-weight: 600; color: #fff; }
-.sb-user-status { font-size: 10px; color: rgba(255,255,255,0.3); display: flex; align-items: center; gap: 4px; }
-.sb-user-status::before { content: ''; width: 6px; height: 6px; background: #10b981; border-radius: 50%; display: inline-block; }
-.sb-time-box { text-align: center; }
-.sb-time { font-size: 22px; font-weight: 700; color: #fff; font-family: 'DM Mono', monospace; letter-spacing: 1px; }
-.sb-date-text { font-size: 11px; color: rgba(255,255,255,0.3); margin-top: 2px; }
 
-/* ─── MAIN ─── */
-.main { margin-left: 240px; flex: 1; display: flex; flex-direction: column; min-height: 100vh; overflow-x: hidden; }
-.topbar {
-  background: var(--white);
-  border-bottom: 1px solid var(--border);
-  padding: 0 28px;
-  height: 58px;
-  display: flex; align-items: center; justify-content: space-between;
-  position: sticky; top: 0; z-index: 100;
-  box-shadow: var(--shadow);
-}
-.tb-left { display: flex; align-items: center; gap: 8px; }
-.tb-back { color: var(--text3); text-decoration: none; font-size: 13px; font-weight: 500; }
-.tb-back:hover { color: var(--text2); }
-.tb-sep { color: var(--border2); }
-.tb-title { font-size: 16px; font-weight: 700; color: var(--text); }
-.tb-right { display: flex; align-items: center; gap: 12px; }
-.tb-datetime { text-align: right; }
-.tb-time { font-size: 15px; font-weight: 700; color: var(--text); font-family: 'DM Mono', monospace; }
-.tb-date { font-size: 11px; color: var(--text3); font-weight: 400; }
-.page-content { padding: 24px 28px; flex: 1; }
-
-/* ─── COMPONENTS ─── */
-.btn {
-  display: inline-flex; align-items: center; gap: 7px;
-  padding: 9px 18px; border-radius: var(--radius-sm);
-  font-family: inherit; font-size: 13.5px; font-weight: 600;
-  cursor: pointer; border: none; transition: all .15s;
-  white-space: nowrap;
-}
-.btn-primary { background: var(--accent); color: #fff; box-shadow: 0 2px 8px rgba(245,158,11,0.35); }
-.btn-primary:hover { background: #e08d00; transform: translateY(-1px); }
-.btn-secondary { background: var(--white); color: var(--text2); border: 1.5px solid var(--border); }
-.btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
-.btn-danger { background: var(--red); color: #fff; }
-.btn-danger:hover { background: #dc2626; }
-.btn-success { background: var(--green); color: #fff; }
-.btn-success:hover { background: #059669; }
-.btn-sm { padding: 6px 12px; font-size: 12.5px; }
-
-.card {
-  background: var(--white);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  overflow: hidden;
-}
-.card-header {
-  padding: 16px 20px;
-  border-bottom: 1px solid var(--border);
-  display: flex; align-items: center; justify-content: space-between;
-}
-.card-title { font-size: 14px; font-weight: 700; color: var(--text); }
-.card-body { padding: 20px; }
-.card-link { font-size: 12.5px; font-weight: 600; color: var(--accent); text-decoration: none; }
-.card-link:hover { color: #e08d00; }
-
-.badge {
-  display: inline-flex; align-items: center;
-  padding: 3px 9px; border-radius: 20px;
-  font-size: 11px; font-weight: 600;
-}
-.badge-green { background: var(--green-light); color: #059669; }
-.badge-red { background: var(--red-light); color: #dc2626; }
-.badge-orange { background: var(--orange-light); color: #ea580c; }
-.badge-yellow { background: var(--yellow-light); color: #d97706; }
-.badge-blue { background: var(--blue-light); color: #2563eb; }
-.badge-gray { background: #f1f5f9; color: #64748b; }
-
-.field { display: flex; flex-direction: column; gap: 5px; }
-.field label { font-size: 12px; font-weight: 600; color: var(--text2); }
-.field input, .field select, .field textarea {
-  background: #f8fafc; border: 1.5px solid var(--border);
-  color: var(--text); padding: 9px 13px;
-  border-radius: var(--radius-sm);
-  font-family: inherit; font-size: 13.5px; font-weight: 400;
-  outline: none; transition: all .15s; width: 100%;
-}
-.field input:focus, .field select:focus, .field textarea:focus {
-  border-color: var(--accent); background: var(--white);
-  box-shadow: 0 0 0 3px rgba(245,158,11,0.12);
-}
-.field textarea { resize: vertical; min-height: 70px; }
-.field-hint { font-size: 11px; color: var(--text3); margin-top: 2px; }
-
-.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-.form-full { grid-column: 1/-1; }
-
-.section-label {
-  font-size: 11px; font-weight: 700; letter-spacing: .8px;
-  text-transform: uppercase; color: var(--accent);
-  margin: 20px 0 12px; padding-bottom: 8px;
-  border-bottom: 2px solid #fef3c7;
-}
-.section-label:first-child { margin-top: 0; }
-
-table { width: 100%; border-collapse: collapse; }
-th {
-  padding: 10px 16px; text-align: left;
-  font-size: 11px; font-weight: 600; letter-spacing: .5px;
-  text-transform: uppercase; color: var(--text3);
-  background: #f8fafc; border-bottom: 1px solid var(--border);
-}
-td { padding: 12px 16px; border-bottom: 1px solid var(--border); font-size: 13.5px; vertical-align: middle; }
-tr:last-child td { border-bottom: none; }
-tbody tr:hover td { background: #fffbeb; }
-
-.overlay {
-  position: fixed; inset: 0;
-  background: rgba(15,23,42,0.6); backdrop-filter: blur(4px);
-  z-index: 300; display: none; align-items: flex-start;
-  justify-content: center; padding: 24px 16px; overflow-y: auto;
-}
-.overlay.open { display: flex; }
-.modal {
-  background: var(--white); border: 1px solid var(--border);
-  border-radius: 16px; width: 100%; max-width: 560px;
-  animation: slideUp .2s ease; margin: auto;
-  box-shadow: var(--shadow-lg);
-}
-@keyframes slideUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
-.modal-header {
-  padding: 20px 24px 16px; border-bottom: 1px solid var(--border);
-  display: flex; align-items: center; justify-content: space-between;
-  position: sticky; top: 0; background: var(--white); z-index: 10;
-}
-.modal-header h2 { font-size: 17px; font-weight: 700; }
-.modal-close {
-  width: 32px; height: 32px; background: #f1f5f9;
-  border: 1px solid var(--border); border-radius: 8px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 18px; color: var(--text2); cursor: pointer;
-}
-.modal-close:hover { background: var(--red-light); border-color: var(--red); color: var(--red); }
-.modal-body { padding: 22px 24px; }
-.modal-footer {
-  padding: 16px 24px; border-top: 1px solid var(--border);
-  display: flex; justify-content: flex-end; gap: 10px;
-  background: #f8fafc; border-radius: 0 0 16px 16px;
-}
-
-.tabs-bar {
-  display: flex; gap: 2px; padding: 0 28px;
-  background: var(--white); border-bottom: 1px solid var(--border);
-  overflow-x: auto;
-}
-.tab {
-  padding: 13px 16px; font-size: 13px; font-weight: 600;
-  color: var(--text2); border-bottom: 3px solid transparent;
-  margin-bottom: -1px; cursor: pointer; white-space: nowrap;
-  transition: all .15s;
-}
-.tab:hover { color: var(--text); }
-.tab.active { color: var(--accent); border-bottom-color: var(--accent); }
-
-main { padding: 24px 28px; }
-.topbar-actions { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
-.page-title { font-size: 21px; font-weight: 700; letter-spacing: -.5px; }
-.spacer { flex: 1; }
-.empty { padding: 48px; text-align: center; color: var(--text3); font-size: 13px; }
-
-/* TABS content */
-.tab-content { display: none; }
-.tab-content.active { display: block; }
-
-@media(max-width:900px) {
-  .sidebar { width: 56px; }
-  .sb-header .sb-brand, .sb-section, .sb-link span:not(.sb-icon),
-  .sb-footer .sb-user-info, .sb-date-text, .sb-brand-sub { display: none; }
-  .sb-header { padding: 14px 8px; justify-content: center; }
-  .sb-link { padding: 9px; justify-content: center; }
-  .sb-icon { margin: 0; }
-  .sb-user { justify-content: center; }
-  .sb-user-info { display: none; }
-  .sb-time { font-size: 13px; }
-  .main { margin-left: 56px; }
-  .page-content, main { padding: 16px; }
-  .topbar { padding: 0 16px; }
-  .form-grid { grid-template-columns: 1fr; }
-  .tabs-bar { padding: 0 16px; }
-}
-
-function fmt(v,d=2){return 'R$ '+Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:d,maximumFractionDigits:d});} function mesNome(d){return d.toLocaleDateString('pt-BR',{month:'long',year:'numeric'}).replace(/^\w/,c=>c.toUpperCase());}
-@media(max-width:768px){.sidebar{display:none!important;}.main{margin-left:0!important;padding-bottom:70px;}#mn{display:flex!important;}.topbar{padding:0 14px!important;height:52px!important;}.tb-datetime{display:none!important;}.page-content,main{padding:14px!important;}.form-grid{grid-template-columns:1fr!important;}}@media(min-width:769px){#mn{display:none!important;}}
-</style>
 </head>
 <body>
 <script src="acesso.js"></script>
@@ -405,7 +111,7 @@ function fmt(v,d=2){return 'R$ '+Number(v||0).toLocaleString('pt-BR',{minimumFra
 <main>
   <div style="margin-bottom:20px">
     <h1 class="page-title">💵 O Que Vai pro Bolso</h1>
-    <div style="font-size:13px;color:var(--text2);margin-top:4px">Resultado real por sócio — baseado no lucro do mês</div>
+    <div style="font-size:13px;color:var(--ink-2);margin-top:4px">Resultado real por sócio — baseado no lucro do mês</div>
   </div>
   <div id="bolso-kpis" style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px"></div>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
@@ -433,16 +139,16 @@ function fmt(v,d=2){return 'R$ '+Number(v||0).toLocaleString('pt-BR',{minimumFra
 </div>
 <div class="tab-content active" id="tab-resumo"><main>
 <div class="topbar-actions" style="margin-bottom:16px"><div class="page-title">Distribuicao de Lucros</div><div class="spacer"></div>
-<div style="display:flex;align-items:center;gap:8px;background:var(--white);border:1px solid var(--border);border-radius:8px;padding:7px 14px">
-<button onclick="mesAnterior()" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--text2)">&#8249;</button>
+<div style="display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:7px 14px">
+<button onclick="mesAnterior()" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--ink-2)">&#8249;</button>
 <div id="mes-label" style="font-size:14px;font-weight:800;min-width:140px;text-align:center"></div>
-<button onclick="mesProximo()" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--text2)">&#8250;</button>
+<button onclick="mesProximo()" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--ink-2)">&#8250;</button>
 </div>
-<button class="btn btn-success" onclick="fecharMes()">Fechar Mes</button></div>
+<button class="btn btn-green" onclick="fecharMes()">Fechar Mes</button></div>
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
-<div style="background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow)">
+<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow)">
 <div style="font-size:13px;font-weight:800;margin-bottom:14px">Base de Calculo</div><div id="resumo-calculo"></div></div>
-<div style="background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow)">
+<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow)">
 <div style="font-size:13px;font-weight:800;margin-bottom:14px">Distribuicao por Pessoa</div><div id="resumo-distribuicao"></div></div>
 </div>
 <div style="font-size:14px;font-weight:800;margin-bottom:14px">Detalhamento por Responsavel</div>
@@ -462,7 +168,7 @@ function fmt(v,d=2){return 'R$ '+Number(v||0).toLocaleString('pt-BR',{minimumFra
 <div class="field" style="margin-bottom:12px"><label>Valor (R$) *</label><input type="number" id="saque-valor" placeholder="0,00" step="0.01"></div>
 <div class="field" style="margin-bottom:12px"><label>Data *</label><input type="date" id="saque-data"></div>
 <div class="field" style="margin-bottom:12px"><label>Observacoes</label><input type="text" id="saque-obs"></div>
-<div id="saque-saldo-info" style="background:var(--bg);border-radius:8px;padding:10px;font-size:12px;font-weight:600;color:var(--text2);margin-bottom:14px"></div>
+<div id="saque-saldo-info" style="background:var(--surface-2);border-radius:8px;padding:10px;font-size:12px;font-weight:600;color:var(--ink-2);margin-bottom:14px"></div>
 <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="registrarSaque()">Registrar Saque</button></div>
 <div class="card card-body">
 <div style="font-size:15px;font-weight:800;margin-bottom:16px">Registrar Aporte</div>
@@ -470,7 +176,7 @@ function fmt(v,d=2){return 'R$ '+Number(v||0).toLocaleString('pt-BR',{minimumFra
 <div class="field" style="margin-bottom:12px"><label>Valor (R$) *</label><input type="number" id="aporte-valor" placeholder="0,00" step="0.01"></div>
 <div class="field" style="margin-bottom:12px"><label>Data *</label><input type="date" id="aporte-data"></div>
 <div class="field" style="margin-bottom:16px"><label>Descricao</label><input type="text" id="aporte-obs"></div>
-<button class="btn btn-success" style="width:100%;justify-content:center" onclick="registrarAporte()">Registrar Aporte</button></div>
+<button class="btn btn-green" style="width:100%;justify-content:center" onclick="registrarAporte()">Registrar Aporte</button></div>
 </div></main></div>
 <div class="tab-content" id="tab-historico"><main>
 <div class="topbar-actions" style="margin-bottom:16px"><div class="page-title">Historico</div></div>
@@ -488,7 +194,7 @@ function fmt(v,d=2){return 'R$ '+Number(v||0).toLocaleString('pt-BR',{minimumFra
 <div class="field form-full"><label>WhatsApp / Email</label><input type="text" id="s-contato"></div>
 </div>
 <div class="section-label">Regra de participacao</div>
-<div id="regra-info" style="background:var(--bg);border-radius:8px;padding:14px;font-size:13px;color:var(--text2);line-height:1.6"></div>
+<div id="regra-info" style="background:var(--surface-2);border-radius:8px;padding:14px;font-size:13px;color:var(--ink-2);line-height:1.6"></div>
 </div>
 <div class="modal-footer"><button class="btn btn-secondary" onclick="closeSocio()">Cancelar</button><button class="btn btn-primary" onclick="salvarSocio()">Salvar</button></div>
 </div></div>
@@ -673,12 +379,12 @@ function switchTab(t){document.querySelectorAll('.tab').forEach(x=>x.classList.r
         </span>
         <div style="text-align:right">
           <div class="resumo-val" style="color:var(--purple)">${fmt(valor)}</div>
-          <div style="font-size:10px;color:var(--text3)">Acumulado: ${fmt(saldo)}</div>
+          <div style="font-size:10px;color:var(--ink-3)">Acumulado: ${fmt(saldo)}</div>
         </div>
       </div>`;
     }).join('');
     document.getElementById('resumo-distribuicao').innerHTML = distHtml ||
-      '<div style="font-size:13px;color:var(--text3);padding:12px">Cadastre os sócios primeiro.</div>';
+      '<div style="font-size:13px;color:var(--ink-3);padding:12px">Cadastre os sócios primeiro.</div>';
 
     // Detalhe por responsável
     const el = document.getElementById('detalhe-resp');
@@ -693,21 +399,21 @@ function switchTab(t){document.querySelectorAll('.tab').forEach(x=>x.classList.r
       const custoProp = calc.custoTotal*proporcao;
       const despProp  = calc.despTotal*proporcao;
       const lucroProp = data.fat-custoProp-despProp;
-      return `<div style="background:var(--white);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:12px;overflow:hidden;box-shadow:var(--shadow-sm)">
+      return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:12px;overflow:hidden;box-shadow:var(--shadow-sm)">
         <div style="padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;background:linear-gradient(135deg,rgba(0,0,0,0.02),rgba(0,0,0,0))">
           <div style="width:32px;height:32px;border-radius:50%;background:${cor};color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px">${resp.charAt(0).toUpperCase()}</div>
           <div style="flex:1"><div style="font-size:14px;font-weight:800">Clientes do ${resp.charAt(0).toUpperCase()+resp.slice(1)}</div>
-          <div style="font-size:11px;color:var(--text2)">Divide entre: ${partic}</div></div>
+          <div style="font-size:11px;color:var(--ink-2)">Divide entre: ${partic}</div></div>
           <div style="text-align:right">
             <div style="font-size:15px;font-weight:800;color:var(--pink)">${fmt(data.fat)}</div>
-            <div style="font-size:11px;color:var(--text3)">${data.peds.length} pedido(s)</div>
+            <div style="font-size:11px;color:var(--ink-3)">${data.peds.length} pedido(s)</div>
           </div>
         </div>
         <div style="display:grid;grid-template-columns:repeat(4,1fr);padding:12px 18px;gap:8px;font-size:12px">
-          <div><div style="font-weight:600;color:var(--text2)">Faturamento</div><div style="font-weight:800;color:var(--green)">${fmt(data.fat)}</div></div>
-          <div><div style="font-weight:600;color:var(--text2)">Custo prod.</div><div style="font-weight:800;color:var(--red)">(${fmt(custoProp)})</div></div>
-          <div><div style="font-weight:600;color:var(--text2)">Desp. proporc.</div><div style="font-weight:800;color:var(--red)">(${fmt(despProp)})</div></div>
-          <div><div style="font-weight:600;color:var(--text2)">Lucro líquido</div><div style="font-weight:800;color:${lucroProp>=0?'var(--purple)':'var(--red)'}">${fmt(lucroProp)}</div></div>
+          <div><div style="font-weight:600;color:var(--ink-2)">Faturamento</div><div style="font-weight:800;color:var(--green)">${fmt(data.fat)}</div></div>
+          <div><div style="font-weight:600;color:var(--ink-2)">Custo prod.</div><div style="font-weight:800;color:var(--red)">(${fmt(custoProp)})</div></div>
+          <div><div style="font-weight:600;color:var(--ink-2)">Desp. proporc.</div><div style="font-weight:800;color:var(--red)">(${fmt(despProp)})</div></div>
+          <div><div style="font-weight:600;color:var(--ink-2)">Lucro líquido</div><div style="font-weight:800;color:${lucroProp>=0?'var(--purple)':'var(--red)'}">${fmt(lucroProp)}</div></div>
         </div>
         <div style="padding:0 18px 12px;display:flex;gap:6px;flex-wrap:wrap">
           ${getParticipantes(resp).map(id=>{
@@ -745,7 +451,7 @@ function switchTab(t){document.querySelectorAll('.tab').forEach(x=>x.classList.r
           <div class="socio-saldo" style="color:${saldo>=0?'var(--green)':'var(--red)'}">${fmt(saldo)}</div>
           <div class="socio-stats">
             <div class="socio-stat"><div class="socio-stat-num" style="color:var(--purple)">${fmt(competencia)}</div><div class="socio-stat-label">Este mês</div></div>
-            <div class="socio-stat"><div class="socio-stat-num" style="color:var(--orange)">${fmt(totalSacado)}</div><div class="socio-stat-label">Total sacado</div></div>
+            <div class="socio-stat"><div class="socio-stat-num" style="color:var(--amber)">${fmt(totalSacado)}</div><div class="socio-stat-label">Total sacado</div></div>
             <div class="socio-stat"><div class="socio-stat-num" style="color:var(--blue)">${fmt(totalAportado)}</div><div class="socio-stat-label">Total aportado</div></div>
             <div class="socio-stat"><div class="socio-stat-num">${movimentos.filter(m=>m.socioId===s.id&&m.tipo==='saque').length}</div><div class="socio-stat-label">Saques realizados</div></div>
           </div>
@@ -840,7 +546,7 @@ function switchTab(t){document.querySelectorAll('.tab').forEach(x=>x.classList.r
     tbody.innerHTML = sorted.map(m=>{
       const s = socios.find(x=>x.id===m.socioId);
       const tipoLabel={credito:'✅ Crédito',saque:'💸 Saque',aporte:'💰 Aporte'}[m.tipo]||m.tipo;
-      const cor={credito:'var(--green)',saque:'var(--orange)',aporte:'var(--blue)'}[m.tipo]||'var(--text)';
+      const cor={credito:'var(--green)',saque:'var(--amber)',aporte:'var(--blue)'}[m.tipo]||'var(--ink)';
       return `<tr>
         <td>${m.data?new Date(m.data+' 00:00').toLocaleDateString('pt-BR'):'—'}</td>
         <td style="font-weight:700;display:flex;align-items:center;gap:6px">
@@ -849,8 +555,8 @@ function switchTab(t){document.querySelectorAll('.tab').forEach(x=>x.classList.r
         </td>
         <td><span style="font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;background:${cor}22;color:${cor}">${tipoLabel}</span></td>
         <td style="font-weight:800;color:${m.tipo==='saque'?'var(--red)':cor}">${m.tipo==='saque'?'-':'+'} ${fmt(m.valor)}</td>
-        <td style="font-size:12px;color:var(--text2)">${m.mesRef||'—'}</td>
-        <td style="font-size:12px;color:var(--text2)">${m.obs||'—'}</td>
+        <td style="font-size:12px;color:var(--ink-2)">${m.mesRef||'—'}</td>
+        <td style="font-size:12px;color:var(--ink-2)">${m.obs||'—'}</td>
         <td><button class="btn-icon danger" onclick="delMov('${m.id}')">🗑️</button></td>
       </tr>`;
     }).join('');
