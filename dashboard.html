@@ -255,7 +255,17 @@
     const getSaldo=p=>{const t=(p.itens||[]).reduce((s,i)=>s+Number(i.total||0),0);return Math.max(0,t-Number(p.entrada||0));};
     const filaAberta=pedidos.filter(p=>['recebido','producao','pronto'].includes(p.status));
     const pedAtraso=filaAberta.filter(p=>p.entrega&&new Date(p.entrega+' 00:00')<now);
-    const totalReceber=pedidos.filter(p=>p.status!=='finalizado').reduce((s,p)=>s+getSaldo(p),0);
+    // A Receber do mês: boletos com vencimento no mês atual (ou atrasados)
+    const hoje2=now.toISOString().split('T')[0];
+    const fimMes=new Date(ano,mes+1,0).toISOString().split('T')[0];
+    const totalReceber=pedidos.filter(p=>{
+      if(p.status==='finalizado'||getSaldo(p)<=0) return false;
+      // Usa vencimento do boleto se existir, senão data de entrega
+      var venc=p.vencimento||p.entrega||'';
+      if(!venc) return false;
+      // Inclui: vence até o fim do mês atual (inclui atrasados)
+      return venc<=fimMes;
+    }).reduce((s,p)=>s+getSaldo(p),0);
     const totalPagarForn=compras.filter(c=>c.statusPgto==='pendente').reduce((s,c)=>s+Number(c.valor||0),0);
     const totalPagarFacc=envios.filter(e=>e.status==='devolvido'&&!e.pago).reduce((s,e)=>s+Number(e.valor||0),0);
     const totalPagar=totalPagarForn+totalPagarFacc;
@@ -396,7 +406,7 @@
         <div class="kpi-top"><span class="kpi-icon">↑</span><span class="kpi-badge ${totalReceber<5000?'ok':'warn'}">${totalReceber===0?'Zerado':'Em aberto'}</span></div>
         <div class="kpi-val" style="color:var(--green)">${fmtK(totalReceber)}</div>
         <div class="kpi-label">A Receber</div>
-        <div class="kpi-sub">${pedidos.filter(p=>p.status!=='finalizado'&&getSaldo(p)>0).length} pedido(s)</div>
+        <div class="kpi-sub">${pedidos.filter(p=>getSaldo(p)>0&&(p.vencimento||p.entrega||'')<=fimMes&&p.status!=='finalizado').length} boleto(s) no mês</div>
       </div>
       <div class="kpi r">
         <div class="kpi-top"><span class="kpi-icon">↓</span><span class="kpi-badge ${totalPagar===0?'ok':'warn'}">${totalPagar===0?'Em dia':'Pendente'}</span></div>
@@ -1091,7 +1101,17 @@
     const getSaldo=p=>{const t=(p.itens||[]).reduce((s,i)=>s+Number(i.total||0),0);return Math.max(0,t-Number(p.entrada||0));};
     const filaAberta=pedidos.filter(p=>['recebido','producao','pronto'].includes(p.status));
     const pedAtraso=filaAberta.filter(p=>p.entrega&&new Date(p.entrega+' 00:00')<now);
-    const totalReceber=pedidos.filter(p=>p.status!=='finalizado').reduce((s,p)=>s+getSaldo(p),0);
+    // A Receber do mês: boletos com vencimento no mês atual (ou atrasados)
+    const hoje2=now.toISOString().split('T')[0];
+    const fimMes=new Date(ano,mes+1,0).toISOString().split('T')[0];
+    const totalReceber=pedidos.filter(p=>{
+      if(p.status==='finalizado'||getSaldo(p)<=0) return false;
+      // Usa vencimento do boleto se existir, senão data de entrega
+      var venc=p.vencimento||p.entrega||'';
+      if(!venc) return false;
+      // Inclui: vence até o fim do mês atual (inclui atrasados)
+      return venc<=fimMes;
+    }).reduce((s,p)=>s+getSaldo(p),0);
     const totalPagarForn=compras.filter(c=>c.statusPgto==='pendente').reduce((s,c)=>s+Number(c.valor||0),0);
     const totalPagarFacc=envios.filter(e=>e.status==='devolvido'&&!e.pago).reduce((s,e)=>s+Number(e.valor||0),0);
     const totalPagar=totalPagarForn+totalPagarFacc;
@@ -1244,7 +1264,7 @@
         <div class="kpi-top"><span class="kpi-icon">↑</span><span class="kpi-badge ${totalReceber<5000?'ok':'warn'}">${totalReceber===0?'Zerado':'Em aberto'}</span></div>
         <div class="kpi-val" style="color:var(--green)">${fmtK(totalReceber)}</div>
         <div class="kpi-label">A Receber</div>
-        <div class="kpi-sub">${pedidos.filter(p=>p.status!=='finalizado'&&getSaldo(p)>0).length} pedido(s)</div>
+        <div class="kpi-sub">${pedidos.filter(p=>getSaldo(p)>0&&(p.vencimento||p.entrega||'')<=fimMes&&p.status!=='finalizado').length} boleto(s) no mês</div>
       </div>
       <div class="kpi r">
         <div class="kpi-top"><span class="kpi-icon">↓</span><span class="kpi-badge ${totalPagar===0?'ok':'warn'}">${totalPagar===0?'Em dia':'Pendente'}</span></div>
