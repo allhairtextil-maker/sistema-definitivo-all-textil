@@ -145,6 +145,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
       <button class="btn btn-orange" onclick="abrirModalAPagar()">+ A Pagar</button>
       <button class="btn" style="background:var(--red);color:#fff" onclick="abrirModalDespesa()">+ Despesa</button>
       <button class="btn btn-gray" onclick="abrirModalConta()">🏦 Conta</button>
+      <button class="btn btn-gray" onclick="exportarDados()" title="Exportar dados para análise">📤 Exportar</button>
     </div>
   </div>
 
@@ -1287,6 +1288,81 @@ function excluirConta(id){
   var d=getData();
   save('allhair_contas_bancarias',d.contas.filter(function(c){return c.id!==id;}));
   render('caixa');
+}
+
+// ============================================================
+// EXPORTAR DADOS
+// ============================================================
+function exportarDados(){
+  var d = getData();
+  var n = new Date();
+  var mesNome = n.toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
+
+  // Montar relatório completo
+  var relatorio = {
+    exportadoEm: n.toISOString(),
+    empresa: 'ALL TEXTIL CONFECCOES LTDA',
+    mesReferencia: mesNome,
+
+    resumo: {
+      saldoCaixa: d.contas.reduce(function(s,c){return s+Number(c.saldo||0);},0),
+      totalContas: d.contas.length,
+      totalAPagar: getAPagar(d).filter(function(x){return !x.pago;}).reduce(function(s,x){return s+Number(x.valor||0);},0),
+      totalAReceber: getBoletosPendentes(d).reduce(function(s,r){return s+Number(r.valor||0);},0),
+      despesasFixasMensais: d.despesas.filter(function(x){return x.tipo==='fixo'&&x.ativo!==false;}).reduce(function(s,x){return s+Number(x.valor||0);},0),
+      totalPedidos: d.pedidos.length,
+      pedidosAtivos: d.pedidos.filter(function(p){return p.status!=='cancelado'&&p.status!=='finalizado';}).length,
+    },
+
+    contas: d.contas.map(function(c){return {banco:c.banco,tipo:c.tipo,saldo:c.saldo};}),
+
+    despesasFixas: d.despesas.filter(function(x){return x.tipo==='fixo';}).map(function(x){
+      return {desc:x.desc,cat:x.cat,valor:x.valor,dia:x.dia,ativo:x.ativo!==false};
+    }),
+
+    despesasVariaveis: d.despesas.filter(function(x){return x.tipo==='variavel';}).map(function(x){
+      return {desc:x.desc,cat:x.cat,valor:x.valor,vencimento:x.venc||x.vencimento||x.dataavulso,status:x.status,pagto:x.pagto};
+    }),
+
+    contasAPagar: getAPagar(d).filter(function(x){return !x.pago;}).map(function(x){
+      return {desc:x.desc,cat:x.cat,tipo:x.tipo,valor:x.valor,vencimento:x.vencimento,dataDivida:x.dataDivida||''};
+    }),
+
+    aReceber: getBoletosPendentes(d).map(function(r){
+      return {desc:r.desc,cliente:r.clienteNome,valor:r.valor,vencimento:r.vencimento,tipo:r.tipo||'boleto'};
+    }),
+
+    pedidos: d.pedidos.map(function(p){
+      var total=(p.itens||[]).reduce(function(s,i){return s+Number(i.total||0);},0);
+      return {
+        numero:p.numero,cliente:p.clienteNome,status:p.status,
+        data:p.data,entrega:p.entrega,formaPgto:p.formaPgto,
+        total:total,pgtoStatus:p.pgtoStatus||'pendente',
+      };
+    }),
+
+    recebimentosUltimos90dias: d.recebimentos.filter(function(r){
+      return r.data && new Date(r.data+'T00:00') > new Date(Date.now()-90*864e5);
+    }).map(function(r){return {desc:r.desc,cliente:r.clienteNome,valor:r.valor,data:r.data,conta:r.contaNome};}),
+
+    pagamentosUltimos90dias: d.pagamentos.filter(function(p){
+      return p.data && new Date(p.data+'T00:00') > new Date(Date.now()-90*864e5) && !p.ignorado;
+    }).map(function(p){return {desc:p.desc,cat:p.cat,valor:p.valor,data:p.data,conta:p.contaNome};}),
+  };
+
+  // Gerar arquivo JSON
+  var json = JSON.stringify(relatorio, null, 2);
+  var blob = new Blob([json], {type:'application/json'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'allhair-financeiro-'+n.toISOString().split('T')[0]+'.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+
+  alert('✅ Dados exportados!\n\nArquivo: allhair-financeiro-'+n.toISOString().split('T')[0]+'.json\n\nEnvie esse arquivo para análise do fluxo de caixa.');
 }
 
 // ============================================================
