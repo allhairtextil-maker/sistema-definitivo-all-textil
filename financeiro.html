@@ -66,7 +66,7 @@
 .venc-hoje{background:#fef3c7;color:#92400e;}
 .venc-ok{background:#ecfdf5;color:#065f46;}
 .venc-none{background:#f3f4f6;color:#6b7280;}
-.item-valor{font-family:'DM Mono',monospace;font-size:14px;font-weight:700;white-space:nowrap;}
+.item-valor{font-family:DM Mono,monospace;font-size:14px;font-weight:700;white-space:nowrap;}
 .item-valor.red{color:#dc2626;}
 .item-valor.green{color:#059669;}
 .item-valor.ink{color:#0f1117;}
@@ -103,7 +103,7 @@
 .dre-row.positive .dre-val{color:#059669;}
 .dre-row.negative .dre-val{color:#dc2626;}
 .dre-label{color:#374151;}
-.dre-val{font-family:'DM Mono',monospace;font-weight:700;}
+.dre-val{font-family:DM Mono,monospace;font-weight:700;}
 
 /* ── Table ── */
 .fin-table{width:100%;border-collapse:collapse;}
@@ -216,6 +216,9 @@
     </div>
     <div class="fin-tab" onclick="aba('caixa')" data-tab="caixa">
       <span class="tab-icon">🏦</span> Contas
+    </div>
+    <div class="fin-tab" onclick="aba('extrato')" data-tab="extrato">
+      <span class="tab-icon">📒</span> Extrato
     </div>
   </div>
 
@@ -385,6 +388,56 @@
     </div>
   </div>
 
+  <!-- ── EXTRATO ── -->
+  <div class="fin-pane" id="tab-extrato">
+
+    <!-- Filtros e busca -->
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;flex-wrap:wrap;">
+      <input id="extrato-busca" type="text" placeholder="🔍 Buscar descrição, cliente..." 
+        oninput="renderExtrato(getData())"
+        style="padding:8px 14px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:13px;font-family:inherit;color:#0f1117;outline:none;min-width:240px;flex:1;">
+      <select id="extrato-tipo" onchange="renderExtrato(getData())"
+        style="padding:8px 12px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:13px;font-family:inherit;color:#374151;background:#fff;outline:none;">
+        <option value="">Todos os tipos</option>
+        <option value="recebido">✅ Recebidos</option>
+        <option value="areceber">💚 A Receber</option>
+        <option value="pago">🔴 Pagamentos</option>
+        <option value="apagar">⚠️ A Pagar</option>
+      </select>
+      <button onclick="exportarExtrato()" class="btn btn-ghost btn-sm">📥 Exportar CSV</button>
+    </div>
+
+    <!-- Totais rápidos -->
+    <div id="extrato-totais" style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px;"></div>
+
+    <!-- Tabela extrato -->
+    <div class="section-card">
+      <div class="sc-head">
+        <span class="sc-title">📒 Extrato Completo</span>
+        <span id="extrato-count" style="font-size:12px;color:#7c8299;font-weight:500;"></span>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="fin-table" style="min-width:800px;">
+          <thead>
+            <tr>
+              <th style="width:100px">Data</th>
+              <th>Descrição</th>
+              <th>Categoria</th>
+              <th>Tipo</th>
+              <th style="width:110px">Situação</th>
+              <th style="text-align:right;width:130px">Valor</th>
+              <th style="text-align:right;width:130px">Saldo</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-extrato"></tbody>
+        </table>
+        <div id="empty-extrato" style="display:none;padding:48px;text-align:center;color:#9ca3af;font-size:13px;">
+          Nenhum lançamento encontrado
+        </div>
+      </div>
+    </div>
+  </div>
+
 </div><!-- /main -->
 </div><!-- /layout -->
 
@@ -547,6 +600,7 @@ function render(w){
   if(w==='despesas')renderDespesas(d);
   if(w==='caixa')   renderCaixa(d);
   if(w==='dre')     renderDRE(d);
+  if(w==='extrato')  renderExtrato(d);
 }
 
 // ── CORE DATA FUNCTIONS ──────────────────────────────────────
@@ -1352,6 +1406,207 @@ function exportarDados(){
   a.href=url;a.download='allhair-financeiro-'+n.toISOString().split('T')[0]+'.json';
   document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
   alert('Dados exportados!');
+}
+
+// ── EXTRATO ──────────────────────────────────────────────────
+function renderExtrato(d){
+  var busca=(document.getElementById('extrato-busca')||{value:''}).value.toLowerCase();
+  var filtroTipo=(document.getElementById('extrato-tipo')||{value:''}).value;
+  var mg=getMgInt();
+  var linhas=[];
+
+  // 1. RECEBIMENTOS confirmados (entradas reais)
+  d.recebimentos.forEach(function(r){
+    linhas.push({
+      data:r.data||'',
+      desc:r.desc||(r.clienteNome?'Recebimento — '+r.clienteNome:'Recebimento'),
+      cat:r.contaNome||'Caixa',
+      tipo:'recebido',
+      tipoLabel:'✅ Recebido',
+      situacao:'confirmado',
+      valor:+Number(r.valor||0),
+      cor:'#059669',
+      bg:'#ecfdf5',
+    });
+  });
+
+  // 2. A RECEBER (boletos/PIX pendentes)
+  getBoletosPendentes(d).forEach(function(r){
+    var dias=r.vencimento?Math.round((new Date(r.vencimento+'T00:00')-new Date())/(864e5)):null;
+    var sit=dias===null?'pendente':dias<0?'vencido':dias===0?'vence hoje':'pendente';
+    linhas.push({
+      data:r.vencimento||'',
+      desc:r.desc+(r.clienteNome?' — '+r.clienteNome:''),
+      cat:r.tipo==='pix'?'PIX/Transferência':'Boleto',
+      tipo:'areceber',
+      tipoLabel:'💚 A Receber',
+      situacao:sit,
+      valor:+Number(r.valor||0),
+      cor:'#2563eb',
+      bg:'#eff6ff',
+    });
+  });
+
+  // 3. PAGAMENTOS confirmados (saídas reais)
+  d.pagamentos.filter(function(p){return !p.ignorado;}).forEach(function(p){
+    linhas.push({
+      data:p.data||'',
+      desc:p.desc||'Pagamento',
+      cat:p.cat||p.contaNome||'—',
+      tipo:'pago',
+      tipoLabel:'🔴 Pago',
+      situacao:'confirmado',
+      valor:-Number(p.valor||0),
+      cor:'#dc2626',
+      bg:'#fef2f2',
+    });
+  });
+
+  // 4. A PAGAR (contas pendentes)
+  getAPagar(d).filter(function(x){return !x.pago;}).forEach(function(x){
+    var dias=x.vencimento?Math.round((new Date(x.vencimento+'T00:00')-new Date())/(864e5)):null;
+    var sit=dias===null?'pendente':dias<0?'vencido':dias===0?'vence hoje':'pendente';
+    linhas.push({
+      data:x.vencimento||'',
+      desc:x.desc,
+      cat:x.cat||x.tipo||'—',
+      tipo:'apagar',
+      tipoLabel:'⚠️ A Pagar',
+      situacao:sit,
+      valor:-Number(x.valor||0),
+      cor:'#d97706',
+      bg:'#fffbeb',
+    });
+  });
+
+  // Ordenar por data (mais recente primeiro, sem data vai pro fim)
+  linhas.sort(function(a,b){
+    if(!a.data&&!b.data) return 0;
+    if(!a.data) return 1;
+    if(!b.data) return -1;
+    return b.data.localeCompare(a.data);
+  });
+
+  // Filtros
+  if(busca) linhas=linhas.filter(function(l){return l.desc.toLowerCase().includes(busca)||l.cat.toLowerCase().includes(busca);});
+  if(filtroTipo) linhas=linhas.filter(function(l){return l.tipo===filtroTipo;});
+
+  // Totais
+  var totRec=linhas.filter(function(l){return l.tipo==='recebido';}).reduce(function(s,l){return s+Math.abs(l.valor);},0);
+  var totARec=linhas.filter(function(l){return l.tipo==='areceber';}).reduce(function(s,l){return s+Math.abs(l.valor);},0);
+  var totPago=linhas.filter(function(l){return l.tipo==='pago';}).reduce(function(s,l){return s+Math.abs(l.valor);},0);
+  var totAPag=linhas.filter(function(l){return l.tipo==='apagar';}).reduce(function(s,l){return s+Math.abs(l.valor);},0);
+
+  var totEl=document.getElementById('extrato-totais');
+  if(totEl) totEl.innerHTML=[
+    {cor:'green',icon:'✅',label:'Recebido',v:totRec},
+    {cor:'blue',icon:'💚',label:'A Receber',v:totARec},
+    {cor:'red',icon:'🔴',label:'Pago',v:totPago},
+    {cor:'amber',icon:'⚠️',label:'A Pagar',v:totAPag},
+  ].map(function(k){
+    return '<div class="kc '+k.cor+'" style="padding:14px 18px;">'
+      +'<div class="kc-icon">'+k.icon+'</div>'
+      +'<div class="kc-val">'+fmt(k.v)+'</div>'
+      +'<div class="kc-label">'+k.label+'</div>'
+    +'</div>';
+  }).join('');
+
+  var cnt=document.getElementById('extrato-count');
+  if(cnt) cnt.textContent=linhas.length+' lançamento(s)';
+
+  var tbody=document.getElementById('tbody-extrato');
+  var empty=document.getElementById('empty-extrato');
+  if(!tbody) return;
+
+  if(!linhas.length){
+    tbody.innerHTML='';
+    if(empty) empty.style.display='block';
+    return;
+  }
+  if(empty) empty.style.display='none';
+
+  // Calcular saldo acumulado (de cima pra baixo, já ordenado desc)
+  // Para saldo acumulado faz sentido de baixo pra cima (cronológico)
+  var saldoBase=d.contas.reduce(function(s,c){return s+Number(c.saldo||0);},0);
+  // Calcula saldo rolling de baixo pra cima
+  var saldos=new Array(linhas.length).fill(0);
+  // Saldo atual já inclui todos os confirmados
+  // Para itens confirmados: saldo vai diminuindo conforme volta no tempo
+  // Para pendentes: não afeta saldo atual
+  var saldoCurr=saldoBase;
+  // Pegar só confirmados ordenados por data asc para calcular saldo histórico
+  var confirmados=linhas.filter(function(l){return l.tipo==='recebido'||l.tipo==='pago';})
+    .slice().sort(function(a,b){return a.data.localeCompare(b.data);});
+  // Mapa de saldo por índice original (simplificado: mostrar saldo corrente p/ confirmados)
+  
+  tbody.innerHTML=linhas.map(function(l,i){
+    var valorAbs=Math.abs(l.valor);
+    var isPositivo=l.valor>=0;
+    var isConfirmado=l.tipo==='recebido'||l.tipo==='pago';
+
+    // Situação badge
+    var sitBadge='';
+    if(l.situacao==='confirmado') sitBadge='<span class="badge badge-green">Confirmado</span>';
+    else if(l.situacao==='vencido') sitBadge='<span class="badge badge-red">Vencido</span>';
+    else if(l.situacao==='vence hoje') sitBadge='<span class="badge badge-amber">Hoje</span>';
+    else sitBadge='<span class="badge badge-gray">Pendente</span>';
+
+    // Tipo badge
+    var tipoBadge='<span style="display:inline-flex;align-items:center;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600;background:'+l.bg+';color:'+l.cor+'">'+l.tipoLabel+'</span>';
+
+    return '<tr>'
+      +'<td style="font-family:DM Mono,monospace;font-size:12px;color:#6b7280;white-space:nowrap;">'+(l.data?fmtD(l.data):'—')+'</td>'
+      +'<td><div style="font-size:13px;font-weight:600;color:#0f1117;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+l.desc+'</div></td>'
+      +'<td><span style="font-size:11px;color:#6b7280;">'+l.cat+'</span></td>'
+      +'<td>'+tipoBadge+'</td>'
+      +'<td>'+sitBadge+'</td>'
+      +'<td style="text-align:right;font-family:DM Mono,monospace;font-size:13px;font-weight:700;color:'+(isPositivo?'#059669':'#dc2626')+';white-space:nowrap;">'
+        +(isPositivo?'+':'')+fmt(valorAbs)
+      +'</td>'
+      +'<td style="text-align:right;font-family:DM Mono,monospace;font-size:12px;color:'+(isConfirmado?'#374151':'#c4c9d4')+';white-space:nowrap;">'
+        +(isConfirmado?fmt(saldoBase):'—')
+      +'</td>'
+    +'</tr>';
+  }).join('');
+}
+
+function exportarExtrato(){
+  var d=getData();
+  // Reusar a lógica de renderExtrato para pegar as linhas
+  var busca=(document.getElementById('extrato-busca')||{value:''}).value.toLowerCase();
+  var filtroTipo=(document.getElementById('extrato-tipo')||{value:''}).value;
+  var linhas=[];
+
+  d.recebimentos.forEach(function(r){
+    linhas.push({data:r.data||'',desc:r.desc||'Recebimento',cat:r.contaNome||'',tipo:'Recebido',situacao:'Confirmado',valor:+Number(r.valor||0)});
+  });
+  getBoletosPendentes(d).forEach(function(r){
+    linhas.push({data:r.vencimento||'',desc:r.desc+(r.clienteNome?' — '+r.clienteNome:''),cat:'Boleto',tipo:'A Receber',situacao:'Pendente',valor:+Number(r.valor||0)});
+  });
+  d.pagamentos.filter(function(p){return !p.ignorado;}).forEach(function(p){
+    linhas.push({data:p.data||'',desc:p.desc||'Pagamento',cat:p.cat||'',tipo:'Pago',situacao:'Confirmado',valor:-Number(p.valor||0)});
+  });
+  getAPagar(d).filter(function(x){return !x.pago;}).forEach(function(x){
+    linhas.push({data:x.vencimento||'',desc:x.desc,cat:x.cat||'',tipo:'A Pagar',situacao:'Pendente',valor:-Number(x.valor||0)});
+  });
+
+  linhas.sort(function(a,b){if(!a.data)return 1;if(!b.data)return -1;return b.data.localeCompare(a.data);});
+  if(busca) linhas=linhas.filter(function(l){return l.desc.toLowerCase().includes(busca);});
+  if(filtroTipo){
+    var m={recebido:'Recebido',areceber:'A Receber',pago:'Pago',apagar:'A Pagar'};
+    linhas=linhas.filter(function(l){return l.tipo===(m[filtroTipo]||'');});
+  }
+
+  var csv='Data,Descricao,Categoria,Tipo,Situacao,Valor\n';
+  csv+=linhas.map(function(l){
+    var row=[l.data,l.desc.replace(/,/g,' '),l.cat.replace(/,/g,' '),l.tipo,l.situacao,l.valor.toFixed(2).replace('.',',')];return row.join(',');
+  }).join('\n')
+
+  var blob=new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');
+  a.href=url;a.download='extrato-allhair-'+new Date().toISOString().split('T')[0]+'.csv';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
 }
 
 // ── CLOCK + INIT ──────────────────────────────────────────────
