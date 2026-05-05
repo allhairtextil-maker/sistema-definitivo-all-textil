@@ -221,7 +221,7 @@
 
   <!-- ── VISÃO GERAL ── -->
   <div class="fin-pane active" id="tab-resumo">
-    <div class="kpi-row" id="kpi-resumo"></div>
+    <div class="kpi-row" id="kpi-resumo" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr))"></div>
     <div class="charts-2">
       <div class="chart-box">
         <div class="chart-head">Entradas × Saídas do Mês</div>
@@ -229,7 +229,7 @@
       </div>
       <div class="chart-box">
         <div class="chart-head">Composição das Despesas</div>
-        <div class="chart-body"><div style="height:220px"><canvas id="chart-despesas-pie"></canvas></div></div>
+        <div class="chart-body"><div style="height:220px"><canvas id="chart-despesas-resumo"></canvas></div></div>
       </div>
     </div>
     <div class="charts-2">
@@ -333,7 +333,7 @@
     <div class="charts-2" style="margin-bottom:16px">
       <div class="chart-box">
         <div class="chart-head">Distribuição das Fixas</div>
-        <div class="chart-body"><div style="height:240px"><canvas id="chart-despesas-pie2"></canvas></div></div>
+        <div class="chart-body"><div style="height:240px"><canvas id="chart-despesas-pie"></canvas></div></div>
       </div>
       <div class="section-card" style="margin-bottom:0">
         <div class="sc-head"><span class="sc-title">📊 Resumo das Fixas</span></div>
@@ -528,8 +528,8 @@ function mkChart(id,cfg){
 // ── ABA ──────────────────────────────────────────────────────
 var _ABAS=['resumo','apagar','areceber','fluxo','anual','despesas','caixa','dre'];
 function aba(id){
-  document.querySelectorAll('.tab').forEach(function(t,i){t.classList.toggle('active',_ABAS[i]===id);});
-  document.querySelectorAll('.tab-content').forEach(function(t){t.classList.remove('active');});
+  document.querySelectorAll('.fin-tab').forEach(function(t){t.classList.toggle('active',t.dataset.tab===id);});
+  document.querySelectorAll('.fin-pane').forEach(function(t){t.classList.remove('active');});
   var el=document.getElementById('tab-'+id);if(el)el.classList.add('active');
   render(id);
 }
@@ -667,6 +667,7 @@ function renderResumo(d){
   // Gráfico mensal entradas x saídas
   var pagMes=d.pagamentos.filter(function(p){return noMesSel(p.data)&&!p.ignorado;}).reduce(function(s,p){return s+Number(p.valor||0);},0);
   var fixasMes=d.despesas.filter(function(x){return x.tipo==='fixo'&&x.ativo!==false;}).reduce(function(s,x){return s+Number(x.valor||0);},0);
+  renderDespesasPieResumo(d);
   mkChart('chart-resumo-mensal',{type:'bar',data:{labels:['Entradas','Saídas Fixas','A Receber','A Pagar'],
     datasets:[{data:[recMes,fixasMes,aRec,aPag],backgroundColor:['#0d9373','#d63b3b','#5ca0e0','#e8923b'],borderRadius:6}]},
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
@@ -683,6 +684,20 @@ function renderResumo(d){
   document.getElementById('resumo-areceber').innerHTML=prxR.length?prxR.slice(0,5).map(function(r){
     return '<div class="item-row"><div class="item-dot" style="background:var(--green)"></div><div class="item-info"><div class="item-desc">'+(r.clienteNome||r.desc)+'</div><div class="item-meta">'+fmtD(r.vencimento)+'</div></div><div class="item-val text-green">'+fmt(r.valor)+'</div></div>';
   }).join(''):'<div style="padding:16px;color:var(--ink-3);text-align:center;font-size:13px">Nenhum recebimento previsto</div>';
+}
+
+// ── MINI PIE para aba Visão Geral ──────────────────────────
+function renderDespesasPieResumo(d){
+  var fixas=d.despesas.filter(function(x){return x.tipo==='fixo'&&x.ativo!==false;});
+  if(!fixas.length)return;
+  mkChart('chart-despesas-resumo',{type:'doughnut',
+    data:{labels:fixas.map(function(x){return x.desc;}),
+      datasets:[{data:fixas.map(function(x){return x.valor;}),
+        backgroundColor:['#6d28d9','#059669','#dc2626','#d97706','#2563eb','#a855f7','#10b981'],
+        borderWidth:0,hoverOffset:6}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'right',labels:{font:{size:11},boxWidth:12,padding:10}}}}
+  });
 }
 
 // ── A PAGAR ───────────────────────────────────────────────────
@@ -1351,13 +1366,12 @@ render('resumo');
 
 
 // Sync badges on tab switch
-const _origAba = aba;
-function aba(id){
-  document.querySelectorAll('.fin-tab').forEach(function(t){t.classList.toggle('active',t.dataset.tab===id);});
-  document.querySelectorAll('.fin-pane').forEach(function(t){t.classList.toggle('active',t.id==='tab-'+id);});
-  render(id);
+// aba() already handles tab switching - just update badges after render
+var _origRender = render;
+render = function(id){
+  _origRender(id);
   _updateBadges();
-}
+};
 function _updateBadges(){
   try{
     var d=getData();
