@@ -13,7 +13,7 @@
 .topbar{position:sticky;top:44px;z-index:40;background:#fff;border-bottom:1.5px solid #e8eaf0;
   display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:56px;gap:12px;}
 .topbar-title{font-family:'Sora',sans-serif;font-size:16px;font-weight:700;color:#0f1117;flex-shrink:0;}
-.topbar-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.topbar-actions{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
 
 /* Tab nav */
 .ftabs{display:flex;background:#fff;border-bottom:2px solid #f1f5f9;overflow-x:auto;padding:0 20px;gap:0;}
@@ -33,7 +33,7 @@
 .fpane.active{display:block;}
 
 /* KPI row */
-.krow{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:22px;}
+.krow{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:20px;}
 .kcard{background:#fff;border:1px solid #e8eaf0;border-radius:14px;padding:18px 20px;
   position:relative;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.04);}
 .kcard::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
@@ -91,8 +91,8 @@
 .btn-ghost{background:#f1f5f9;color:#374151;border:1.5px solid #e2e8f0;}
 
 /* Grid layouts */
-.g2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
-.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:16px;}
+.g2{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px;margin-bottom:16px;}
+.g3{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-bottom:16px;}
 
 /* Charts */
 .chartbox{background:#fff;border:1px solid #e8eaf0;border-radius:14px;
@@ -128,7 +128,13 @@
 .bgr{background:#f3f4f6;color:#374151;} .bp{background:#f3e8ff;color:#6b21a8;}
 
 /* Contas */
-.contas-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;padding:20px;}
+.contas-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;padding:20px;}
+/* Prevent horizontal overflow */
+html,body{overflow-x:hidden;max-width:100vw;}
+.fpane{overflow-x:hidden;}
+.fcard,.chartbox,.kcard{max-width:100%;overflow:hidden;}
+.ftable td, .ftable th{word-break:break-word;}
+
 .conta-card{background:#f8fafc;border:1.5px solid #e8eaf0;border-radius:12px;padding:18px;}
 .conta-banco{font-family:'Sora',sans-serif;font-size:14px;font-weight:700;color:#0f1117;margin-bottom:2px;}
 .conta-tipo{font-size:11px;color:#94a3b8;margin-bottom:14px;}
@@ -138,7 +144,7 @@
 .overlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:300;
   align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(3px);}
 .overlay.open{display:flex;}
-.modal{background:#fff;border-radius:16px;width:100%;max-width:480px;
+.modal{background:#fff;border-radius:16px;width:100%;max-width:min(480px,95vw);
   max-height:90vh;overflow-y:auto;box-shadow:0 24px 64px rgba(0,0,0,.18);border:1px solid #e8eaf0;}
 .modal-header{display:flex;align-items:center;justify-content:space-between;
   padding:18px 22px;border-bottom:1px solid #f1f5f9;}
@@ -199,7 +205,7 @@
   </div>
 
   <!-- Tabs -->
-  <div id="fin-tabs" style="display:flex!important;position:sticky;top:98px;z-index:35;background:#ffffff;border-bottom:2px solid #e8eaf0;overflow-x:auto;padding:0 20px;gap:0;min-height:50px;box-shadow:0 1px 3px rgba(0,0,0,.04);">
+  <div id="fin-tabs" style="display:flex!important;background:#ffffff;border-bottom:2px solid #e8eaf0;overflow-x:auto;padding:0 20px;gap:0;min-height:50px;">
     <div class="ftab active" data-id="resumo" onclick="aba('resumo')" style="display:flex!important;align-items:center;gap:6px;padding:14px 18px;font-size:13px;font-weight:600;color:#6d28d9;cursor:pointer;border-bottom:2px solid #6d28d9;margin-bottom:-2px;white-space:nowrap;">📊 Visão Geral</div>
     <div class="ftab" data-id="areceber" onclick="aba('areceber')" style="display:flex!important;align-items:center;gap:6px;padding:14px 18px;font-size:13px;font-weight:600;color:#94a3b8;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;">💚 A Receber <span id="badge-ar" style="background:#f1f5f9;color:#64748b;font-size:10px;font-weight:700;padding:1px 7px;border-radius:20px;">0</span></div>
     <div class="ftab" data-id="apagar" onclick="aba('apagar')" style="display:flex!important;align-items:center;gap:6px;padding:14px 18px;font-size:13px;font-weight:600;color:#94a3b8;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;">🔴 A Pagar <span id="badge-ap" style="background:#f1f5f9;color:#64748b;font-size:10px;font-weight:700;padding:1px 7px;border-radius:20px;">0</span></div>
@@ -212,7 +218,7 @@
   </div>
 
   <!-- VISÃO GERAL -->
-  <div class="fpane" id="fpane-resumo" style="display:block;padding:22px 24px;">
+  <div class="fpane" id="fpane-resumo" style="display:block;padding:20px;">
     <div class="krow" id="kpi-resumo"></div>
     <div class="g2">
       <div class="chartbox">
@@ -243,7 +249,7 @@
   </div>
 
   <!-- A RECEBER -->
-  <div class="fpane" style="display:none;padding:22px 24px;" id="fpane-areceber">
+  <div class="fpane" style="display:none;padding:20px;" id="fpane-areceber">
     <div class="krow" id="kpi-areceber"></div>
     <div class="fcard">
       <div class="fcard-head">
@@ -255,7 +261,7 @@
   </div>
 
   <!-- A PAGAR -->
-  <div class="fpane" style="display:none;padding:22px 24px;" id="fpane-apagar">
+  <div class="fpane" style="display:none;padding:20px;" id="fpane-apagar">
     <div class="krow" id="kpi-apagar"></div>
     <div class="fcard">
       <div class="fcard-head">
@@ -270,7 +276,7 @@
   </div>
 
   <!-- EXTRATO -->
-  <div class="fpane" style="display:none;padding:22px 24px;" id="fpane-extrato">
+  <div class="fpane" style="display:none;padding:20px;" id="fpane-extrato">
     <div style="display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap;align-items:center;">
       <input id="extrato-busca" type="text" placeholder="🔍 Buscar..."
         oninput="renderExtrato(getData())"
@@ -293,8 +299,8 @@
         <span class="fcard-title">📒 Extrato Completo</span>
         <span id="extrato-count" style="font-size:12px;color:#94a3b8;"></span>
       </div>
-      <div style="overflow-x:auto;">
-        <table class="ftable" style="min-width:760px;">
+      <div style="overflow-x:auto;max-width:100%;">
+        <table class="ftable" style="width:100%;min-width:0;">
           <thead><tr>
             <th>Data</th><th>Descrição</th><th>Categoria</th>
             <th>Tipo</th><th>Situação</th>
@@ -308,7 +314,7 @@
   </div>
 
   <!-- FLUXO DE CAIXA -->
-  <div class="fpane" style="display:none;padding:22px 24px;" id="fpane-fluxo">
+  <div class="fpane" style="display:none;padding:20px;" id="fpane-fluxo">
     <div class="krow" id="kpi-fluxo"></div>
     <div id="fluxo-alerta"></div>
     <div class="chartbox">
@@ -322,7 +328,7 @@
   </div>
 
   <!-- PROJEÇÃO ANUAL -->
-  <div class="fpane" style="display:none;padding:22px 24px;" id="fpane-anual">
+  <div class="fpane" style="display:none;padding:20px;" id="fpane-anual">
     <div class="krow" id="kpi-anual"></div>
     <div class="chartbox">
       <div class="chartbox-head">Saldo Projetado — 52 Semanas</div>
@@ -341,7 +347,7 @@
   </div>
 
   <!-- DRE -->
-  <div class="fpane" style="display:none;padding:22px 24px;" id="fpane-dre">
+  <div class="fpane" style="display:none;padding:20px;" id="fpane-dre">
     <div class="g2">
       <div class="fcard" style="margin:0">
         <div class="fcard-head"><span class="fcard-title" id="dre-titulo">DRE do Mês</span></div>
@@ -355,7 +361,7 @@
   </div>
 
   <!-- DESPESAS -->
-  <div class="fpane" style="display:none;padding:22px 24px;" id="fpane-despesas">
+  <div class="fpane" style="display:none;padding:20px;" id="fpane-despesas">
     <div class="g2" style="margin-bottom:16px">
       <div class="chartbox" style="margin:0">
         <div class="chartbox-head">Distribuição das Fixas</div>
@@ -382,7 +388,7 @@
   </div>
 
   <!-- CONTAS -->
-  <div class="fpane" style="display:none;padding:22px 24px;" id="fpane-caixa">
+  <div class="fpane" style="display:none;padding:20px;" id="fpane-caixa">
     <div class="fcard">
       <div class="fcard-head">
         <span class="fcard-title">🏦 Contas Bancárias</span>
