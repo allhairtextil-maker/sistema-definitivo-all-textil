@@ -199,24 +199,20 @@
   </div>
 
   <!-- Tabs -->
-  <div class="ftabs">
-    <div class="ftab active" data-id="resumo" onclick="aba('resumo')">📊 Visão Geral</div>
-    <div class="ftab" data-id="areceber" onclick="aba('areceber')">
-      💚 A Receber <span class="fbadge" id="badge-ar">0</span>
-    </div>
-    <div class="ftab" data-id="apagar" onclick="aba('apagar')">
-      🔴 A Pagar <span class="fbadge" id="badge-ap">0</span>
-    </div>
-    <div class="ftab" data-id="extrato" onclick="aba('extrato')">📒 Extrato</div>
-    <div class="ftab" data-id="fluxo" onclick="aba('fluxo')">📈 Fluxo de Caixa</div>
-    <div class="ftab" data-id="anual" onclick="aba('anual')">📅 Projeção Anual</div>
-    <div class="ftab" data-id="dre" onclick="aba('dre')">📋 DRE</div>
-    <div class="ftab" data-id="despesas" onclick="aba('despesas')">🧾 Despesas</div>
-    <div class="ftab" data-id="caixa" onclick="aba('caixa')">🏦 Contas</div>
+  <div id="fin-tabs" style="display:flex!important;background:#fff;border-bottom:2px solid #f1f5f9;overflow-x:auto;padding:0 20px;gap:0;min-height:50px;">
+    <div class="ftab active" data-id="resumo" onclick="aba('resumo')" style="display:flex!important;align-items:center;gap:6px;padding:14px 18px;font-size:13px;font-weight:600;color:#6d28d9;cursor:pointer;border-bottom:2px solid #6d28d9;margin-bottom:-2px;white-space:nowrap;">📊 Visão Geral</div>
+    <div class="ftab" data-id="areceber" onclick="aba('areceber')" style="display:flex!important;align-items:center;gap:6px;padding:14px 18px;font-size:13px;font-weight:600;color:#94a3b8;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;">💚 A Receber <span id="badge-ar" style="background:#f1f5f9;color:#64748b;font-size:10px;font-weight:700;padding:1px 7px;border-radius:20px;">0</span></div>
+    <div class="ftab" data-id="apagar" onclick="aba('apagar')" style="display:flex!important;align-items:center;gap:6px;padding:14px 18px;font-size:13px;font-weight:600;color:#94a3b8;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;">🔴 A Pagar <span id="badge-ap" style="background:#f1f5f9;color:#64748b;font-size:10px;font-weight:700;padding:1px 7px;border-radius:20px;">0</span></div>
+    <div class="ftab" data-id="extrato" onclick="aba('extrato')" style="display:flex!important;align-items:center;gap:6px;padding:14px 18px;font-size:13px;font-weight:600;color:#94a3b8;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;">📒 Extrato</div>
+    <div class="ftab" data-id="fluxo" onclick="aba('fluxo')" style="display:flex!important;align-items:center;gap:6px;padding:14px 18px;font-size:13px;font-weight:600;color:#94a3b8;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;">📈 Fluxo de Caixa</div>
+    <div class="ftab" data-id="anual" onclick="aba('anual')" style="display:flex!important;align-items:center;gap:6px;padding:14px 18px;font-size:13px;font-weight:600;color:#94a3b8;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;">📅 Projeção Anual</div>
+    <div class="ftab" data-id="dre" onclick="aba('dre')" style="display:flex!important;align-items:center;gap:6px;padding:14px 18px;font-size:13px;font-weight:600;color:#94a3b8;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;">📋 DRE</div>
+    <div class="ftab" data-id="despesas" onclick="aba('despesas')" style="display:flex!important;align-items:center;gap:6px;padding:14px 18px;font-size:13px;font-weight:600;color:#94a3b8;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;">🧾 Despesas</div>
+    <div class="ftab" data-id="caixa" onclick="aba('caixa')" style="display:flex!important;align-items:center;gap:6px;padding:14px 18px;font-size:13px;font-weight:600;color:#94a3b8;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;">🏦 Contas</div>
   </div>
 
   <!-- VISÃO GERAL -->
-  <div class="fpane active" id="fpane-resumo">
+  <div class="fpane" id="fpane-resumo" style="display:block;padding:22px 24px;">
     <div class="krow" id="kpi-resumo"></div>
     <div class="g2">
       <div class="chartbox">
@@ -247,7 +243,7 @@
   </div>
 
   <!-- A RECEBER -->
-  <div class="fpane" id="fpane-areceber">
+  <div class="fpane" style="display:none;padding:22px 24px;" id="fpane-areceber">
     <div class="krow" id="kpi-areceber"></div>
     <div class="fcard">
       <div class="fcard-head">
@@ -259,7 +255,7 @@
   </div>
 
   <!-- A PAGAR -->
-  <div class="fpane" id="fpane-apagar">
+  <div class="fpane" style="display:none;padding:22px 24px;" id="fpane-apagar">
     <div class="krow" id="kpi-apagar"></div>
     <div class="fcard">
       <div class="fcard-head">
@@ -274,7 +270,7 @@
   </div>
 
   <!-- EXTRATO -->
-  <div class="fpane" id="fpane-extrato">
+  <div class="fpane" style="display:none;padding:22px 24px;" id="fpane-extrato">
     <div style="display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap;align-items:center;">
       <input id="extrato-busca" type="text" placeholder="🔍 Buscar..."
         oninput="renderExtrato(getData())"
@@ -312,7 +308,7 @@
   </div>
 
   <!-- FLUXO DE CAIXA -->
-  <div class="fpane" id="fpane-fluxo">
+  <div class="fpane" style="display:none;padding:22px 24px;" id="fpane-fluxo">
     <div class="krow" id="kpi-fluxo"></div>
     <div id="fluxo-alerta"></div>
     <div class="chartbox">
@@ -326,7 +322,7 @@
   </div>
 
   <!-- PROJEÇÃO ANUAL -->
-  <div class="fpane" id="fpane-anual">
+  <div class="fpane" style="display:none;padding:22px 24px;" id="fpane-anual">
     <div class="krow" id="kpi-anual"></div>
     <div class="chartbox">
       <div class="chartbox-head">Saldo Projetado — 52 Semanas</div>
@@ -345,7 +341,7 @@
   </div>
 
   <!-- DRE -->
-  <div class="fpane" id="fpane-dre">
+  <div class="fpane" style="display:none;padding:22px 24px;" id="fpane-dre">
     <div class="g2">
       <div class="fcard" style="margin:0">
         <div class="fcard-head"><span class="fcard-title" id="dre-titulo">DRE do Mês</span></div>
@@ -359,7 +355,7 @@
   </div>
 
   <!-- DESPESAS -->
-  <div class="fpane" id="fpane-despesas">
+  <div class="fpane" style="display:none;padding:22px 24px;" id="fpane-despesas">
     <div class="g2" style="margin-bottom:16px">
       <div class="chartbox" style="margin:0">
         <div class="chartbox-head">Distribuição das Fixas</div>
@@ -386,7 +382,7 @@
   </div>
 
   <!-- CONTAS -->
-  <div class="fpane" id="fpane-caixa">
+  <div class="fpane" style="display:none;padding:22px 24px;" id="fpane-caixa">
     <div class="fcard">
       <div class="fcard-head">
         <span class="fcard-title">🏦 Contas Bancárias</span>
