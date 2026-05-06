@@ -191,29 +191,30 @@
 </div>
 
 <div class="main">
-  <div class="topbar">
-    <div class="topbar-title">💰 Financeiro</div>
-    <div class="topbar-actions">
-      <button class="btn btn-ghost btn-sm" onclick="exportarDados()">📤 Exportar</button>
-      <button class="btn btn-purple btn-sm" onclick="abrirModalReceber()">+ A Receber</button>
-      <button class="btn btn-red btn-sm" onclick="abrirModalAPagar()">+ A Pagar</button>
-      <button class="btn btn-ghost btn-sm" onclick="abrirModalDespesa()">+ Despesa</button>
-      <button class="btn btn-ghost btn-sm" onclick="abrirModalConta()">+ Conta</button>
+  <div style="position:sticky;top:44px;z-index:40;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.06);">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:54px;gap:12px;border-bottom:1px solid #e8eaf0;">
+      <div style="font-family:'Sora',sans-serif;font-size:16px;font-weight:700;color:#0f1117;flex-shrink:0;">💰 Financeiro</div>
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+        <button class="btn btn-ghost btn-sm" onclick="exportarDados()">📤 Exportar</button>
+        <button class="btn btn-purple btn-sm" onclick="abrirModalReceber()">+ A Receber</button>
+        <button class="btn btn-red btn-sm" onclick="abrirModalAPagar()">+ A Pagar</button>
+        <button class="btn btn-ghost btn-sm" onclick="abrirModalDespesa()">+ Despesa</button>
+        <button class="btn btn-ghost btn-sm" onclick="abrirModalConta()">+ Conta</button>
+      </div>
+    </div>
+    <div id="fin-tabs" style="display:flex;background:#fff;border-bottom:2px solid #e8eaf0;overflow-x:auto;padding:0 20px;gap:0;min-height:48px;">
+      <div class="ftab active" data-id="resumo" onclick="aba('resumo')" style="display:flex;align-items:center;gap:6px;padding:12px 16px;font-size:13px;font-weight:600;color:#6d28d9;cursor:pointer;border-bottom:2px solid #6d28d9;margin-bottom:-2px;white-space:nowrap;">📊 Visão Geral</div>
+      <div class="ftab" data-id="areceber" onclick="aba('areceber')" style="display:flex;align-items:center;gap:6px;padding:12px 16px;font-size:13px;font-weight:600;color:#94a3b8;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;">💚 A Receber <span id="badge-ar" style="background:#f1f5f9;color:#64748b;font-size:10px;font-weight:700;padding:1px 7px;border-radius:20px;">0</span></div>
+      <div class="ftab" data-id="apagar" onclick="aba('apagar')" style="display:flex;align-items:center;gap:6px;padding:12px 16px;font-size:13px;font-weight:600;color:#94a3b8;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;">🔴 A Pagar <span id="badge-ap" style="background:#f1f5f9;color:#64748b;font-size:10px;font-weight:700;padding:1px 7px;border-radius:20px;">0</span></div>
+      <div class="ftab" data-id="extrato" onclick="aba('extrato')" style="display:flex;align-items:center;gap:6px;padding:12px 16px;font-size:13px;font-weight:600;color:#94a3b8;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;">📒 Extrato</div>
+      <div class="ftab" data-id="fluxo" onclick="aba('fluxo')" style="display:flex;align-items:center;gap:6px;padding:12px 16px;font-size:13px;font-weight:600;color:#94a3b8;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;">📈 Fluxo de Caixa</div>
+      <div class="ftab" data-id="anual" onclick="aba('anual')" style="display:flex;align-items:center;gap:6px;padding:12px 16px;font-size:13px;font-weight:600;color:#94a3b8;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;">📅 Projeção Anual</div>
+      <div class="ftab" data-id="dre" onclick="aba('dre')" style="display:flex;align-items:center;gap:6px;padding:12px 16px;font-size:13px;font-weight:600;color:#94a3b8;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;">📋 DRE</div>
+      <div class="ftab" data-id="despesas" onclick="aba('despesas')" style="display:flex;align-items:center;gap:6px;padding:12px 16px;font-size:13px;font-weight:600;color:#94a3b8;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;">🧾 Despesas</div>
+      <div class="ftab" data-id="caixa" onclick="aba('caixa')" style="display:flex;align-items:center;gap:6px;padding:12px 16px;font-size:13px;font-weight:600;color:#94a3b8;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;">🏦 Contas</div>
     </div>
   </div>
 
-  <!-- Tabs -->
-  <div id="fin-tabs" style="display:flex!important;background:#ffffff;border-bottom:2px solid #e8eaf0;overflow-x:auto;padding:0 20px;gap:0;min-height:50px;">
-    <div class="ftab active" data-id="resumo" onclick="aba('resumo')" style="display:flex!important;align-items:center;gap:6px;padding:14px 18px;font-size:13px;font-weight:600;color:#6d28d9;cursor:pointer;border-bottom:2px solid #6d28d9;margin-bottom:-2px;white-space:nowrap;">📊 Visão Geral</div>
-    <div class="ftab" data-id="areceber" onclick="aba('areceber')" style="display:flex!important;align-items:center;gap:6px;padding:14px 18px;font-size:13px;font-weight:600;color:#94a3b8;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;">💚 A Receber <span id="badge-ar" style="background:#f1f5f9;color:#64748b;font-size:10px;font-weight:700;padding:1px 7px;border-radius:20px;">0</span></div>
-    <div class="ftab" data-id="apagar" onclick="aba('apagar')" style="display:flex!important;align-items:center;gap:6px;padding:14px 18px;font-size:13px;font-weight:600;color:#94a3b8;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;">🔴 A Pagar <span id="badge-ap" style="background:#f1f5f9;color:#64748b;font-size:10px;font-weight:700;padding:1px 7px;border-radius:20px;">0</span></div>
-    <div class="ftab" data-id="extrato" onclick="aba('extrato')" style="display:flex!important;align-items:center;gap:6px;padding:14px 18px;font-size:13px;font-weight:600;color:#94a3b8;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;">📒 Extrato</div>
-    <div class="ftab" data-id="fluxo" onclick="aba('fluxo')" style="display:flex!important;align-items:center;gap:6px;padding:14px 18px;font-size:13px;font-weight:600;color:#94a3b8;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;">📈 Fluxo de Caixa</div>
-    <div class="ftab" data-id="anual" onclick="aba('anual')" style="display:flex!important;align-items:center;gap:6px;padding:14px 18px;font-size:13px;font-weight:600;color:#94a3b8;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;">📅 Projeção Anual</div>
-    <div class="ftab" data-id="dre" onclick="aba('dre')" style="display:flex!important;align-items:center;gap:6px;padding:14px 18px;font-size:13px;font-weight:600;color:#94a3b8;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;">📋 DRE</div>
-    <div class="ftab" data-id="despesas" onclick="aba('despesas')" style="display:flex!important;align-items:center;gap:6px;padding:14px 18px;font-size:13px;font-weight:600;color:#94a3b8;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;">🧾 Despesas</div>
-    <div class="ftab" data-id="caixa" onclick="aba('caixa')" style="display:flex!important;align-items:center;gap:6px;padding:14px 18px;font-size:13px;font-weight:600;color:#94a3b8;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;">🏦 Contas</div>
-  </div>
 
   <!-- VISÃO GERAL -->
   <div class="fpane" id="fpane-resumo" style="display:block;padding:20px;">
