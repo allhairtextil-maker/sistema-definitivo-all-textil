@@ -555,10 +555,18 @@ function mkChart(id,cfg){
 // ── ABA ──────────────────────────────────────────────────────
 var _ABAS=['resumo','apagar','areceber','fluxo','anual','despesas','caixa','dre'];
 function aba(id){
-  document.querySelectorAll('.fin-tab').forEach(function(t){t.classList.toggle('active',t.dataset.tab===id);});
-  document.querySelectorAll('.fin-pane').forEach(function(t){t.classList.remove('active');});
-  var el=document.getElementById('tab-'+id);if(el)el.classList.add('active');
+  // Update tab styles
+  document.querySelectorAll('.ftab').forEach(function(t){
+    var active = t.dataset.id === id;
+    t.style.color = active ? '#6d28d9' : '#94a3b8';
+    t.style.borderBottom = active ? '2px solid #6d28d9' : '2px solid transparent';
+  });
+  // Show/hide panes
+  document.querySelectorAll('.fpane').forEach(function(t){
+    t.style.display = t.id === 'fpane-' + id ? 'block' : 'none';
+  });
   render(id);
+  _updateBadges();
 }
 function fechar(id){var el=document.getElementById('overlay-'+id);if(el)el.classList.remove('open');}
 function abrir(id){var el=document.getElementById('overlay-'+id);if(el)el.classList.add('open');}
