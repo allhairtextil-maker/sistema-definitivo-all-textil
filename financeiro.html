@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Financeiro — ALL HAIR</title>
-  <script src="mes-global.js"></script>
+  
   <link rel="stylesheet" href="design.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
   <style>
@@ -314,10 +314,11 @@
 
   <!-- FLUXO DE CAIXA -->
   <div class="fpane" style="display:none;padding:20px;" id="fpane-fluxo">
+    <div id="fluxo-sobra"></div>
     <div class="krow" id="kpi-fluxo"></div>
     <div id="fluxo-alerta"></div>
     <div class="chartbox">
-      <div class="chartbox-head">Fluxo — Próximas 8 Semanas</div>
+      <div class="chartbox-head">📊 Projeção de Caixa — Próximos 3 Meses</div>
       <div class="chartbox-body"><div style="height:280px"><canvas id="chart-fluxo"></canvas></div></div>
     </div>
     <div class="fcard">
@@ -510,6 +511,34 @@
 
 
 // ── STORAGE ──────────────────────────────────────────────────
+// ── MÊS GLOBAL (self-contained) ──────────────────────────────
+var MG=(function(){
+  var n=new Date(),_m=n.getMonth(),_a=n.getFullYear();
+  var NM=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  function upd(){
+    var el=document.getElementById('mes-display');
+    if(el)el.textContent=NM[_m]+' '+_a;
+    if(typeof render==='function')render('all');
+  }
+  return{
+    getMes:function(){return{mes:_m,ano:_a};},
+    getNome:function(){return NM[_m]+' '+_a;},
+    noMesSel:function(d2){
+      if(!d2)return false;
+      var dt=new Date(d2.length===7?d2+'-01T00:00':d2+'T00:00');
+      return dt.getMonth()===_m&&dt.getFullYear()===_a;
+    },
+    anterior:function(){_m--;if(_m<0){_m=11;_a--;}upd();},
+    proximo:function(){
+      var n2=new Date();
+      if(_a>n2.getFullYear()||(_a===n2.getFullYear()&&_m>=n2.getMonth()))return;
+      _m++;if(_m>11){_m=0;_a++;}upd();
+    }
+  };
+})();
+function noMesSel(d2){return MG.noMesSel(d2);}
+
+
 function load(k,d){try{return JSON.parse(localStorage.getItem(k)||'null')||d;}catch(e){return d;}}
 function save(k,v){localStorage.setItem(k,JSON.stringify(v));}
 function getData(){
@@ -532,7 +561,6 @@ function fmtK(v){return 'R$\u00a0'+Number(v||0).toLocaleString('pt-BR',{minimumF
 function fmtD(d){return d?new Date(d+'T00:00').toLocaleDateString('pt-BR'):'—';}
 function hoje(){return new Date().toISOString().split('T')[0];}
 function diasAte(d){if(!d)return null;return Math.round((new Date(d+'T00:00')-new Date(hoje()+'T00:00'))/864e5);}
-function noMesSel(d){return typeof MG!=='undefined'?MG.noMesSel(d):true;}
 function getMgInt(){return typeof MG!=='undefined'?MG.intervalo():{inicio:'1900-01-01',fim:'2999-12-31'};}
 function selContas(id,ph){
   var s=document.getElementById(id);if(!s)return;
@@ -651,7 +679,7 @@ function getAPagar(d){
   var mg=getMgInt();
   var hoje2=hoje();
   var isFut=mg.inicio>hoje2;
-  var mesAtual=(typeof MG!=='undefined'?MG.getMes():{mes:n.getMonth(),ano:n.getFullYear()});
+  var mesAtual=MG.getMes();
 
   // Fixas
   d.despesas.filter(function(x){return x.tipo==='fixo'&&x.ativo!==false;}).forEach(function(x){
@@ -823,67 +851,174 @@ function renderFluxo(d){
   var saldo=d.contas.reduce(function(s,c){return s+Number(c.saldo||0);},0);
   var aPag=getAPagar(d).filter(function(x){return !x.pago;});
   var aRec=getBoletosPendentes(d);
-  var necCaixa=aPag.reduce(function(s,x){return s+Number(x.valor||0);},0);
-  var folga=saldo-necCaixa;
-  var recTot=aRec.reduce(function(s,r){return s+Number(r.valor||0);},0);
   var fixas=d.despesas.filter(function(x){return x.tipo==='fixo'&&x.ativo!==false;}).reduce(function(s,x){return s+Number(x.valor||0);},0);
+  var hoje2=new Date(hoje()+'T00:00');
+
+  // ── Calcula projeção por mês (atual + 2 seguintes) ──
+  function getMesData(offsetMeses){
+    var dt=new Date(hoje2);dt.setDate(1);dt.setMonth(dt.getMonth()+offsetMeses);
+    var mes=dt.getMonth(),ano=dt.getFullYear();
+    function noMes(d2){
+      if(!d2)return false;
+      var x=new Date(d2+'T00:00');return x.getMonth()===mes&&x.getFullYear()===ano;
+    }
+    // Entradas: boletos vencendo no mês
+    var ent=aRec.filter(function(r){return r.vencimento&&noMes(r.vencimento);});
+    var entTotal=ent.reduce(function(s,r){return s+Number(r.valor||0);},0);
+    // Saídas: a pagar vencendo no mês + fixas
+    var sai=aPag.filter(function(x){return x.vencimento&&noMes(x.vencimento);});
+    var saiTotal=sai.reduce(function(s,x){return s+Number(x.valor||0);},0);
+    // Adiciona fixas no mês atual e próximo (já estão previstas)
+    saiTotal+=fixas;
+    // Variáveis do mês
+    var varMes=d.despesas.filter(function(x){
+      return x.tipo==='variavel'&&x.status!=='pago'&&noMes(x.venc||x.vencimento||x.dataavulso);
+    }).reduce(function(s,x){return s+Number(x.valor||0);},0);
+    saiTotal+=varMes;
+    var nome=dt.toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
+    nome=nome.charAt(0).toUpperCase()+nome.slice(1);
+    return{mes:mes,ano:ano,nome:nome,ent:entTotal,sai:saiTotal,items_ent:ent,items_sai:sai};
+  }
+
+  var meses=[getMesData(0),getMesData(1),getMesData(2)];
+  var saldoAcum=saldo;
+  meses.forEach(function(m){m.saldoAntes=saldoAcum;saldoAcum+=m.ent-m.sai;m.saldoDepois=saldoAcum;m.sobra=m.ent-m.sai;});
+
+  // ── KPIs topo ──
+  var m0=meses[0];
+  var recTot=aRec.reduce(function(s,r){return s+Number(r.valor||0);},0);
+  var necTot=aPag.reduce(function(s,x){return s+Number(x.valor||0);},0)+fixas;
+  var sobra=m0.ent-m0.sai;
 
   document.getElementById('kpi-fluxo').innerHTML=[
-    {bar:'var(--blue)',l:'Saldo Atual',v:fmt(saldo),s:'nas contas'},
-    {bar:'var(--green)',l:'Entradas 30d',v:fmt(recTot),s:'a receber'},
-    {bar:'var(--red)',l:'Necessidade de Caixa',v:fmt(necCaixa),s:'total pendente'},
-    {bar:folga>=0?'var(--green)':'var(--red)',l:folga>=0?'Folga de Caixa':'Déficit',v:fmt(Math.abs(folga)),s:folga>=0?'sobra':'falta'},
-  ].map(function(k){return '<div class="kpi"><div class="kpi-bar" style="background:'+k.bar+'"></div><div class="kpi-label">'+k.l+'</div><div class="kpi-val">'+k.v+'</div><div class="kpi-sub">'+k.s+'</div></div>';}).join('');
+    {bar:'#3b82f6',l:'Saldo Atual',v:fmt(saldo),s:'nas contas',icon:'💳'},
+    {bar:'#10b981',l:'A Receber Total',v:fmt(recTot),s:aRec.length+' boleto(s)',icon:'📥'},
+    {bar:'#ef4444',l:'A Pagar Total',v:fmt(necTot),s:aPag.length+' conta(s) + fixas',icon:'📤'},
+    {bar:sobra>=0?'#10b981':'#ef4444',l:sobra>=0?'Sobra do Mês':'Déficit do Mês',v:fmt(Math.abs(sobra)),s:sobra>=0?'livre após pagamentos':'precisa cobrir',icon:sobra>=0?'🟢':'🔴'},
+  ].map(function(k){
+    return '<div class="kpi">'+
+      '<div class="kpi-bar" style="background:'+k.bar+'"></div>'+
+      '<div class="kpi-label">'+k.icon+' '+k.l+'</div>'+
+      '<div class="kpi-val" style="color:'+k.bar+'">'+k.v+'</div>'+
+      '<div class="kpi-sub">'+k.s+'</div></div>';
+  }).join('');
 
-  // Alerta
-  document.getElementById('fluxo-alerta').innerHTML=folga<0
-    ?'<div class="alert-box alert-red"><div class="alert-icon">⚠️</div><div><strong>Caixa Insuficiente:</strong> Você tem '+fmt(saldo)+' mas precisa de '+fmt(necCaixa)+'. Déficit de '+fmt(Math.abs(folga))+'.</div></div>'
-    :'<div class="alert-box alert-green"><div class="alert-icon">✅</div><div><strong>Caixa Suficiente:</strong> '+fmt(saldo)+' cobre '+fmt(necCaixa)+' de contas. Folga de '+fmt(folga)+'.</div></div>';
+  // ── Alerta ──
+  document.getElementById('fluxo-alerta').innerHTML=sobra<0
+    ?'<div class="alert-box alert-red"><div class="alert-icon">🚨</div><div><strong>Déficit este mês:</strong> Entradas de '+fmt(m0.ent)+' vs saídas de '+fmt(m0.sai)+'. Déficit de '+fmt(Math.abs(sobra))+'. Revise despesas ou antecipe cobranças.</div></div>'
+    :saldo<necTot
+    ?'<div class="alert-box" style="background:#fff7ed;border:1px solid #f59e0b;border-radius:8px;display:flex;gap:10px;padding:12px 16px;margin-bottom:12px"><div class="alert-icon">⚠️</div><div><strong>Caixa apertado:</strong> Saldo de '+fmt(saldo)+' cobre contas pendentes de '+fmt(necTot)+'. Fique atento aos vencimentos.</div></div>'
+    :'<div class="alert-box alert-green"><div class="alert-icon">✅</div><div><strong>Fluxo saudável:</strong> Sobra de '+fmt(sobra)+' este mês. Saldo projetado: '+fmt(m0.saldoDepois)+'</div></div>';
 
-  // 8 semanas
+  // ── Gráfico — barras mês a mês + linha saldo ──
+  var chartLabels=meses.map(function(m){return m.nome.split(' ')[0];});
+  var saldos=meses.map(function(m){return Math.round(m.saldoDepois);});
+  mkChart('chart-fluxo',{
+    data:{
+      labels:chartLabels,
+      datasets:[
+        {type:'bar',label:'Entradas',data:meses.map(function(m){return Math.round(m.ent);}),
+          backgroundColor:'rgba(16,185,129,.8)',borderRadius:6,borderSkipped:false},
+        {type:'bar',label:'Saídas',data:meses.map(function(m){return Math.round(m.sai);}),
+          backgroundColor:'rgba(239,68,68,.8)',borderRadius:6,borderSkipped:false},
+        {type:'line',label:'Saldo Projetado',data:saldos,
+          borderColor:'#3b82f6',backgroundColor:'rgba(59,130,246,.08)',
+          fill:true,tension:.3,pointRadius:6,pointBackgroundColor:saldos.map(function(v){return v>=0?'#3b82f6':'#ef4444';}),
+          borderWidth:2.5,yAxisID:'y2'},
+      ]
+    },
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'top',labels:{font:{size:11},boxWidth:10,usePointStyle:true}}},
+      scales:{
+        x:{ticks:{font:{size:12},color:'#64748b'},grid:{display:false}},
+        y:{ticks:{callback:function(v){return 'R$'+Math.round(v/1000)+'k';},font:{size:10}},
+          grid:{color:'rgba(0,0,0,.05)'}},
+        y2:{position:'right',ticks:{callback:function(v){return 'R$'+Math.round(v/1000)+'k';},font:{size:10}},
+          grid:{display:false}}
+      }
+    }
+  });
+
+  // ── Cards dos 3 meses ──
+  document.getElementById('fluxo-detalhe').innerHTML=
+    '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px">'+
+    meses.map(function(m,i){
+      var ok=m.sobra>=0;
+      var cor=ok?'#10b981':'#ef4444';
+      var bg=ok?'#f0fdf4':'#fff5f5';
+      return '<div style="border:1.5px solid '+cor+';border-radius:12px;padding:16px;background:'+bg+'">'+
+        '<div style="font-size:13px;font-weight:800;color:#1e293b;margin-bottom:10px">'+
+          (i===0?'📅 ':'📆 ')+m.nome+'</div>'+
+        '<div style="font-size:11px;color:#64748b;margin-bottom:4px">Saldo início: <strong>'+fmt(m.saldoAntes)+'</strong></div>'+
+        projecaoRow('📥 Entradas',m.ent,'#10b981')+
+        projecaoRow('📤 Saídas',m.sai,'#ef4444')+
+        '<div style="border-top:1.5px solid '+cor+';margin:8px 0"></div>'+
+        '<div style="display:flex;justify-content:space-between;align-items:center">'+
+          '<span style="font-size:12px;font-weight:700;color:#64748b">'+(ok?'Sobra':'Déficit')+'</span>'+
+          '<span style="font-size:18px;font-weight:900;color:'+cor+'">'+fmt(Math.abs(m.sobra))+'</span>'+
+        '</div>'+
+        '<div style="font-size:11px;color:#64748b;margin-top:4px">Saldo final: <strong style="color:'+cor+'">'+fmt(m.saldoDepois)+'</strong></div>'+
+      '</div>';
+    }).join('')+
+    '</div>'+
+    // Semanas desta semana
+    renderSemanas(aRec,aPag,saldo);
+
+  // ── Indicador sobra caixa grande ──
+  var sobraEl=document.getElementById('fluxo-sobra');
+  if(sobraEl){
+    var cor2=sobra>=0?'#10b981':'#ef4444';
+    sobraEl.innerHTML='<div style="background:'+(sobra>=0?'#d1fae5':'#fee2e2')+';border-radius:12px;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">'+
+      '<div>'+
+        '<div style="font-size:11px;font-weight:700;color:'+cor2+';text-transform:uppercase;letter-spacing:.5px">'+( sobra>=0?'Sobra de Caixa este Mês':'Déficit este Mês')+'</div>'+
+        '<div style="font-size:32px;font-weight:900;color:'+cor2+'">'+fmt(Math.abs(sobra))+'</div>'+
+        '<div style="font-size:12px;color:'+cor2+';margin-top:2px">Saldo projetado fim do mês: '+fmt(m0.saldoDepois)+'</div>'+
+      '</div>'+
+      '<div style="font-size:56px">'+(sobra>=0?'🟢':'🔴')+'</div>'+
+    '</div>';
+  }
+}
+
+function projecaoRow(l,v,c){
+  return '<div style="display:flex;justify-content:space-between;font-size:12px;padding:3px 0">'+
+    '<span style="color:#64748b">'+l+'</span>'+
+    '<span style="font-weight:700;color:'+c+'">'+fmt(v)+'</span>'+
+  '</div>';
+}
+
+function renderSemanas(aRec,aPag,saldo){
+  var hoje2=new Date(hoje()+'T00:00');
   var semanas=[];
-  var base=new Date(hoje()+'T00:00');
-  for(var sw=0;sw<8;sw++){
-    var ini=new Date(base);ini.setDate(ini.getDate()+sw*7);
+  for(var sw=0;sw<4;sw++){
+    var ini=new Date(hoje2);ini.setDate(ini.getDate()+sw*7);
     var fim=new Date(ini);fim.setDate(fim.getDate()+6);
     var iStr=ini.toISOString().split('T')[0];
     var fStr=fim.toISOString().split('T')[0];
     var ent=aRec.filter(function(r){return r.vencimento>=iStr&&r.vencimento<=fStr;});
     var sai=aPag.filter(function(x){return x.vencimento>=iStr&&x.vencimento<=fStr;});
-    semanas.push({ini:ini,fim:fim,iStr:iStr,fStr:fStr,
-      entTotal:ent.reduce(function(s,r){return s+r.valor;},0),
-      saiTotal:sai.reduce(function(s,x){return s+x.valor;},0),
-      ent:ent,sai:sai});
+    if(!ent.length&&!sai.length)continue;
+    semanas.push({ini:ini,fim:fim,ent:ent,sai:sai,
+      entT:ent.reduce(function(s,r){return s+Number(r.valor||0);},0),
+      saiT:sai.reduce(function(s,x){return s+Number(x.valor||0);},0)});
   }
-  var labels=semanas.map(function(sw){return sw.ini.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})+'-'+sw.fim.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});});
-  var acum=saldo;
-  var saldoLinha=semanas.map(function(sw){acum+=sw.entTotal-sw.saiTotal;return Math.round(acum);});
-
-  mkChart('chart-fluxo',{
-    data:{labels:labels,datasets:[
-      {type:'bar',label:'Entradas',data:semanas.map(function(s){return s.entTotal;}),backgroundColor:'rgba(13,147,115,.75)',borderRadius:4},
-      {type:'bar',label:'Saídas',data:semanas.map(function(s){return s.saiTotal;}),backgroundColor:'rgba(214,59,59,.75)',borderRadius:4},
-      {type:'line',label:'Saldo',data:saldoLinha,borderColor:'#2563eb',backgroundColor:'rgba(37,99,235,.08)',fill:true,tension:.3,pointRadius:4,pointBackgroundColor:'#2563eb',borderWidth:2,yAxisID:'y2'},
-    ]},
-    options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{display:false},annotation:{}},
-      scales:{x:{ticks:{font:{size:10},maxRotation:30},grid:{display:false}},
-        y:{ticks:{callback:function(v){return 'R$'+Math.round(v/1000)+'k';}},grid:{color:'rgba(0,0,0,.04)'}},
-        y2:{position:'right',ticks:{callback:function(v){return 'R$'+Math.round(v/1000)+'k';}},grid:{display:false}}}}
-  });
-
-  // Detalhe semanas
-  document.getElementById('fluxo-detalhe').innerHTML=semanas.map(function(sw,i){
-    if(!sw.ent.length&&!sw.sai.length)return '';
-    var lbl=sw.ini.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})+' – '+sw.fim.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
-    return '<div style="border-bottom:1px solid var(--border);padding:12px 18px">'+
-      '<div class="flex-between mb-8"><span style="font-size:12px;font-weight:600">'+(i===0?'Esta semana':'Semana '+(i+1))+' · '+lbl+'</span>'+
-      '<div style="display:flex;gap:16px;font-size:12px"><span class="text-green">+'+fmt(sw.entTotal)+'</span><span class="text-red">−'+fmt(sw.saiTotal)+'</span><span style="font-weight:600;color:'+(saldoLinha[i]>=0?'var(--blue)':'var(--red)')+'">Saldo: '+fmt(saldoLinha[i])+'</span></div></div>'+
-      sw.ent.map(function(r){return '<div style="display:flex;justify-content:space-between;font-size:12px;color:var(--ink-2);padding:2px 0"><span class="text-green">↑ '+r.clienteNome.split(' ')[0]+' · '+r.desc+'</span><span class="text-green">'+fmt(r.valor)+'</span></div>';}).join('')+
-      sw.sai.map(function(x){return '<div style="display:flex;justify-content:space-between;font-size:12px;color:var(--ink-2);padding:2px 0"><span class="text-red">↓ '+x.desc+'</span><span class="text-red">'+fmt(x.valor)+'</span></div>';}).join('')+
-    '</div>';
-  }).join('');
+  if(!semanas.length)return '<div style="text-align:center;padding:20px;color:#94a3b8;font-size:13px">Nenhum lançamento nas próximas 4 semanas</div>';
+  return '<div style="font-size:12px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">📋 Próximas 4 Semanas</div>'+
+    semanas.map(function(sw,i){
+      var lbl=sw.ini.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})+' – '+sw.fim.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
+      return '<div style="border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;margin-bottom:8px">'+
+        '<div style="display:flex;justify-content:space-between;padding:10px 14px;background:#f8fafc">'+
+          '<span style="font-size:12px;font-weight:700">'+(i===0?'Esta semana':lbl)+'</span>'+
+          '<div style="display:flex;gap:12px;font-size:12px">'+
+            '<span style="color:#10b981;font-weight:700">+'+fmt(sw.entT)+'</span>'+
+            '<span style="color:#ef4444;font-weight:700">−'+fmt(sw.saiT)+'</span>'+
+          '</div>'+
+        '</div>'+
+        sw.ent.map(function(r){return '<div style="display:flex;justify-content:space-between;padding:6px 14px;border-top:1px solid #f1f5f9;font-size:12px"><span style="color:#10b981">↑ '+(r.clienteNome||'')+(r.desc?' · '+r.desc:'')+'</span><span style="color:#10b981;font-weight:700">'+fmt(r.valor)+'</span></div>';}).join('')+
+        sw.sai.map(function(x){return '<div style="display:flex;justify-content:space-between;padding:6px 14px;border-top:1px solid #f1f5f9;font-size:12px"><span style="color:#ef4444">↓ '+x.desc+'</span><span style="color:#ef4444;font-weight:700">'+fmt(x.valor)+'</span></div>';}).join('')+
+      '</div>';
+    }).join('');
 }
+
 
 // ── FLUXO ANUAL ───────────────────────────────────────────────
 function renderAnual(d){
@@ -1061,38 +1196,94 @@ function renderCaixa(d){
 
 // ── DRE ──────────────────────────────────────────────────────
 function renderDRE(d){
-  var pedsMes=d.pedidos.filter(function(p){return noMesSel(p.entrega||p.data)&&p.status!=='cancelado';});
-  var fat=pedsMes.reduce(function(s,p){return s+(p.itens||[]).reduce(function(ss,i){return ss+Number(i.total||0);},0);},0);
-  var mp=d.compras.filter(function(c){return noMesSel(c.data||c.criadoEm);}).reduce(function(s,c){return s+Number(c.total||c.valor||0);},0);
-  var fixas=d.despesas.filter(function(x){return x.tipo==='fixo'&&x.ativo!==false;}).reduce(function(s,x){return s+Number(x.valor||0);},0);
-  var impPct=(d.config.aliquota||6)/100;
+  // RECEITA — pedidos com ENTREGA no mês (competência)
+  var pedsMes=d.pedidos.filter(function(p){
+    return noMesSel(p.entrega||p.data)&&p.status!=='cancelado';
+  });
+  var fat=pedsMes.reduce(function(s,p){
+    return s+(p.itens||[]).reduce(function(ss,i){return ss+Number(i.total||0);},0);
+  },0);
+
+  // Deduções: Simples Nacional
+  var impPct=Number(d.config.aliquota||6)/100;
   var imp=fat*impPct;
-  var mc=fat-mp-imp;
-  var lucro=mc-fixas;
-  var mg=fat>0?mc/fat*100:0;
-  var ml=fat>0?lucro/fat*100:0;
+  var recLiq=fat-imp;
 
-  document.getElementById('dre-titulo').textContent='DRE — '+(typeof MG!=='undefined'?MG.getNome():new Date().toLocaleDateString('pt-BR',{month:'long',year:'numeric'}));
+  // CPV: MP comprada no mês + faccionista (envios do mês)
+  var mpMes=d.compras.filter(function(c){
+    return noMesSel(c.data||c.criadoEm);
+  }).reduce(function(s,c){return s+Number(c.valor||0)+Number(c.frete||0);},0);
+  var faccMes=load('allhair_envios_v2',[]).filter(function(e){
+    return noMesSel(e.dataEnvio)&&Number(e.valor||0)>0;
+  }).reduce(function(s,e){return s+Number(e.valor||0)+Number(e.frete||0);},0);
+  var cpv=mpMes+faccMes;
+  var lucroBruto=recLiq-cpv;
+  var mbPct=fat>0?lucroBruto/fat*100:0;
 
-  function dreRow(l,v,bold,cor,ind){
-    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:'+(bold?'12':'8')+'px 18px;background:'+(bold?'var(--surface-2)':'transparent')+';border-bottom:1px solid var(--border)">'+
-      '<span style="font-size:13px;font-weight:'+(bold?'600':'400')+';padding-left:'+(ind?16:0)+'px;color:var(--ink'+(ind?'-2':'')+')">'+l+'</span>'+
-      '<span style="font-family:\'DM Mono\',monospace;font-size:'+(bold?'14':'13')+'px;font-weight:'+(bold?'600':'400')+';color:'+(cor||'var(--ink)')+'">'+fmt(v)+'</span>'+
+  // DESPESAS OPERACIONAIS
+  var fixas=d.despesas.filter(function(x){return x.tipo==='fixo'&&x.ativo!==false;})
+    .reduce(function(s,x){return s+Number(x.valor||0);},0);
+  var variaveis=d.despesas.filter(function(x){
+    return x.tipo==='variavel'&&noMesSel(x.venc||x.vencimento||x.dataavulso||x.avista||x.divida);
+  }).reduce(function(s,x){return s+Number(x.valor||0);},0);
+  var apMes=(d.aPagar||[]).filter(function(x){
+    return !x.pago&&!x.geradoAutomatico&&noMesSel(x.vencimento);
+  }).reduce(function(s,x){return s+Number(x.valor||0);},0);
+  var comissoes=d.despesas.filter(function(x){
+    return x.cat==='Comissão'&&noMesSel(x.dataavulso||x.venc||x.vencimento);
+  }).reduce(function(s,x){return s+Number(x.valor||0);},0);
+  var despesasOp=fixas+variaveis+comissoes;
+  var lucro=lucroBruto-despesasOp;
+  var mlPct=fat>0?lucro/fat*100:0;
+  var mcPct=fat>0?lucroBruto/fat:0.45;
+  var pe=mcPct>0?despesasOp/mcPct:0;
+
+  document.getElementById('dre-titulo').textContent='DRE — '+MG.getNome();
+
+  function sec(l){
+    return '<div style="padding:6px 18px;background:#ede9fe;font-size:10px;font-weight:800;color:#6d28d9;text-transform:uppercase;letter-spacing:.8px">'+l+'</div>';
+  }
+  function row(l,v,bold,cor,ind,pct){
+    var ps=pct!==undefined?' <span style="font-size:10px;opacity:.6">('+pct.toFixed(1)+'%)</span>':'';
+    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:'+(bold?'10':'7')+'px 18px;background:'+(bold?'#f8fafc':'transparent')+';border-bottom:1px solid #f1f5f9">'+
+      '<span style="font-size:13px;font-weight:'+(bold?'700':'400')+';padding-left:'+(ind||0)*14+'px;color:'+(bold?'#1e293b':'#64748b')+'">'+l+ps+'</span>'+
+      '<span style="font-size:'+(bold?'14':'13')+'px;font-weight:'+(bold?'800':'400')+';color:'+(cor||'#1e293b')+'">'+fmt(v)+'</span>'+
     '</div>';
   }
+
   document.getElementById('dre-content').innerHTML=
-    dreRow('(+) Faturamento Bruto',fat,true,'var(--purple)')+
-    dreRow('(−) Custo de MP',mp,false,'var(--red)',true)+
-    dreRow('(−) Impostos ('+(impPct*100).toFixed(0)+'%)',imp,false,'var(--red)',true)+
-    dreRow('(=) Margem de Contribuição ('+mg.toFixed(1)+'%)',mc,true,mc>=0?'var(--blue)':'var(--red)')+
-    dreRow('(−) Despesas Fixas',fixas,false,'var(--red)',true)+
-    dreRow('(=) Lucro Líquido ('+ml.toFixed(1)+'%)',lucro,true,lucro>=0?'var(--green)':'var(--red)');
+    sec('Receita')+
+    row('(+) Faturamento Bruto',fat,true,'#8b5cf6')+
+    row('(−) Impostos Simples ('+( impPct*100).toFixed(0)+'%)',imp,false,'#ef4444',1)+
+    row('(=) Receita Líquida',recLiq,true,'#3b82f6',0,fat>0?recLiq/fat*100:0)+
+    sec('Custo dos Produtos Vendidos')+
+    row('(−) Matéria-Prima',mpMes,false,'#ef4444',1)+
+    row('(−) Faccionista / Acabamento',faccMes,false,'#ef4444',1)+
+    row('(=) Lucro Bruto',lucroBruto,true,lucroBruto>=0?'#10b981':'#ef4444',0,mbPct)+
+    sec('Despesas Operacionais')+
+    row('(−) Despesas Fixas',fixas,false,'#ef4444',1)+
+    row('(−) Despesas Variáveis do Mês',variaveis+apMes,false,'#ef4444',1)+
+    row('(−) Comissões Representantes',comissoes,false,'#ef4444',1)+
+    sec('Resultado Final')+
+    row('(=) Lucro Líquido',lucro,true,lucro>=0?'#10b981':'#ef4444',0,mlPct)+
+    '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;border-top:2px solid #e2e8f0">'+
+      kpiDRE('Margem Bruta',mbPct.toFixed(1)+'%',mbPct>=30?'#10b981':mbPct>=15?'#f59e0b':'#ef4444')+
+      kpiDRE('Margem Líquida',mlPct.toFixed(1)+'%',mlPct>=10?'#10b981':mlPct>=0?'#f59e0b':'#ef4444')+
+      kpiDRE('Ponto de Equilíbrio',fmtK(pe),fat>=pe?'#10b981':'#ef4444')+
+    '</div>';
 
   mkChart('chart-dre',{type:'doughnut',
-    data:{labels:['MP','Impostos','Despesas Fixas','Lucro'],
-      datasets:[{data:[Math.max(0,mp),Math.max(0,imp),Math.max(0,fixas),Math.max(0,lucro)],backgroundColor:['#d63b3b','#c97a00','#2563eb','#0d9373'],borderWidth:0,hoverOffset:4}]},
+    data:{labels:['Impostos','MP + Facc','Fixas','Variáveis','Comissões','Lucro'],
+      datasets:[{data:[Math.max(0,imp),Math.max(0,cpv),Math.max(0,fixas),Math.max(0,variaveis+apMes),Math.max(0,comissoes),Math.max(0,lucro)],
+      backgroundColor:['#c97a00','#d63b3b','#2563eb','#7c3aed','#db2777','#0d9373'],borderWidth:0,hoverOffset:4}]},
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:11},boxWidth:12}}}}
   });
+}
+function kpiDRE(l,v,c){
+  return '<div style="text-align:center;padding:12px 8px;border-right:1px solid #e2e8f0">'+
+    '<div style="font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;margin-bottom:4px">'+l+'</div>'+
+    '<div style="font-size:20px;font-weight:900;color:'+c+'">'+v+'</div>'+
+  '</div>';
 }
 
 // ── MODALS A RECEBER ─────────────────────────────────────────

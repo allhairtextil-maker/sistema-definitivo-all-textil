@@ -233,7 +233,7 @@ table { width: 100%; border-collapse: collapse; }
 .tab-content { display: none; }
 .tab-content.active { display: block; }
 @media(max-width:900px) {
-  .sidebar { width: 56px; }
+  /* sidebar width from design.css */
   .sb-header .sb-brand, .sb-section, .sb-link span:not(.sb-icon),
   .sb-footer .sb-user-info, .sb-date-text, .sb-brand-sub { display: none; }
   .sb-header { padding: 14px 8px; justify-content: center; }
@@ -446,7 +446,7 @@ table { width: 100%; border-collapse: collapse; }
 .tab-content { display: none; }
 .tab-content.active { display: block; }
 @media(max-width:900px) {
-  .sidebar { width: 56px; }
+  /* sidebar width from design.css */
   .sb-header .sb-brand, .sb-section, .sb-link span:not(.sb-icon),
   .sb-footer .sb-user-info, .sb-date-text, .sb-brand-sub { display: none; }
   .sb-header { padding: 14px 8px; justify-content: center; }
@@ -659,7 +659,7 @@ table { width: 100%; border-collapse: collapse; }
 .tab-content { display: none; }
 .tab-content.active { display: block; }
 @media(max-width:900px) {
-  .sidebar { width: 56px; }
+  /* sidebar width from design.css */
   .sb-header .sb-brand, .sb-section, .sb-link span:not(.sb-icon),
   .sb-footer .sb-user-info, .sb-date-text, .sb-brand-sub { display: none; }
   .sb-header { padding: 14px 8px; justify-content: center; }
@@ -872,7 +872,7 @@ table { width: 100%; border-collapse: collapse; }
 .tab-content { display: none; }
 .tab-content.active { display: block; }
 @media(max-width:900px) {
-  .sidebar { width: 56px; }
+  /* sidebar width from design.css */
   .sb-header .sb-brand, .sb-section, .sb-link span:not(.sb-icon),
   .sb-footer .sb-user-info, .sb-date-text, .sb-brand-sub { display: none; }
   .sb-header { padding: 14px 8px; justify-content: center; }
@@ -1085,7 +1085,7 @@ table { width: 100%; border-collapse: collapse; }
 .tab-content { display: none; }
 .tab-content.active { display: block; }
 @media(max-width:900px) {
-  .sidebar { width: 56px; }
+  /* sidebar width from design.css */
   .sb-header .sb-brand, .sb-section, .sb-link span:not(.sb-icon),
   .sb-footer .sb-user-info, .sb-date-text, .sb-brand-sub { display: none; }
   .sb-header { padding: 14px 8px; justify-content: center; }
@@ -1298,7 +1298,7 @@ table { width: 100%; border-collapse: collapse; }
 .tab-content { display: none; }
 .tab-content.active { display: block; }
 @media(max-width:900px) {
-  .sidebar { width: 56px; }
+  /* sidebar width from design.css */
   .sb-header .sb-brand, .sb-section, .sb-link span:not(.sb-icon),
   .sb-footer .sb-user-info, .sb-date-text, .sb-brand-sub { display: none; }
   .sb-header { padding: 14px 8px; justify-content: center; }
@@ -1424,7 +1424,7 @@ table { width: 100%; border-collapse: collapse; }
   .sidebar-date{font-size:10px;color:rgba(255,255,255,0.35);text-align:center;margin-top:2px;}
   .main-content{margin-left:220px;min-height:100vh;}
   @media(max-width:900px){
-    .sidebar{width:56px;}
+    /* sidebar width from design.css */
     .nav-link span:not(.nav-icon){display:none;}
     .nav-group{display:none;}
     .sidebar-footer{display:none;}
@@ -1801,23 +1801,7 @@ table { width: 100%; border-collapse: collapse; }
     buildItemOptions();
     var sel=document.getElementById('c-fornecedor');
     sel.innerHTML='<option value="">— Opcional —</option>';
-    fornecedores.forEach(function(f){
-      var pendente=compras.filter(function(c){return c.fornecedor===f.id&&c.statusPgto==='pendente';}).reduce(function(s,c){return s+Number(c.valor||0);},0);
-      var disp=f.limiteCredito>0?Math.max(0,f.limiteCredito-pendente):0;
-      var o=document.createElement('option');o.value=f.id;
-      o.textContent=f.nome+(f.limiteCredito>0?' (Limite disp: R$'+disp.toFixed(0)+')':'');
-      sel.appendChild(o);
-    });
-    sel.onchange=function(){
-      var fId=sel.value;var f=fornecedores.find(function(x){return x.id===fId;});
-      if(f&&f.prazoPagamento>0){
-        var dataEl=document.getElementById('c-data');var dataPag=document.getElementById('c-vencimento');
-        if(dataEl&&dataEl.value&&dataPag&&!dataPag.value){
-          var d=new Date(dataEl.value+'T00:00');d.setDate(d.getDate()+f.prazoPagamento);
-          dataPag.value=d.toISOString().split('T')[0];
-        }
-      }
-    };
+    fornecedores.forEach(function(f){var o=document.createElement('option');o.value=f.id;o.textContent=f.nome;sel.appendChild(o);});
     ['c-qtd','c-valor','c-frete','c-nf','c-obs','c-vencimento','c-data-pgto'].forEach(function(k){
       var el=document.getElementById(k);if(el)el.value='';
     });
@@ -2229,8 +2213,6 @@ table { width: 100%; border-collapse: collapse; }
         document.getElementById('f-estado').value=f.estado||'';
         document.getElementById('f-cat').value=f.cat||'';
         document.getElementById('f-obs').value=f.obs||'';
-        if(document.getElementById('f-limite'))document.getElementById('f-limite').value=f.limiteCredito||'';
-        if(document.getElementById('f-prazo'))document.getElementById('f-prazo').value=f.prazoPagamento||'';
       }
     }
     document.getElementById('overlay-forn').classList.add('open');
@@ -2246,9 +2228,7 @@ table { width: 100%; border-collapse: collapse; }
       cnpj:document.getElementById('f-cnpj').value,
       estado:document.getElementById('f-estado').value,
       cat:document.getElementById('f-cat').value,
-      obs:document.getElementById('f-obs').value,
-      limiteCredito:parseFloat(document.getElementById('f-limite')?.value||0)||0,
-      prazoPagamento:parseInt(document.getElementById('f-prazo')?.value||0)||0,
+      obs:document.getElementById('f-obs').value
     };
     if(editingFornId){var i=fornecedores.findIndex(function(x){return x.id===editingFornId;});if(i>=0)fornecedores[i]=f;}
     else fornecedores.push(f);
@@ -2285,21 +2265,6 @@ table { width: 100%; border-collapse: collapse; }
           '<span>'+nComp+' compra(s)</span>'+
           '<span style="font-weight:700;color:var(--blue)">'+fmt(total)+'</span>'+
         '</div>'+
-        (f.limiteCredito>0?(function(){
-          var pendente=compras.filter(function(c){return c.fornecedor===f.id&&c.statusPgto==='pendente';}).reduce(function(s,c){return s+Number(c.valor||0)+Number(c.frete||0);},0);
-          var disponivel=Math.max(0,f.limiteCredito-pendente);
-          var pct=f.limiteCredito>0?Math.round(pendente/f.limiteCredito*100):0;
-          var cor=pct>=90?'#ef4444':pct>=60?'#f59e0b':'#10b981';
-          return '<div style="padding:8px 12px;background:'+cor+'11;border-radius:0 0 12px 12px;border-top:1px solid var(--border)">'+
-            '<div style="display:flex;justify-content:space-between;font-size:11px;font-weight:700;color:'+cor+';margin-bottom:4px">'+
-              '<span>💳 Limite: '+fmt(f.limiteCredito)+(f.prazoPagamento?' · '+f.prazoPagamento+'d':'')+'</span>'+
-              '<span>Disponível: '+fmt(disponivel)+'</span>'+
-            '</div>'+
-            '<div style="background:#e2e8f0;border-radius:20px;height:5px;overflow:hidden">'+
-              '<div style="height:100%;background:'+cor+';width:'+pct+'%;border-radius:20px"></div>'+
-            '</div>'+
-          '</div>';
-        })():'<div></div>')+
       '</div>';
     }).join('');
   }
