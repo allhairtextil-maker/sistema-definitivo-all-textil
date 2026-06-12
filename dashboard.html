@@ -180,16 +180,16 @@
     </div>
   </div>
   <div class="content">
-    <!-- PAINEL MANHÃ -->
-    <div id="painel-manha"></div>
-    <!-- CHECKLIST DIÁRIO -->
-    <div id="checklist-diario" style="margin-bottom:14px"></div>
     <!-- ALERTA FIM DE MÊS -->
     <div id="alerta-fimmes"></div>
-    <!-- Meta de faturamento -->
-    <div id="meta-hero-wrap"></div>
+    <!-- PAINEL MANHÃ -->
+    <div id="painel-manha" style="margin-bottom:16px"></div>
+    <!-- CHECKLIST DIÁRIO -->
+    <div id="checklist-diario"></div>
     <!-- KPIs: A Receber, A Pagar, Resultado, Pedidos -->
     <div class="kpi-grid" id="kpi-grid"></div>
+    <!-- Meta de faturamento -->
+    <div id="meta-hero-wrap"></div>
     <!-- Esta semana (abaixo dos KPIs) -->
     <div id="semana-wrap"></div>
     <!-- Fila de produção + Financeiro -->
@@ -1127,27 +1127,33 @@ function renderPainelManha(){
 
   function fmt2(v){return 'R$ '+Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});}
   function card(icon,label,val,cor,sub,action){
-    return '<div style="background:#fff;border:1.5px solid '+cor+'33;border-radius:12px;padding:14px 16px;position:relative">'+
-      (action?'<a href="'+action+'" style="position:absolute;top:10px;right:12px;font-size:10px;color:#8b5cf6;font-weight:700;text-decoration:none">Ver →</a>':'')+
-      '<div style="font-size:12px;color:#64748b;font-weight:700;margin-bottom:6px">'+icon+' '+label+'</div>'+
-      '<div style="font-size:22px;font-weight:900;color:'+cor+'">'+val+'</div>'+
+    var el='<a href="'+(action||'#')+'" style="text-decoration:none;display:block;background:#fff;border:1px solid '+cor+'44;border-left:4px solid '+cor+';border-radius:10px;padding:14px 16px">'+
+      '<div style="font-size:11px;color:#64748b;font-weight:700;text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px">'+icon+' '+label+'</div>'+
+      '<div style="font-size:20px;font-weight:900;color:'+cor+'">'+val+'</div>'+
       (sub?'<div style="font-size:11px;color:#94a3b8;margin-top:3px">'+sub+'</div>':'')+
-    '</div>';
+    '</a>';
+    return el;
   }
 
   var dataHoje=n.toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'});
   dataHoje=dataHoje.charAt(0).toUpperCase()+dataHoje.slice(1);
 
-  el.innerHTML='<div style="margin-bottom:16px">'+
-    '<div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">'+dataHoje+'</div>'+
+  var temAtraso=pagarAtraso+receberAtraso>0;
+  el.innerHTML=
+    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">'+
+      '<div>'+
+        '<div style="font-size:19px;font-weight:900;color:#1e293b">Bom dia 👋</div>'+
+        '<div style="font-size:12px;color:#94a3b8;margin-top:1px">'+dataHoje+'</div>'+
+      '</div>'+
+      (temAtraso?'<div style="background:#fee2e2;color:#ef4444;border-radius:20px;padding:5px 14px;font-size:12px;font-weight:700">🔴 '+fmt2(pagarAtraso+receberAtraso)+' em atraso</div>':
+        '<div style="background:#d1fae5;color:#065f46;border-radius:20px;padding:5px 14px;font-size:12px;font-weight:700">✅ Tudo em dia</div>')+
+    '</div>'+
     '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">'+
       card('💳','Caixa Atual',fmt2(saldo),'#3b82f6','em '+contas.length+' conta(s)','financeiro.html')+
-      card('📥','A Receber Hoje',fmt2(receberHoje),receberHoje>0?'#10b981':'#94a3b8',receberHoje>0?'Cobrar hoje':'Nenhum hoje','financeiro.html')+
-      card('📤','A Pagar Hoje',fmt2(pagarHoje),pagarHoje>0?'#f59e0b':'#94a3b8',pagarHoje>0?'Pagar hoje':'Nenhum hoje','financeiro.html')+
-      card('🔴','Em Atraso',fmt2(pagarAtraso+receberAtraso),pagarAtraso+receberAtraso>0?'#ef4444':'#10b981',
-        pagarAtraso+receberAtraso>0?'Urgente — resolver hoje':'Tudo em dia','financeiro.html')+
-    '</div>'+
-  '</div>';
+      card('📥','A Receber Hoje',fmt2(receberHoje),receberHoje>0?'#10b981':'#64748b',receberHoje>0?'Entrar hoje':'Nenhum hoje','financeiro.html')+
+      card('📤','A Pagar Hoje',fmt2(pagarHoje),pagarHoje>0?'#f59e0b':'#64748b',pagarHoje>0?'Pagar hoje':'Nenhum hoje','financeiro.html')+
+      card('⚠️','Em Atraso',fmt2(pagarAtraso+receberAtraso),temAtraso?'#ef4444':'#10b981',temAtraso?'Resolver hoje':'Tudo em dia','financeiro.html')+
+    '</div>';
 }
 
 function renderChecklist(){
@@ -1180,7 +1186,7 @@ function renderChecklist(){
 }
 
 function checkItem(key,label,done,action){
-  return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #f1f5f9" onclick="'+action+'" style="cursor:pointer">'+
+  return '<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #f1f5f9;cursor:pointer" onclick="'+action+'">'+
     '<div style="width:20px;height:20px;border-radius:50%;border:2px solid '+(done?'#10b981':'#cbd5e1')+';background:'+(done?'#10b981':'transparent')+';display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer">'+
       (done?'<span style="color:#fff;font-size:12px">✓</span>':'')+
     '</div>'+
@@ -2010,6 +2016,10 @@ function wizardFinalizar(){
 
   init();
   setInterval(init,60000);
+  // Painel manhã, checklist e alerta — renderiza 1x no carregamento
+  renderPainelManha();
+  renderChecklist();
+  renderAlertaFimMes();
 
 
 </script>
