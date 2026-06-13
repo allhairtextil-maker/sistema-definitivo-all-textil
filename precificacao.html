@@ -1,58 +1,58 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Precificação — ALL HAIR</title>
 <link rel="manifest" href="manifest.json">
-<link rel="icon" href="favicon.ico">
+<link rel="icon" type="image/png" href="favicon.ico">
+<meta name="theme-color" content="#8b5cf6">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Precificação — ALL HAIR</title>
+<script src="mes-global.js"></script>
 <link rel="stylesheet" href="design.css">
 <style>
-.prec-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
-.prec-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;}
-.prec-title{font-size:13px;font-weight:800;color:var(--ink-2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
-.field{margin-bottom:12px;}
-.field label{display:block;font-size:11px;font-weight:700;color:var(--ink-3);margin-bottom:4px;text-transform:uppercase;letter-spacing:.3px;}
-.field input,.field select{width:100%;padding:8px 11px;border:1.5px solid var(--border-2);border-radius:7px;font-family:inherit;font-size:13px;background:#fff;color:var(--ink);transition:border-color .15s;}
-.field input:focus,.field select:focus{outline:none;border-color:var(--purple);}
-.field-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
-.field-hint{font-size:10px;color:var(--ink-3);margin-top:3px;}
-.section-sep{border:none;border-top:1.5px solid var(--border);margin:16px 0;}
-/* Resultado */
-.result-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;}
-.result-header{background:linear-gradient(135deg,var(--purple),#a78bfa);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;}
-.result-header-title{font-size:13px;font-weight:800;color:rgba(255,255,255,.8);text-transform:uppercase;letter-spacing:.5px;}
-.result-preco{font-size:32px;font-weight:900;color:#fff;}
-.result-sub{font-size:12px;color:rgba(255,255,255,.7);margin-top:2px;}
-.result-rows{padding:16px 20px;}
-.result-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);}
-.result-row:last-child{border-bottom:none;}
-.result-row-label{font-size:12px;color:var(--ink-2);}
-.result-row-val{font-size:13px;font-weight:700;}
-.result-row.total{padding-top:12px;margin-top:4px;border-top:2px solid var(--border);}
-.result-row.total .result-row-label{font-weight:800;color:var(--ink);}
-.result-row.total .result-row-val{font-size:15px;}
-/* Margem badge */
-.margem-badge{display:inline-block;padding:4px 12px;border-radius:20px;font-size:13px;font-weight:800;}
-/* Platform tabs */
-.platform-tabs{display:flex;gap:6px;margin-bottom:16px;}
-.ptab{padding:8px 16px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;border:1.5px solid var(--border-2);background:var(--surface-2);color:var(--ink-2);transition:all .15s;}
-.ptab.on{background:var(--purple);color:#fff;border-color:var(--purple);}
-/* Semáforo */
-.semaforo{display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:8px;font-size:13px;font-weight:700;margin-top:12px;}
-.semaforo.verde{background:#d1fae5;color:#065f46;}
-.semaforo.amarelo{background:#fef3c7;color:#92400e;}
-.semaforo.vermelho{background:#fee2e2;color:#991b1b;}
-/* Preço editável */
-.preco-edit{display:flex;align-items:center;gap:6px;margin-top:6px;}
-.preco-edit input{width:140px;padding:6px 10px;border:1.5px solid rgba(255,255,255,.4);border-radius:7px;background:rgba(255,255,255,.15);color:#fff;font-size:18px;font-weight:800;font-family:inherit;}
-.preco-edit input::placeholder{color:rgba(255,255,255,.5);}
-.preco-edit input:focus{outline:none;border-color:#fff;}
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+  html{height:100%;}
+  .tb-left{display:flex;align-items:center;gap:8px;}
+  .tb-title{font-size:16px;font-weight:700;color:var(--ink);font-family:'Sora',sans-serif;}
+  .tb-right{display:flex;align-items:center;gap:12px;}
+  .tb-datetime{text-align:right;}
+  .tb-time{font-size:15px;font-weight:700;color:var(--ink);font-family:'DM Mono',monospace;}
+  .tb-date{font-size:11px;color:var(--ink-3);font-weight:400;}
+  .page-content{padding:24px 28px;flex:1;}
+  .tab.on{color:var(--purple);border-color:var(--purple);font-weight:700;}
+  .tc{display:none;}.tc.on{display:block;}
+  .qty-input{width:64px;text-align:center;padding:5px 4px;border:1.5px solid var(--border-2);border-radius:var(--radius-sm);font-family:'DM Mono',monospace;font-weight:500;font-size:13px;color:var(--ink);background:var(--surface);}
+  .qty-input:focus{outline:none;border-color:var(--purple);}
+  .mono{font-family:'DM Mono',monospace;}
+  .mg{font-weight:700;font-family:'DM Mono',monospace;}
+  .mg-ok{color:var(--green);}.mg-mid{color:var(--amber);}.mg-low{color:var(--red);}
+  .ph-fino{color:var(--purple);}.ph-grosso{color:var(--blue);}.ph-inf{color:var(--green);}
+  .cfg-label{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--ink-3);margin:18px 0 8px;}
+  .cfg-label:first-child{margin-top:0;}
+  .cfg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;}
+  .out-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-top:18px;}
+  .price-cell b{font-family:'Sora',sans-serif;font-size:15px;}
+  .formula{font-size:12px;color:var(--ink-3);line-height:1.6;}
+  .prod-card{border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;}
+  .prod-card-h{padding:10px 14px;font-family:'Sora',sans-serif;font-weight:700;font-size:13px;color:#fff;}
+  .comp-row{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;padding:14px;}
+  .comp-row .field label{font-size:10px;}
+  .breakdown{border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-top:16px;}
+  .bd-row{display:flex;justify-content:space-between;padding:9px 14px;font-size:13px;border-bottom:1px solid var(--border);}
+  .bd-row:last-child{border-bottom:none;}
+  .bd-row.tot{background:var(--surface-2);font-weight:700;font-family:'Sora',sans-serif;}
+  .bd-row .v{font-family:'DM Mono',monospace;}
+  .seg{display:inline-flex;border:1.5px solid var(--border-2);border-radius:var(--radius-sm);overflow:hidden;}
+  .seg button{padding:7px 14px;font-size:12px;font-weight:700;background:var(--surface);color:var(--ink-2);border:none;cursor:pointer;}
+  .seg button.on{background:var(--purple);color:#fff;}
+  @media(max-width:640px){.page-content{padding:16px;}.comp-row{grid-template-columns:repeat(2,1fr);}}
 </style>
 </head>
 <body>
-<script src="acesso.js"></script>
-<div class="layout">
 <div class="sidebar">
   <div class="sb-header"><img src="./logo.png" alt="ALL HAIR"><div><div class="sb-brand-name">ALL HAIR</div><div class="sb-brand-sub">Gestão Industrial</div></div></div>
   <nav class="sb-nav">
@@ -62,441 +62,301 @@
     <a class="sb-link" href="producao.html"><span class="sb-icon">◈</span>Produção</a>
     <a class="sb-link" href="estoque.html"><span class="sb-icon">◧</span>Estoque</a>
     <a class="sb-link" href="financeiro.html"><span class="sb-icon">◉</span>Financeiro</a>
-    <a class="sb-link on" href="precificacao.html"><span class="sb-icon">🏷️</span>Precificação</a>
     <a class="sb-link" href="socios.html"><span class="sb-icon">◎</span>Sócios</a>
     <div class="sb-section">Vendas</div>
     <a class="sb-link" href="clientes.html"><span class="sb-icon">👥</span>Clientes</a>
     <a class="sb-link" href="representantes.html"><span class="sb-icon">🤝</span>Representantes</a>
+    <a class="sb-link active" href="precificacao.html"><span class="sb-icon">🏷️</span>Precificação</a>
+    <a class="sb-link" href="crm.html"><span class="sb-icon">◐</span>CRM</a>
     <div class="sb-section">Gestão</div>
     <a class="sb-link" href="produtos.html"><span class="sb-icon">◈</span>Produtos</a>
     <a class="sb-link" href="fornecedores.html"><span class="sb-icon">◫</span>Fornecedores</a>
     <a class="sb-link" href="configuracoes.html"><span class="sb-icon">⚙️</span>Configurações</a>
   </nav>
   <div class="sb-footer">
-    <div class="sb-user"><div class="sb-avatar">A</div><div class="sb-user-info"><div class="sb-user-name">ALL HAIR</div></div></div>
-    <div id="sb-time" style="font-size:20px;font-weight:900;color:#fff;text-align:center;padding:4px 0"></div>
-    <div id="sb-date" style="font-size:11px;color:rgba(255,255,255,.4);text-align:center;padding-bottom:4px"></div>
+    <div class="sb-user"><div class="sb-avatar">A</div><div style="font-size:12px;font-weight:600;color:rgba(255,255,255,.7)">ALL HAIR</div></div>
+    <div class="sb-time" id="sb-time">--:--</div>
+    <div class="sb-date" id="sb-date"></div>
   </div>
 </div>
 
 <div class="main">
-  <div class="topbar">
-    <div class="topbar-title">🏷️ Calculadora de Precificação</div>
-    <div class="topbar-right">
-      <button class="btn btn-sm" onclick="resetar()" style="background:var(--surface-2);border:1.5px solid var(--border-2);color:var(--ink-2)">↺ Resetar</button>
+  <div class="topbar" style="gap:12px">
+    <div class="tb-left"><div class="tb-title">🏷️ Precificação</div></div>
+    <div class="tb-right">
+      <button class="btn btn-ghost" onclick="syncDown&&syncDown()">↻ Sincronizar</button>
+      <div class="tb-datetime"><div class="tb-time" id="tb-time">--:--</div><div class="tb-date" id="tb-date"></div></div>
     </div>
   </div>
 
-  <div class="tab-content active" style="padding:20px">
+  <div class="page-content">
+    <div class="tabs-bar">
+      <div class="tab on" onclick="switchTab('custo')">🧶 Custo &amp; Composição</div>
+      <div class="tab" onclick="switchTab('atacado')">🏬 Atacado (loja física)</div>
+      <div class="tab" onclick="switchTab('varejo')">🛒 Varejo (marketplace)</div>
+    </div>
 
-    <div class="prec-grid">
-
-      <!-- COLUNA ESQUERDA: INPUTS -->
-      <div>
-
-        <!-- PRODUTO -->
-        <div class="prec-card" style="margin-bottom:14px">
-          <div class="prec-title">📦 Produto</div>
-          <div class="field">
-            <label>Nome (opcional)</label>
-            <input type="text" id="p-nome" placeholder="Ex: Xuxinha A1 — Paleta Cítrico" oninput="calc()">
-          </div>
-          <div class="field-row">
-            <div class="field">
-              <label>Peças por pacote</label>
-              <input type="number" id="p-unid" value="12" min="1" oninput="calc()">
-            </div>
-            <div class="field">
-              <label>Rendimento (pçs/kg)</label>
-              <input type="number" id="p-rend" value="150" min="1" oninput="calc()">
-              <div class="field-hint">Quantas peças saem de 1kg de fio</div>
-            </div>
+    <!-- ===================== CUSTO ===================== -->
+    <div class="tc on" id="tc-custo">
+      <div class="kpi-grid" id="cu-kpis"></div>
+      <div class="card mb-16">
+        <div class="card-header"><div class="card-title">Matéria-prima (R$/kg)</div></div>
+        <div style="padding:18px">
+          <div class="cfg-grid">
+            <div class="field"><label>Fio branco</label><input id="cu-br" type="number" step="0.5" value="14"></div>
+            <div class="field"><label>Fio colorido</label><input id="cu-co" type="number" step="0.5" value="24"></div>
+            <div class="field"><label>Elastano</label><input id="cu-el" type="number" step="0.5" value="20"></div>
+            <div class="field"><label>Perda (%)</label><input id="cu-perda" type="number" step="0.5" value="5"></div>
           </div>
         </div>
-
-        <!-- MATÉRIA PRIMA -->
-        <div class="prec-card" style="margin-bottom:14px">
-          <div class="prec-title">🧶 Matéria-Prima</div>
-          <div style="background:var(--surface-2);border-radius:8px;padding:10px 12px;font-size:11px;color:var(--ink-3);margin-bottom:12px">
-            A composição PES + Elastano deve somar 100%
-          </div>
-
-          <div style="margin-bottom:10px">
-            <div style="font-size:12px;font-weight:700;color:var(--ink-2);margin-bottom:6px">Fio PES (Poliéster)</div>
-            <div class="field-row">
-              <div class="field">
-                <label>% na composição</label>
-                <input type="number" id="mp-pes-pct" value="80" min="0" max="100" oninput="calc()">
-              </div>
-              <div class="field">
-                <label>Preço por kg (R$)</label>
-                <input type="number" id="mp-pes-preco" value="0" step="0.01" min="0" placeholder="0,00" oninput="calc()">
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <div style="font-size:12px;font-weight:700;color:var(--ink-2);margin-bottom:6px">Elastano</div>
-            <div class="field-row">
-              <div class="field">
-                <label>% na composição</label>
-                <input type="number" id="mp-ela-pct" value="20" min="0" max="100" oninput="calc()">
-              </div>
-              <div class="field">
-                <label>Preço por kg (R$)</label>
-                <input type="number" id="mp-ela-preco" value="0" step="0.01" min="0" placeholder="0,00" oninput="calc()">
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- PRODUÇÃO -->
-        <div class="prec-card" style="margin-bottom:14px">
-          <div class="prec-title">🏭 Produção</div>
-          <div class="field-row">
-            <div class="field">
-              <label>Faccionista (R$/kg)</label>
-              <input type="number" id="p-facc" value="0" step="0.01" min="0" placeholder="0,00" oninput="calc()">
-            </div>
-            <div class="field">
-              <label>Mão de obra direta (R$/pct)</label>
-              <input type="number" id="p-mob" value="0" step="0.01" min="0" placeholder="0,00" oninput="calc()">
-              <div class="field-hint">Se embalagem é feita internamente</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- EMBALAGEM -->
-        <div class="prec-card" style="margin-bottom:14px">
-          <div class="prec-title">📦 Embalagem e Etiqueta</div>
-          <div class="field-row">
-            <div class="field">
-              <label>Embalagem (R$/pct)</label>
-              <input type="number" id="p-emb" value="0" step="0.001" min="0" placeholder="0,000" oninput="calc()">
-            </div>
-            <div class="field">
-              <label>Etiqueta (R$/pct)</label>
-              <input type="number" id="p-etq" value="0" step="0.001" min="0" placeholder="0,000" oninput="calc()">
-            </div>
-          </div>
-          <div class="field" style="margin-top:4px">
-            <label>Envelope de segurança marketplace (R$/pct)</label>
-            <input type="number" id="p-env" value="0" step="0.001" min="0" placeholder="0,000" oninput="calc()">
-            <div class="field-hint">Só aplica nos canais de marketplace</div>
-          </div>
-        </div>
-
-        <!-- IMPOSTOS E COMISSÃO -->
-        <div class="prec-card">
-          <div class="prec-title">📋 Impostos e Comissões</div>
-          <div class="field-row">
-            <div class="field">
-              <label>Simples Nacional (%)</label>
-              <input type="number" id="p-imp" value="6" step="0.1" min="0" max="100" oninput="calc()">
-            </div>
-            <div class="field">
-              <label>Comissão representante (%)</label>
-              <input type="number" id="p-rep" value="15" step="0.1" min="0" max="100" oninput="calc()">
-              <div class="field-hint">Só no canal atacado físico</div>
-            </div>
-          </div>
-        </div>
-
       </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px" id="cu-prods"></div>
+      <div class="formula mt-16">Custo/kg = (%branco·preço + %colorido·preço + %elastano·preço) × (1 + perda) + MOD faccionista. Custo/peça = custo/kg ÷ rendimento. Esse custo alimenta o Atacado e o Varejo automaticamente.</div>
+    </div>
 
-      <!-- COLUNA DIREITA: RESULTADOS -->
-      <div>
-
-        <!-- ATACADO FÍSICO -->
-        <div style="margin-bottom:14px">
-          <div style="font-size:13px;font-weight:800;color:var(--ink-2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">🏪 Atacado Físico</div>
-          <div class="result-box">
-            <div class="result-header" style="background:linear-gradient(135deg,#3b82f6,#6366f1)">
-              <div>
-                <div class="result-header-title">Preço sugerido por pacote</div>
-                <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
-                  <div class="result-preco" id="atac-preco-display">R$ —</div>
-                </div>
-                <div class="result-sub" id="atac-margem-display">Margem: —</div>
-              </div>
-              <div style="text-align:right">
-                <div style="font-size:11px;color:rgba(255,255,255,.7);margin-bottom:4px">Markup</div>
-                <input type="number" id="atac-markup" value="2.0" step="0.1" min="1" oninput="calc()"
-                  style="width:70px;padding:6px 8px;border:1.5px solid rgba(255,255,255,.4);border-radius:7px;background:rgba(255,255,255,.15);color:#fff;font-size:16px;font-weight:800;font-family:inherit;text-align:center">
-                <div style="font-size:10px;color:rgba(255,255,255,.6);margin-top:2px">×</div>
-              </div>
-            </div>
-            <div class="result-rows" id="atac-rows"></div>
-          </div>
-        </div>
-
-        <!-- MARKETPLACES -->
-        <div>
-          <div style="font-size:13px;font-weight:800;color:var(--ink-2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">🛒 Marketplaces</div>
-
-          <!-- Platform tabs -->
-          <div class="platform-tabs">
-            <div class="ptab on" onclick="setPlat('shopee')" id="tab-shopee">🛍️ Shopee</div>
-            <div class="ptab" onclick="setPlat('tiktok')" id="tab-tiktok">🎵 TikTok Shop</div>
-          </div>
-
-          <!-- Shopee config -->
-          <div id="cfg-shopee" style="margin-bottom:12px">
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-              <div class="field">
-                <label>Taxa Shopee (%)</label>
-                <input type="number" id="shopee-taxa" value="20" step="0.1" min="0" oninput="calc()">
-              </div>
-              <div class="field">
-                <label>Frete fixo cobrado (R$)</label>
-                <input type="number" id="shopee-frete" value="0" step="0.01" min="0" placeholder="0,00" oninput="calc()">
-                <div class="field-hint">0 = cliente paga</div>
-              </div>
-            </div>
-          </div>
-
-          <!-- TikTok config -->
-          <div id="cfg-tiktok" style="display:none;margin-bottom:12px">
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-              <div class="field">
-                <label>Taxa TikTok Shop (%)</label>
-                <input type="number" id="tiktok-taxa" value="12" step="0.1" min="0" oninput="calc()">
-              </div>
-              <div class="field">
-                <label>Frete fixo cobrado (R$)</label>
-                <input type="number" id="tiktok-frete" value="0" step="0.01" min="0" placeholder="0,00" oninput="calc()">
-                <div class="field-hint">0 = cliente paga</div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Markup marketplace -->
-          <div class="result-box">
-            <div class="result-header" style="background:linear-gradient(135deg,#f97316,#fb923c)">
-              <div>
-                <div class="result-header-title" id="mkt-plat-label">Shopee — Preço por pacote</div>
-                <div class="result-preco" id="mkt-preco-display">R$ —</div>
-                <div class="result-sub" id="mkt-margem-display">Margem: —</div>
-              </div>
-              <div style="text-align:right">
-                <div style="font-size:11px;color:rgba(255,255,255,.7);margin-bottom:4px">Markup</div>
-                <input type="number" id="mkt-markup" value="2.5" step="0.1" min="1" oninput="calc()"
-                  style="width:70px;padding:6px 8px;border:1.5px solid rgba(255,255,255,.4);border-radius:7px;background:rgba(255,255,255,.15);color:#fff;font-size:16px;font-weight:800;font-family:inherit;text-align:center">
-                <div style="font-size:10px;color:rgba(255,255,255,.6);margin-top:2px">×</div>
-              </div>
-            </div>
-            <div class="result-rows" id="mkt-rows"></div>
-          </div>
-        </div>
-
-        <!-- RESUMO COMPARATIVO -->
-        <div style="margin-top:14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px">
-          <div style="font-size:12px;font-weight:800;color:var(--ink-2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">📊 Comparativo de Canais</div>
-          <div id="comparativo"></div>
-        </div>
-
+    <!-- ===================== ATACADO ===================== -->
+    <div class="tc" id="tc-atacado">
+      <div class="card mb-16">
+        <div class="card-header"><div class="card-title">Parâmetros do atacado</div></div>
+        <div style="padding:18px"><div class="cfg-grid">
+          <div class="field"><label>Divisor da loja</label><input id="at-div" type="number" step="0.1" value="2"></div>
+          <div class="field"><label>Frete / pacote (R$)</label><input id="at-frete" type="number" step="0.01" value="0.17"></div>
+          <div class="field"><label>Simples (%)</label><input id="at-simples" type="number" step="0.1" value="6"></div>
+          <div class="field"><label>Comissão rep. (%)</label><input id="at-com" type="number" step="0.1" value="15"></div>
+          <div class="field"><label>Embalagem / pacote (R$)</label><input id="at-emb" type="number" step="0.01" value="0.10"></div>
+        </div></div>
       </div>
-    </div><!-- fim prec-grid -->
-  </div><!-- fim tab-content -->
-</div><!-- fim main -->
-</div><!-- fim layout -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Lojas de Preço Único</div>
+          <span class="text-muted" style="font-size:12px">quantidades editáveis · salva automático</span>
+        </div>
+        <div class="table-wrap"><table id="at-tbl">
+          <thead><tr><th>Loja vende</th><th>Preço ALL HAIR</th><th>Líquido</th><th class="ph-fino">Fino</th><th class="ph-grosso">Grosso</th><th class="ph-inf">Infantil</th></tr></thead>
+          <tbody id="at-body"></tbody>
+        </table></div>
+        <div class="formula" style="padding:12px 18px">Preço ALL HAIR = (loja ÷ divisor) − frete, arredondado p/ baixo em R$0,10. Líquido = preço − (Simples + comissão). Margem = contribuição (não inclui custo fixo).</div>
+      </div>
+    </div>
 
-<script src="mes-global.js"></script>
+    <!-- ===================== VAREJO ===================== -->
+    <div class="tc" id="tc-varejo">
+      <div class="card" style="max-width:760px">
+        <div class="card-header"><div class="card-title">Precificação para marketplace</div></div>
+        <div style="padding:18px">
+          <div class="cfg-label">Produto do anúncio</div>
+          <div class="cfg-grid">
+            <div class="field"><label>Linha</label><select id="vj-prod"><option value="fino">Fino</option><option value="grosso">Grosso</option><option value="infantil">Infantil</option></select></div>
+            <div class="field"><label>Peças no anúncio</label><input id="vj-qtd" type="number" step="1" value="24"></div>
+            <div class="field"><label>Embalagem varejo (R$)</label><input id="vj-emb" type="number" step="0.05" value="0.80"></div>
+            <div class="field"><label>Frete / subsídio (R$)</label><input id="vj-frete" type="number" step="0.50" value="0"></div>
+            <div class="field"><label>Imposto (%)</label><input id="vj-imposto" type="number" step="0.1" value="6"></div>
+          </div>
+
+          <div class="cfg-label">Marketplace</div>
+          <div class="cfg-grid">
+            <div class="field"><label>Plataforma</label><select id="vj-mkt" onchange="mktChange()"></select></div>
+            <div class="field"><label>Comissão (%)</label><input id="vj-com" type="number" step="0.1" value="20"></div>
+            <div class="field"><label>Taxa fixa / item (R$)</label><input id="vj-fix" type="number" step="0.5" value="4"></div>
+          </div>
+          <div class="formula" id="vj-mkt-info" style="margin-top:8px"></div>
+
+          <div class="cfg-label">Cálculo</div>
+          <div class="flex gap-12" style="align-items:flex-end;flex-wrap:wrap">
+            <div class="seg"><button id="seg-margem" class="on" onclick="setModo('margem')">Definir pela margem</button><button id="seg-preco" onclick="setModo('preco')">Definir pelo preço</button></div>
+          </div>
+          <div class="form-row mt-12">
+            <div class="field"><label>Margem desejada (% sobre venda)</label><input id="vj-margem" type="number" step="1" value="30" oninput="calcVarejo('margem')"></div>
+            <div class="field"><label>Preço de venda (R$)</label><input id="vj-preco" type="number" step="0.5" value="0" oninput="calcVarejo('preco')"></div>
+          </div>
+
+          <div class="breakdown" id="vj-breakdown"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="acesso.js"></script>
 <script>
-// ── UTILS ─────────────────────────────────────────────────────
-function v(id){return parseFloat(document.getElementById(id)?.value||0)||0;}
-function fmt(n){return 'R$ '+Number(n).toFixed(2).replace('.',',');}
-function pct(n){return n.toFixed(1).replace('.',',')+'%'}
+const KEY='allhair_precificacao';
+const PRODS=['fino','grosso','infantil'];
+const NOME={fino:'Fino',grosso:'Grosso',infantil:'Infantil'};
+const COR={fino:'var(--purple)',grosso:'var(--blue)',infantil:'var(--green)'};
 
-// ── PLATFORM ─────────────────────────────────────────────────
-var _plat = 'shopee';
-function setPlat(p){
-  _plat = p;
-  ['shopee','tiktok'].forEach(function(x){
-    document.getElementById('tab-'+x).classList.toggle('on', x===p);
-    document.getElementById('cfg-'+x).style.display = x===p?'block':'none';
+const DEFAULT={
+  custo:{br:14,co:24,el:20,perda:5,prod:{
+    fino:{br:0,co:90,el:10,mod:10,rend:1000},
+    grosso:{br:45,co:45,el:10,mod:10,rend:1000},
+    infantil:{br:45,co:45,el:10,mod:20,rend:3000},
+  }},
+  atacado:{div:2,frete:0.17,simples:6,com:15,emb:0.10,tiers:[
+    {loja:5,fino:25,grosso:25,infantil:50},{loja:7,fino:35,grosso:35,infantil:70},
+    {loja:10,fino:50,grosso:50,infantil:100},{loja:12,fino:65,grosso:65,infantil:130},
+    {loja:15,fino:80,grosso:80,infantil:160},{loja:20,fino:105,grosso:105,infantil:210},
+    {loja:25,fino:135,grosso:135,infantil:270},{loja:30,fino:160,grosso:160,infantil:320},
+  ]},
+  varejo:{prod:'fino',qtd:24,emb:0.80,frete:0,imposto:6,mkt:'shopee',com:20,fix:4,modo:'margem',margem:30,preco:0},
+};
+
+// presets de marketplace (taxas 2026, editáveis)
+const MKT={
+  shopee:{nome:'Shopee',tipo:'faixa',faixas:[
+    {ate:79.99,com:20,fix:4},{ate:99.99,com:14,fix:16},{ate:199.99,com:14,fix:20},{ate:1e9,com:14,fix:26}],
+    info:'Faixa por preço · até R$79,99: 20% + R$4 · R$80–99,99: 14% + R$16 · R$100–199,99: 14% + R$20 · acima de R$200: 14% + R$26. Frete grátis já embutido.'},
+  ml_classico:{nome:'Mercado Livre Clássico',tipo:'ml',com:13,fix:6,info:'Clássico ~13% + R$6 fixo p/ itens abaixo de R$79. Abaixo de R$12,50: 50% do valor. Acima de R$79: só a comissão.'},
+  ml_premium:{nome:'Mercado Livre Premium',tipo:'ml',com:17,fix:6,info:'Premium ~17% (parcelamento s/ juros) + R$6 fixo p/ itens abaixo de R$79. Abaixo de R$12,50: 50% do valor.'},
+  amazon:{nome:'Amazon',tipo:'flat',com:15,fix:0,info:'Comissão de indicação ~15% (beleza/saúde). Pode haver plano mensal à parte.'},
+  magalu:{nome:'Magalu Marketplace',tipo:'flat',com:14,fix:0,info:'Comissão média ~14%, varia por categoria.'},
+  shein:{nome:'Shein',tipo:'flat',com:16,fix:0,info:'Comissão média ~16%.'},
+  tiktok:{nome:'TikTok Shop',tipo:'flat',com:8,fix:0,info:'Comissão ~8% (pode variar com campanhas).'},
+  custom:{nome:'Personalizado',tipo:'flat',com:15,fix:0,info:'Edite a comissão e a taxa fixa manualmente.'},
+};
+
+let state=load();
+function load(){try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.custo&&s.varejo)return mergeDeep(JSON.parse(JSON.stringify(DEFAULT)),s);}catch(e){}return JSON.parse(JSON.stringify(DEFAULT));}
+function mergeDeep(t,s){for(const k in s){if(s[k]&&typeof s[k]==='object'&&!Array.isArray(s[k])){t[k]=mergeDeep(t[k]||{},s[k]);}else{t[k]=s[k];}}return t;}
+function persist(){localStorage.setItem(KEY,JSON.stringify(state));}
+function n(id){return parseFloat(document.getElementById(id).value)||0;}
+function val(id,v){const e=document.getElementById(id);if(e)e.value=v;}
+function brl(v){return 'R$ '+(v||0).toFixed(2).replace('.',',');}
+function mgClass(m){return m>=40?'mg-ok':m>=20?'mg-mid':'mg-low';}
+
+/* ---------- CUSTO ---------- */
+function readCusto(){
+  state.custo.br=n('cu-br');state.custo.co=n('cu-co');state.custo.el=n('cu-el');state.custo.perda=n('cu-perda');
+  PRODS.forEach(p=>{const o=state.custo.prod[p];o.br=n('cu-'+p+'-br');o.co=n('cu-'+p+'-co');o.el=n('cu-'+p+'-el');o.mod=n('cu-'+p+'-mod');o.rend=n('cu-'+p+'-rend');});
+}
+function custoKg(p){const c=state.custo,o=c.prod[p];const mat=(o.br/100*c.br+o.co/100*c.co+o.el/100*c.el)*(1+c.perda/100);return mat+o.mod;}
+function custoPeca(p){const o=state.custo.prod[p];return o.rend>0?custoKg(p)/o.rend:0;}
+
+function renderCustoInputs(){
+  const box=document.getElementById('cu-prods');box.innerHTML='';
+  PRODS.forEach(p=>{const o=state.custo.prod[p];
+    box.insertAdjacentHTML('beforeend',`<div class="prod-card">
+      <div class="prod-card-h" style="background:${COR[p]}">${NOME[p]}</div>
+      <div class="comp-row">
+        <div class="field"><label>% branco</label><input id="cu-${p}-br" type="number" step="1" value="${o.br}"></div>
+        <div class="field"><label>% colorido</label><input id="cu-${p}-co" type="number" step="1" value="${o.co}"></div>
+        <div class="field"><label>% elastano</label><input id="cu-${p}-el" type="number" step="1" value="${o.el}"></div>
+        <div class="field"><label>MOD R$/kg</label><input id="cu-${p}-mod" type="number" step="0.5" value="${o.mod}"></div>
+        <div class="field"><label>Rend. pç/kg</label><input id="cu-${p}-rend" type="number" step="100" value="${o.rend}"></div>
+      </div></div>`);
   });
-  calc();
+}
+function renderCustoKpis(){
+  let h='';PRODS.forEach(p=>{const o=state.custo.prod[p];const soma=o.br+o.co+o.el;const aviso=soma!==100?' ⚠️':'';
+    h+=`<div class="kpi"><div class="kpi-bar" style="background:${COR[p]}"></div><div class="kpi-label">${NOME[p]}${aviso}</div><div class="kpi-val">${brl(custoPeca(p))}</div><div class="kpi-sub">/peça · ${brl(custoKg(p))}/kg · comp. ${soma}%</div></div>`;});
+  document.getElementById('cu-kpis').innerHTML=h;
 }
 
-// ── CUSTO BASE (por pacote) ───────────────────────────────────
-function calcCusto(){
-  var unid  = v('p-unid')  || 12;   // peças/pacote
-  var rend  = v('p-rend')  || 150;  // peças/kg
-  var kgPct = unid / rend;          // kg de fio por pacote
-
-  // MP
-  var pesPct  = v('mp-pes-pct') / 100;
-  var elaPct  = v('mp-ela-pct') / 100;
-  var pesPreco= v('mp-pes-preco');
-  var elaPreco= v('mp-ela-preco');
-  var custoMP = kgPct * (pesPct * pesPreco + elaPct * elaPreco);
-
-  // Produção
-  var custoFacc = kgPct * v('p-facc');
-  var custoMob  = v('p-mob');
-
-  // Embalagem
-  var custoEmb = v('p-emb') + v('p-etq');
-
-  return {
-    mp:    custoMP,
-    facc:  custoFacc,
-    mob:   custoMob,
-    emb:   custoEmb,
-    base:  custoMP + custoFacc + custoMob + custoEmb,
-    kgPct: kgPct
-  };
-}
-
-// ── PRECIFICAR ────────────────────────────────────────────────
-function precificar(custoVariavel, taxaPlat, markup, temRep, freteFixo, temEnvelope){
-  var env    = temEnvelope ? v('p-env') : 0;
-  var impPct = v('p-imp') / 100;
-  var repPct = temRep ? v('p-rep') / 100 : 0;
-
-  // Custo variável total (sem imposto — imposto é sobre o preço de venda)
-  var custoVar = custoVariavel + env + freteFixo;
-
-  // Preço mínimo: cobre custo + imposto + taxa + comissão
-  // precoMin = custoVar / (1 - impPct - taxaPlat - repPct)
-  var divisor = 1 - impPct - taxaPlat - repPct;
-  var precoMin = divisor > 0 ? custoVar / divisor : custoVar * 2;
-
-  // Preço sugerido = custo × markup
-  var precoSug = custoVar * markup / (1 - impPct - taxaPlat - repPct);
-  // Simpler: precoSug = precoMin * markup — but markup on full price is cleaner
-  // Use: precoSug = precoMin × markup to ensure margin
-  precoSug = precoMin * markup;
-
-  var imposto  = precoSug * impPct;
-  var taxaVal  = precoSug * taxaPlat;
-  var repVal   = precoSug * repPct;
-  var lucro    = precoSug - custoVar - imposto - taxaVal - repVal;
-  var margem   = precoSug > 0 ? lucro / precoSug * 100 : 0;
-
-  return {precoMin, precoSug, precoMin, imposto, taxaVal, repVal, lucro, margem, custoVar, env};
-}
-
-// ── RENDER ROW ────────────────────────────────────────────────
-function rRow(label, val, cor){
-  return '<div class="result-row">'+
-    '<span class="result-row-label">'+label+'</span>'+
-    '<span class="result-row-val" style="color:'+(cor||'var(--ink)')+'">'+val+'</span>'+
-  '</div>';
-}
-function margemCor(m){return m>=35?'#10b981':m>=20?'#f59e0b':'#ef4444';}
-function margemIcon(m){return m>=35?'🟢':m>=20?'🟡':'🔴';}
-
-// ── MAIN CALC ─────────────────────────────────────────────────
-function calc(){
-  var c = calcCusto();
-
-  // ATACADO FÍSICO
-  var atac = precificar(c.base, 0, v('atac-markup'), true, 0, false);
-  document.getElementById('atac-preco-display').textContent = fmt(atac.precoSug);
-  document.getElementById('atac-margem-display').textContent = 'Margem: '+pct(atac.margem)+' · Mín: '+fmt(atac.precoMin);
-  document.getElementById('atac-rows').innerHTML =
-    '<div style="margin-bottom:10px">'+
-      '<div style="font-size:11px;font-weight:700;color:var(--ink-3);text-transform:uppercase;margin-bottom:6px">Custo por pacote</div>'+
-      rRow('🧶 Matéria-Prima ('+v('p-unid')+'pçs × '+(c.kgPct*1000).toFixed(0)+'g)', fmt(c.mp),'var(--ink)')+
-      rRow('🏭 Faccionista', fmt(c.facc),'var(--ink)')+
-      (c.mob>0?rRow('👐 Mão de obra', fmt(c.mob),'var(--ink)'):'')+
-      rRow('📦 Embalagem + Etiqueta', fmt(c.emb),'var(--ink)')+
-      rRow('Total custo variável', fmt(c.base),'var(--ink-2)')+
-    '</div>'+
-    '<div style="font-size:11px;font-weight:700;color:var(--ink-3);text-transform:uppercase;margin-bottom:6px">Sobre o preço de venda</div>'+
-    rRow('📋 Imposto Simples ('+v('p-imp')+'%)', '-'+fmt(atac.imposto),'var(--red)')+
-    rRow('🤝 Comissão rep ('+v('p-rep')+'%)', '-'+fmt(atac.repVal),'var(--red)')+
-    '<div class="result-row total">'+
-      '<span class="result-row-label">💰 Lucro por pacote</span>'+
-      '<span class="result-row-val" style="color:'+(atac.lucro>=0?'var(--green)':'var(--red)')+'">'+fmt(atac.lucro)+'</span>'+
-    '</div>'+
-    '<div style="margin-top:10px;padding:10px 12px;border-radius:8px;background:'+(margemCor(atac.margem)+'18')+';display:flex;align-items:center;gap:8px">'+
-      '<span style="font-size:18px">'+margemIcon(atac.margem)+'</span>'+
-      '<div><div style="font-size:14px;font-weight:900;color:'+margemCor(atac.margem)+'">'+pct(atac.margem)+' de margem</div>'+
-      '<div style="font-size:11px;color:var(--ink-3)">Preço mínimo para não prejuízo: '+fmt(atac.precoMin)+'</div></div>'+
-    '</div>';
-
-  // MARKETPLACE
-  var plat = _plat;
-  var taxa = v(plat+'-taxa') / 100;
-  var frete = v(plat+'-frete');
-  var platLabel = plat==='shopee'?'Shopee':'TikTok Shop';
-  var platIcon  = plat==='shopee'?'🛍️':'🎵';
-
-  var mkt = precificar(c.base, taxa, v('mkt-markup'), false, frete, true);
-  document.getElementById('mkt-plat-label').textContent = platIcon+' '+platLabel+' — Preço por pacote';
-  document.getElementById('mkt-preco-display').textContent = fmt(mkt.precoSug);
-  document.getElementById('mkt-margem-display').textContent = 'Margem: '+pct(mkt.margem)+' · Mín: '+fmt(mkt.precoMin);
-  document.getElementById('mkt-rows').innerHTML =
-    '<div style="margin-bottom:10px">'+
-      '<div style="font-size:11px;font-weight:700;color:var(--ink-3);text-transform:uppercase;margin-bottom:6px">Custo por pacote</div>'+
-      rRow('🧶 Matéria-Prima', fmt(c.mp),'var(--ink)')+
-      rRow('🏭 Faccionista', fmt(c.facc),'var(--ink)')+
-      (c.mob>0?rRow('👐 Mão de obra', fmt(c.mob),'var(--ink)'):'')+
-      rRow('📦 Embalagem + Etiqueta', fmt(c.emb),'var(--ink)')+
-      (mkt.env>0?rRow('📬 Envelope segurança', fmt(mkt.env),'var(--ink)'):'')+
-      (frete>0?rRow('🚚 Frete subsidiado', fmt(frete),'var(--ink)'):'')+
-      rRow('Total custo variável', fmt(mkt.custoVar),'var(--ink-2)')+
-    '</div>'+
-    '<div style="font-size:11px;font-weight:700;color:var(--ink-3);text-transform:uppercase;margin-bottom:6px">Descontos sobre venda</div>'+
-    rRow('📋 Imposto Simples ('+v('p-imp')+'%)', '-'+fmt(mkt.imposto),'var(--red)')+
-    rRow(platIcon+' Taxa '+platLabel+' ('+v(plat+'-taxa')+'%)', '-'+fmt(mkt.taxaVal),'var(--red)')+
-    '<div class="result-row total">'+
-      '<span class="result-row-label">💰 Lucro por pacote</span>'+
-      '<span class="result-row-val" style="color:'+(mkt.lucro>=0?'var(--green)':'var(--red)')+'">'+fmt(mkt.lucro)+'</span>'+
-    '</div>'+
-    '<div style="margin-top:10px;padding:10px 12px;border-radius:8px;background:'+(margemCor(mkt.margem)+'18')+';display:flex;align-items:center;gap:8px">'+
-      '<span style="font-size:18px">'+margemIcon(mkt.margem)+'</span>'+
-      '<div><div style="font-size:14px;font-weight:900;color:'+margemCor(mkt.margem)+'">'+pct(mkt.margem)+' de margem</div>'+
-      '<div style="font-size:11px;color:var(--ink-3)">Preço mínimo para não prejuízo: '+fmt(mkt.precoMin)+'</div></div>'+
-    '</div>';
-
-  // COMPARATIVO
-  var atacTikTok = precificar(c.base, v('tiktok-taxa')/100, v('mkt-markup'), false, v('tiktok-frete'), true);
-  var atacShopee = precificar(c.base, v('shopee-taxa')/100, v('mkt-markup'), false, v('shopee-frete'), true);
-  document.getElementById('comparativo').innerHTML =
-    ['🏪 Atacado','🛍️ Shopee','🎵 TikTok'].reduce(function(html, nome, i){
-      var res = i===0?atac:i===1?atacShopee:atacTikTok;
-      return html+
-        '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)">'+
-          '<span style="font-size:13px;font-weight:700">'+nome+'</span>'+
-          '<div style="display:flex;gap:16px;align-items:center">'+
-            '<span style="font-size:12px;color:var(--ink-2)">'+fmt(res.precoSug)+'/pct</span>'+
-            '<span style="font-size:12px;font-weight:800;color:'+margemCor(res.margem)+'">'+margemIcon(res.margem)+' '+pct(res.margem)+'</span>'+
-            '<span style="font-size:12px;color:var(--green);font-weight:700">'+fmt(res.lucro)+'</span>'+
-          '</div>'+
-        '</div>';
-    },'');
-}
-
-function resetar(){
-  if(!confirm('Resetar todos os valores?')) return;
-  ['p-unid','p-rend','mp-pes-pct','mp-pes-preco','mp-ela-pct','mp-ela-preco',
-   'p-facc','p-mob','p-emb','p-etq','p-env','p-imp','p-rep',
-   'atac-markup','mkt-markup','shopee-taxa','shopee-frete','tiktok-taxa','tiktok-frete'].forEach(function(id){
-    var el=document.getElementById(id);
-    if(!el) return;
-    var defaults={'p-unid':12,'p-rend':150,'mp-pes-pct':80,'mp-ela-pct':20,
-      'p-imp':6,'p-rep':15,'atac-markup':2.0,'mkt-markup':2.5,
-      'shopee-taxa':20,'tiktok-taxa':12};
-    el.value=defaults[id]||0;
+/* ---------- ATACADO ---------- */
+function precoAllHair(loja){return Math.floor((loja/n('at-div')-n('at-frete'))*10)/10;}
+function liquidoAtacado(ah){return ah*(1-(n('at-simples')+n('at-com'))/100);}
+function renderAtacado(){
+  const tb=document.getElementById('at-body');tb.innerHTML='';
+  state.atacado.tiers.forEach((t,i)=>{
+    const ah=precoAllHair(t.loja),net=liquidoAtacado(ah),emb=n('at-emb');
+    const cell=(p,q)=>{const cv=q*custoPeca(p)+emb,c=net-cv,mg=net>0?c/net*100:0;
+      return `<td><div class="flex" style="gap:6px;align-items:center"><input class="qty-input" type="number" min="1" value="${q}" data-i="${i}" data-p="${p}" onchange="updTier(this)"><span class="text-muted" style="font-size:11px">pç</span></div><div class="mg ${mgClass(mg)}" style="font-size:12px;margin-top:3px">${mg.toFixed(0)}% · ${brl(c)}</div></td>`;};
+    tb.insertAdjacentHTML('beforeend',`<tr><td class="price-cell"><b>${brl(t.loja)}</b></td><td class="price-cell text-purple"><b>${brl(ah)}</b></td><td class="mono">${brl(net)}</td>${cell('fino',t.fino)}${cell('grosso',t.grosso)}${cell('infantil',t.infantil)}</tr>`);
   });
-  document.getElementById('p-nome').value='';
-  calc();
+}
+function updTier(el){state.atacado.tiers[+el.dataset.i][el.dataset.p]=parseInt(el.value)||0;persist();renderAtacado();}
+
+/* ---------- VAREJO ---------- */
+function mktFee(P){ // retorna {com, fix} efetivos p/ o marketplace selecionado no preço P
+  const key=document.getElementById('vj-mkt').value,m=MKT[key];
+  if(m.tipo==='faixa'){const f=m.faixas.find(x=>P<=x.ate)||m.faixas[m.faixas.length-1];return {com:f.com,fix:f.fix};}
+  if(m.tipo==='ml'){if(P<12.5)return {com:50,fix:0};return {com:m.com,fix:P<79?m.fix:0};}
+  return {com:m.com,fix:m.fix};
+}
+function autoFillMkt(P){ // preenche os campos com/fix conforme marketplace+preço (exceto personalizado)
+  const key=document.getElementById('vj-mkt').value;if(key==='custom')return;
+  const f=mktFee(P||0);val('vj-com',f.com);val('vj-fix',f.fix);
+}
+function mktChange(){
+  const key=document.getElementById('vj-mkt').value;state.varejo.mkt=key;
+  document.getElementById('vj-mkt-info').textContent=MKT[key].info;
+  autoFillMkt(n('vj-preco')||refPrecoVarejo());
+  calcVarejo(state.varejo.modo);
+}
+function refPrecoVarejo(){const v=state.varejo;return v.preco>0?v.preco:(custoPeca(v.prod)*n('vj-qtd')+n('vj-emb'))*2.2;}
+function custoProdutoVarejo(){return custoPeca(document.getElementById('vj-prod').value)*n('vj-qtd');}
+
+function setModo(modo){state.varejo.modo=modo;
+  document.getElementById('seg-margem').classList.toggle('on',modo==='margem');
+  document.getElementById('seg-preco').classList.toggle('on',modo==='preco');
+  document.getElementById('vj-margem').disabled=(modo==='preco');
+  document.getElementById('vj-preco').disabled=(modo==='margem');
+  calcVarejo(modo);
+}
+function calcVarejo(origem){
+  const imp=n('vj-imposto')/100, cp=custoProdutoVarejo(), emb=n('vj-emb'), fr=n('vj-frete');
+  const key=document.getElementById('vj-mkt').value;
+  let P;
+  if(state.varejo.modo==='margem'){
+    const m=n('vj-margem')/100;
+    P=(cp+emb+fr+5)/Math.max(0.05,(1-0.20-imp-m)); // chute inicial
+    for(let i=0;i<20;i++){
+      const f=mktFee(P), c=f.com/100, denom=1-c-imp-m;
+      if(denom<=0){P=0;break;}
+      const novo=(f.fix+cp+emb+fr)/denom;
+      if(!isFinite(novo)||novo<=0){P=0;break;}
+      if(Math.abs(novo-P)<0.005){P=novo;break;}
+      P=novo;
+    }
+    P=P>0?Math.ceil(P*100)/100:0;
+    val('vj-preco',P.toFixed(2));autoFillMkt(P);
+  }else{
+    P=n('vj-preco');autoFillMkt(P);
+  }
+  const f=mktFee(P), comV=P*f.com/100, fixV=f.fix, impV=P*imp;
+  const lucro=P-comV-fixV-impV-cp-emb-fr, mg=P>0?lucro/P*100:0, markup=cp>0?P/(cp+emb):0;
+  if(state.varejo.modo==='preco')val('vj-margem',mg.toFixed(1));
+  document.getElementById('vj-breakdown').innerHTML=`
+    <div class="bd-row tot"><span>Preço de venda</span><span class="v text-purple">${brl(P)}</span></div>
+    <div class="bd-row"><span>− Comissão (${f.com}%)</span><span class="v text-red">−${brl(comV).slice(3)}</span></div>
+    <div class="bd-row"><span>− Taxa fixa</span><span class="v text-red">−${brl(fixV).slice(3)}</span></div>
+    <div class="bd-row"><span>− Imposto (${n('vj-imposto')}%)</span><span class="v text-red">−${brl(impV).slice(3)}</span></div>
+    <div class="bd-row"><span>− Custo produto (${n('vj-qtd')} pç)</span><span class="v text-red">−${brl(cp).slice(3)}</span></div>
+    <div class="bd-row"><span>− Embalagem + frete</span><span class="v text-red">−${brl(emb+fr).slice(3)}</span></div>
+    <div class="bd-row tot"><span>Lucro líquido</span><span class="v ${mgClass(mg)}">${brl(lucro)}</span></div>
+    <div class="bd-row tot"><span>Margem sobre venda</span><span class="v ${mgClass(mg)}">${mg.toFixed(1)}%</span></div>`;
+  state.varejo.prod=document.getElementById('vj-prod').value;state.varejo.qtd=n('vj-qtd');state.varejo.emb=emb;
+  state.varejo.frete=fr;state.varejo.imposto=n('vj-imposto');state.varejo.com=n('vj-com');state.varejo.fix=n('vj-fix');
+  state.varejo.margem=n('vj-margem');state.varejo.preco=P;persist();
 }
 
-// Clock
-function tick(){
-  var n=new Date();
-  document.getElementById('sb-time').textContent=n.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
-  document.getElementById('sb-date').textContent=n.toLocaleDateString('pt-BR',{weekday:'short',day:'numeric',month:'short'});
-}
-setInterval(tick,1000);tick();
+/* ---------- INIT / TABS ---------- */
+function switchTab(name){document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));document.querySelectorAll('.tc').forEach(t=>t.classList.remove('on'));event.target.classList.add('on');document.getElementById('tc-'+name).classList.add('on');}
 
-// Init
-calc();
+function renderAll(){readCusto();renderCustoKpis();renderAtacado();calcVarejo(state.varejo.modo);}
+window.render=function(){state=load();initInputs();renderAll();};
+
+function initInputs(){
+  // custo
+  val('cu-br',state.custo.br);val('cu-co',state.custo.co);val('cu-el',state.custo.el);val('cu-perda',state.custo.perda);
+  renderCustoInputs();
+  // atacado
+  val('at-div',state.atacado.div);val('at-frete',state.atacado.frete);val('at-simples',state.atacado.simples);val('at-com',state.atacado.com);val('at-emb',state.atacado.emb);
+  // varejo
+  const mkSel=document.getElementById('vj-mkt');mkSel.innerHTML=Object.keys(MKT).map(k=>`<option value="${k}">${MKT[k].nome}</option>`).join('');
+  mkSel.value=state.varejo.mkt;
+  val('vj-prod',state.varejo.prod);val('vj-qtd',state.varejo.qtd);val('vj-emb',state.varejo.emb);val('vj-frete',state.varejo.frete);
+  val('vj-imposto',state.varejo.imposto);val('vj-com',state.varejo.com);val('vj-fix',state.varejo.fix);
+  val('vj-margem',state.varejo.margem);val('vj-preco',state.varejo.preco);
+  document.getElementById('vj-mkt-info').textContent=MKT[state.varejo.mkt].info;
+  setModo(state.varejo.modo);
+}
+
+document.addEventListener('input',e=>{if(e.target.id&&e.target.id.startsWith('cu-')){readCusto();renderCustoKpis();renderAtacado();calcVarejo(state.varejo.modo);persist();}if(e.target.id&&e.target.id.startsWith('at-')){persist();renderAtacado();}if(['vj-prod','vj-qtd','vj-emb','vj-frete','vj-imposto','vj-com','vj-fix'].includes(e.target.id)){calcVarejo(state.varejo.modo);}});
+document.addEventListener('change',e=>{if(e.target.id==='vj-prod')calcVarejo(state.varejo.modo);});
+
+initInputs();renderAll();
+</script>
+<script>
+(function(){function _t(){var n=new Date();var fmt=n.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});var dt=n.toLocaleDateString("pt-BR",{weekday:"short",day:"numeric",month:"short"});["sb-time","tb-time"].forEach(function(id){var e=document.getElementById(id);if(e)e.textContent=fmt;});["sb-date","tb-date"].forEach(function(id){var e=document.getElementById(id);if(e)e.textContent=dt;});}setInterval(_t,1000);_t();})();
 </script>
 <script src="firebase-sync.js"></script>
 </body>
