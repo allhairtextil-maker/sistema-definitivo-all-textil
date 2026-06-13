@@ -9,7 +9,7 @@
     'allhair_recebimentos','allhair_pagamentos','allhair_apagar','allhair_a_receber',
     'allhair_cores','allhair_embalagens','allhair_etiquetas','allhair_caixas',
     'allhair_reservas','allhair_envios_v2','allhair_faccionistas','allhair_leads',
-    'allhair_melhorias',
+    'allhair_melhorias','allhair_precificacao',
   ];
 
   let firebaseReady = null;
