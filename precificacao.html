@@ -4,57 +4,55 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Precificação — ALL HAIR</title>
-<link rel="manifest" href="manifest.json">
 <link rel="icon" href="favicon.ico">
 <link rel="stylesheet" href="design.css">
 <style>
-.prec-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
-.prec-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;}
-.prec-title{font-size:13px;font-weight:800;color:var(--ink-2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
-.field{margin-bottom:12px;}
-.field label{display:block;font-size:11px;font-weight:700;color:var(--ink-3);margin-bottom:4px;text-transform:uppercase;letter-spacing:.3px;}
-.field input,.field select{width:100%;padding:8px 11px;border:1.5px solid var(--border-2);border-radius:7px;font-family:inherit;font-size:13px;background:#fff;color:var(--ink);transition:border-color .15s;}
-.field input:focus,.field select:focus{outline:none;border-color:var(--purple);}
-.field-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
-.field-hint{font-size:10px;color:var(--ink-3);margin-top:3px;}
-.section-sep{border:none;border-top:1.5px solid var(--border);margin:16px 0;}
-/* Resultado */
-.result-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;}
-.result-header{background:linear-gradient(135deg,var(--purple),#a78bfa);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;}
-.result-header-title{font-size:13px;font-weight:800;color:rgba(255,255,255,.8);text-transform:uppercase;letter-spacing:.5px;}
-.result-preco{font-size:32px;font-weight:900;color:#fff;}
-.result-sub{font-size:12px;color:rgba(255,255,255,.7);margin-top:2px;}
-.result-rows{padding:16px 20px;}
-.result-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);}
-.result-row:last-child{border-bottom:none;}
-.result-row-label{font-size:12px;color:var(--ink-2);}
-.result-row-val{font-size:13px;font-weight:700;}
-.result-row.total{padding-top:12px;margin-top:4px;border-top:2px solid var(--border);}
-.result-row.total .result-row-label{font-weight:800;color:var(--ink);}
-.result-row.total .result-row-val{font-size:15px;}
-/* Margem badge */
-.margem-badge{display:inline-block;padding:4px 12px;border-radius:20px;font-size:13px;font-weight:800;}
-/* Platform tabs */
-.platform-tabs{display:flex;gap:6px;margin-bottom:16px;}
-.ptab{padding:8px 16px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;border:1.5px solid var(--border-2);background:var(--surface-2);color:var(--ink-2);transition:all .15s;}
-.ptab.on{background:var(--purple);color:#fff;border-color:var(--purple);}
-/* Semáforo */
-.semaforo{display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:8px;font-size:13px;font-weight:700;margin-top:12px;}
-.semaforo.verde{background:#d1fae5;color:#065f46;}
-.semaforo.amarelo{background:#fef3c7;color:#92400e;}
-.semaforo.vermelho{background:#fee2e2;color:#991b1b;}
-/* Preço editável */
-.preco-edit{display:flex;align-items:center;gap:6px;margin-top:6px;}
-.preco-edit input{width:140px;padding:6px 10px;border:1.5px solid rgba(255,255,255,.4);border-radius:7px;background:rgba(255,255,255,.15);color:#fff;font-size:18px;font-weight:800;font-family:inherit;}
-.preco-edit input::placeholder{color:rgba(255,255,255,.5);}
-.preco-edit input:focus{outline:none;border-color:#fff;}
+.calc-wrap{max-width:700px;margin:0 auto;padding:20px;}
+.canal-tabs{display:flex;gap:8px;margin-bottom:24px;}
+.ctab{flex:1;padding:12px;border-radius:10px;border:2px solid var(--border-2);background:var(--surface-2);
+  font-size:14px;font-weight:700;color:var(--ink-2);cursor:pointer;text-align:center;transition:all .15s;}
+.ctab.on{border-color:var(--purple);background:var(--purple);color:#fff;}
+.bloco{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:12px;}
+.bloco-titulo{font-size:11px;font-weight:800;color:var(--ink-3);text-transform:uppercase;
+  letter-spacing:.6px;margin-bottom:14px;display:flex;align-items:center;gap:6px;}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+.f label{display:block;font-size:11px;font-weight:700;color:var(--ink-3);margin-bottom:4px;}
+.f input,.f select{width:100%;padding:9px 11px;border:1.5px solid var(--border-2);border-radius:8px;
+  font-family:inherit;font-size:14px;font-weight:600;background:#fff;color:var(--ink);}
+.f input:focus{outline:none;border-color:var(--purple);}
+.f .hint{font-size:10px;color:var(--ink-3);margin-top:3px;}
+.resultado{border-radius:14px;overflow:hidden;margin-bottom:12px;}
+.res-topo{padding:20px 22px;display:flex;justify-content:space-between;align-items:center;}
+.res-preco{font-size:36px;font-weight:900;color:#fff;line-height:1;}
+.res-label{font-size:11px;font-weight:700;color:rgba(255,255,255,.7);text-transform:uppercase;
+  letter-spacing:.5px;margin-bottom:6px;}
+.res-sub{font-size:12px;color:rgba(255,255,255,.7);margin-top:4px;}
+.res-min{font-size:12px;background:rgba(0,0,0,.15);border-radius:6px;padding:6px 10px;
+  color:rgba(255,255,255,.9);margin-top:8px;display:inline-block;}
+.res-body{background:#fff;padding:18px 22px;}
+.res-linha{display:flex;justify-content:space-between;padding:7px 0;
+  border-bottom:1px solid #f1f5f9;font-size:13px;}
+.res-linha:last-child{border:none;}
+.res-linha.sep{border-top:2px solid #e2e8f0;margin-top:4px;padding-top:10px;font-weight:800;}
+.semaforo{display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:10px;
+  margin-top:12px;font-size:13px;font-weight:700;}
+.s-verde{background:#d1fae5;color:#065f46;}
+.s-amarelo{background:#fef3c7;color:#92400e;}
+.s-vermelho{background:#fee2e2;color:#991b1b;}
+.badge-pct{background:rgba(0,0,0,.12);border-radius:20px;padding:3px 10px;
+  font-size:13px;font-weight:800;color:#fff;margin-left:8px;}
 </style>
 </head>
 <body>
 <script src="acesso.js"></script>
 <div class="layout">
+
+<!-- SIDEBAR -->
 <div class="sidebar">
-  <div class="sb-header"><img src="./logo.png" alt="ALL HAIR"><div><div class="sb-brand-name">ALL HAIR</div><div class="sb-brand-sub">Gestão Industrial</div></div></div>
+  <div class="sb-header"><img src="./logo.png" alt="ALL HAIR">
+    <div><div class="sb-brand-name">ALL HAIR</div><div class="sb-brand-sub">Gestão Industrial</div></div>
+  </div>
   <nav class="sb-nav">
     <div class="sb-section">Principal</div>
     <a class="sb-link" href="dashboard.html"><span class="sb-icon">⊞</span>Início</a>
@@ -73,455 +71,399 @@
     <a class="sb-link" href="configuracoes.html"><span class="sb-icon">⚙️</span>Configurações</a>
   </nav>
   <div class="sb-footer">
-    <div class="sb-user"><div class="sb-avatar">A</div><div class="sb-user-info"><div class="sb-user-name">ALL HAIR</div></div></div>
+    <div class="sb-user"><div class="sb-avatar">A</div>
+      <div class="sb-user-info"><div class="sb-user-name">ALL HAIR</div></div>
+    </div>
     <div id="sb-time" style="font-size:20px;font-weight:900;color:#fff;text-align:center;padding:4px 0"></div>
     <div id="sb-date" style="font-size:11px;color:rgba(255,255,255,.4);text-align:center;padding-bottom:4px"></div>
   </div>
 </div>
 
+<!-- MAIN -->
 <div class="main">
   <div class="topbar">
-    <div class="topbar-title">🏷️ Calculadora de Precificação</div>
-    <div class="topbar-right">
-      <button class="btn btn-sm" onclick="resetar()" style="background:var(--surface-2);border:1.5px solid var(--border-2);color:var(--ink-2)">↺ Resetar</button>
-    </div>
+    <div class="topbar-title">🏷️ Precificação</div>
+    <button class="btn" onclick="resetar()"
+      style="background:var(--surface-2);border:1.5px solid var(--border-2);color:var(--ink-2);font-size:12px;padding:0 14px;height:30px">
+      ↺ Zerar
+    </button>
   </div>
 
-  <div class="tab-content active" style="padding:20px">
+  <div class="tab-content active">
+  <div class="calc-wrap">
 
-    <div class="prec-grid">
+    <!-- CANAL -->
+    <div class="canal-tabs">
+      <div class="ctab on" onclick="canal('loja')"    id="tab-loja">🏪 Loja / Atacado</div>
+      <div class="ctab"    onclick="canal('shopee')"  id="tab-shopee">🛍️ Shopee</div>
+      <div class="ctab"    onclick="canal('tiktok')"  id="tab-tiktok">🎵 TikTok Shop</div>
+    </div>
 
-      <!-- COLUNA ESQUERDA: INPUTS -->
-      <div>
-
-        <!-- PRODUTO -->
-        <div class="prec-card" style="margin-bottom:14px">
-          <div class="prec-title">📦 Produto</div>
-          <div class="field">
-            <label>Nome (opcional)</label>
-            <input type="text" id="p-nome" placeholder="Ex: Xuxinha A1 — Paleta Cítrico" oninput="calc()">
-          </div>
-          <div class="field-row">
-            <div class="field">
-              <label>Peças por pacote</label>
-              <input type="number" id="p-unid" value="12" min="1" oninput="calc()">
-            </div>
-            <div class="field">
-              <label>Rendimento (pçs/kg)</label>
-              <input type="number" id="p-rend" value="150" min="1" oninput="calc()">
-              <div class="field-hint">Quantas peças saem de 1kg de fio</div>
-            </div>
-          </div>
+    <!-- PRODUTO -->
+    <div class="bloco">
+      <div class="bloco-titulo">📦 Produto</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+        <div class="f"><label>Peças por pacote</label>
+          <input type="number" id="unid" value="12" min="1" oninput="c()">
         </div>
-
-        <!-- MATÉRIA PRIMA -->
-        <div class="prec-card" style="margin-bottom:14px">
-          <div class="prec-title">🧶 Matéria-Prima</div>
-          <div style="background:var(--surface-2);border-radius:8px;padding:10px 12px;font-size:11px;color:var(--ink-3);margin-bottom:12px">
-            A composição PES + Elastano deve somar 100%
-          </div>
-
-          <div style="margin-bottom:10px">
-            <div style="font-size:12px;font-weight:700;color:var(--ink-2);margin-bottom:6px">Fio PES (Poliéster)</div>
-            <div class="field-row">
-              <div class="field">
-                <label>% na composição</label>
-                <input type="number" id="mp-pes-pct" value="80" min="0" max="100" oninput="calc()">
-              </div>
-              <div class="field">
-                <label>Preço por kg (R$)</label>
-                <input type="number" id="mp-pes-preco" value="0" step="0.01" min="0" placeholder="0,00" oninput="calc()">
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <div style="font-size:12px;font-weight:700;color:var(--ink-2);margin-bottom:6px">Elastano</div>
-            <div class="field-row">
-              <div class="field">
-                <label>% na composição</label>
-                <input type="number" id="mp-ela-pct" value="20" min="0" max="100" oninput="calc()">
-              </div>
-              <div class="field">
-                <label>Preço por kg (R$)</label>
-                <input type="number" id="mp-ela-preco" value="0" step="0.01" min="0" placeholder="0,00" oninput="calc()">
-              </div>
-            </div>
-          </div>
+        <div class="f"><label>Rendimento (peças/kg)</label>
+          <input type="number" id="rend" value="150" min="1" oninput="c()">
+          <div class="hint">Quantas peças saem de 1 kg de fio</div>
         </div>
-
-        <!-- PRODUÇÃO -->
-        <div class="prec-card" style="margin-bottom:14px">
-          <div class="prec-title">🏭 Produção</div>
-          <div class="field-row">
-            <div class="field">
-              <label>Faccionista (R$/kg)</label>
-              <input type="number" id="p-facc" value="0" step="0.01" min="0" placeholder="0,00" oninput="calc()">
-            </div>
-            <div class="field">
-              <label>Mão de obra direta (R$/pct)</label>
-              <input type="number" id="p-mob" value="0" step="0.01" min="0" placeholder="0,00" oninput="calc()">
-              <div class="field-hint">Se embalagem é feita internamente</div>
-            </div>
-          </div>
+        <div class="f"><label>Qtd. pacotes a produzir</label>
+          <input type="number" id="qtd-pct" value="0" min="0" oninput="c()" placeholder="Ex: 1000">
+          <div class="hint">Para calcular MP total necessária</div>
         </div>
-
-        <!-- EMBALAGEM -->
-        <div class="prec-card" style="margin-bottom:14px">
-          <div class="prec-title">📦 Embalagem e Etiqueta</div>
-          <div class="field-row">
-            <div class="field">
-              <label>Embalagem (R$/pct)</label>
-              <input type="number" id="p-emb" value="0" step="0.001" min="0" placeholder="0,000" oninput="calc()">
-            </div>
-            <div class="field">
-              <label>Etiqueta (R$/pct)</label>
-              <input type="number" id="p-etq" value="0" step="0.001" min="0" placeholder="0,000" oninput="calc()">
-            </div>
-          </div>
-          <div class="field" style="margin-top:4px">
-            <label>Envelope de segurança marketplace (R$/pct)</label>
-            <input type="number" id="p-env" value="0" step="0.001" min="0" placeholder="0,000" oninput="calc()">
-            <div class="field-hint">Só aplica nos canais de marketplace</div>
-          </div>
-        </div>
-
-        <!-- IMPOSTOS E COMISSÃO -->
-        <div class="prec-card">
-          <div class="prec-title">📋 Impostos e Comissões</div>
-          <div class="field-row">
-            <div class="field">
-              <label>Simples Nacional (%)</label>
-              <input type="number" id="p-imp" value="6" step="0.1" min="0" max="100" oninput="calc()">
-            </div>
-            <div class="field">
-              <label>Comissão representante (%)</label>
-              <input type="number" id="p-rep" value="15" step="0.1" min="0" max="100" oninput="calc()">
-              <div class="field-hint">Só no canal atacado físico</div>
-            </div>
-          </div>
-        </div>
-
       </div>
+    </div>
 
-      <!-- COLUNA DIREITA: RESULTADOS -->
-      <div>
-
-        <!-- ATACADO FÍSICO / LOJAS -->
-        <div style="margin-bottom:14px">
-          <div style="font-size:13px;font-weight:800;color:var(--ink-2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">🏪 Atacado — Lojas</div>
-
-          <!-- Config lojas (igual aos marketplaces) -->
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
-            <div class="field">
-              <label>Comissão representante (%)</label>
-              <input type="number" id="atac-rep" value="15" step="0.1" min="0" oninput="calc()">
-            </div>
-            <div class="field">
-              <label>Embalagem extra loja (R$/pct)</label>
-              <input type="number" id="atac-emb-extra" value="0" step="0.01" min="0" placeholder="0,00" oninput="calc()">
-              <div class="field-hint">Ex: caixa de papelão para envio</div>
-            </div>
-            <div class="field">
-              <label>Margem contribuição mín. (%)</label>
-              <input type="number" id="atac-mc-min" value="35" step="1" min="0" max="100" oninput="calc()">
-              <div class="field-hint">Abaixo disso → aviso vermelho</div>
-            </div>
-            <div class="field">
-              <label>Frete (R$/pct)</label>
-              <input type="number" id="atac-frete" value="0" step="0.01" min="0" placeholder="0,00" oninput="calc()">
-              <div class="field-hint">0 = cliente retira / paga</div>
-            </div>
-          </div>
-
-          <div class="result-box">
-            <div class="result-header" style="background:linear-gradient(135deg,#3b82f6,#6366f1)">
-              <div>
-                <div class="result-header-title">Preço sugerido por pacote</div>
-                <div class="result-preco" id="atac-preco-display">R$ —</div>
-                <div class="result-sub" id="atac-margem-display">Margem: —</div>
-              </div>
-              <div style="text-align:right">
-                <div style="font-size:11px;color:rgba(255,255,255,.7);margin-bottom:4px">Markup</div>
-                <input type="number" id="atac-markup" value="2.0" step="0.1" min="1" oninput="calc()"
-                  style="width:70px;padding:6px 8px;border:1.5px solid rgba(255,255,255,.4);border-radius:7px;background:rgba(255,255,255,.15);color:#fff;font-size:16px;font-weight:800;font-family:inherit;text-align:center">
-                <div style="font-size:10px;color:rgba(255,255,255,.6);margin-top:2px">×</div>
-              </div>
-            </div>
-            <div class="result-rows" id="atac-rows"></div>
-          </div>
+    <!-- MATÉRIA PRIMA -->
+    <div class="bloco">
+      <div class="bloco-titulo">🧶 Matéria-Prima <span style="font-size:10px;font-weight:400;color:var(--ink-3)">(PES + Elastano deve somar 100%)</span></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px">
+        <div class="f"><label>Fio Branco %</label>
+          <input type="number" id="pes-b-pct" value="80" min="0" max="100" oninput="syncEla();c()">
         </div>
-
-        <!-- MARKETPLACES -->
-        <div>
-          <div style="font-size:13px;font-weight:800;color:var(--ink-2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">🛒 Marketplaces</div>
-
-          <!-- Platform tabs -->
-          <div class="platform-tabs">
-            <div class="ptab on" onclick="setPlat('shopee')" id="tab-shopee">🛍️ Shopee</div>
-            <div class="ptab" onclick="setPlat('tiktok')" id="tab-tiktok">🎵 TikTok Shop</div>
-          </div>
-
-          <!-- Shopee config -->
-          <div id="cfg-shopee" style="margin-bottom:12px">
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-              <div class="field">
-                <label>Taxa Shopee (%)</label>
-                <input type="number" id="shopee-taxa" value="20" step="0.1" min="0" oninput="calc()">
-              </div>
-              <div class="field">
-                <label>Frete fixo cobrado (R$)</label>
-                <input type="number" id="shopee-frete" value="0" step="0.01" min="0" placeholder="0,00" oninput="calc()">
-                <div class="field-hint">0 = cliente paga</div>
-              </div>
-            </div>
-          </div>
-
-          <!-- TikTok config -->
-          <div id="cfg-tiktok" style="display:none;margin-bottom:12px">
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-              <div class="field">
-                <label>Taxa TikTok Shop (%)</label>
-                <input type="number" id="tiktok-taxa" value="12" step="0.1" min="0" oninput="calc()">
-              </div>
-              <div class="field">
-                <label>Frete fixo cobrado (R$)</label>
-                <input type="number" id="tiktok-frete" value="0" step="0.01" min="0" placeholder="0,00" oninput="calc()">
-                <div class="field-hint">0 = cliente paga</div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Markup marketplace -->
-          <div class="result-box">
-            <div class="result-header" style="background:linear-gradient(135deg,#f97316,#fb923c)">
-              <div>
-                <div class="result-header-title" id="mkt-plat-label">Shopee — Preço por pacote</div>
-                <div class="result-preco" id="mkt-preco-display">R$ —</div>
-                <div class="result-sub" id="mkt-margem-display">Margem: —</div>
-              </div>
-              <div style="text-align:right">
-                <div style="font-size:11px;color:rgba(255,255,255,.7);margin-bottom:4px">Markup</div>
-                <input type="number" id="mkt-markup" value="2.5" step="0.1" min="1" oninput="calc()"
-                  style="width:70px;padding:6px 8px;border:1.5px solid rgba(255,255,255,.4);border-radius:7px;background:rgba(255,255,255,.15);color:#fff;font-size:16px;font-weight:800;font-family:inherit;text-align:center">
-                <div style="font-size:10px;color:rgba(255,255,255,.6);margin-top:2px">×</div>
-              </div>
-            </div>
-            <div class="result-rows" id="mkt-rows"></div>
-          </div>
+        <div class="f"><label>Preço Branco R$/kg</label>
+          <input type="number" id="pes-b-preco" value="0" step="0.01" oninput="c()">
         </div>
-
-        <!-- RESUMO COMPARATIVO -->
-        <div style="margin-top:14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px">
-          <div style="font-size:12px;font-weight:800;color:var(--ink-2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">📊 Comparativo de Canais</div>
-          <div id="comparativo"></div>
+        <div class="f"><label>Fio Colorido %</label>
+          <input type="number" id="pes-c-pct" value="0" min="0" max="100" oninput="c()">
+          <div class="hint">Para xuxinhas coloridas</div>
         </div>
-
+        <div class="f"><label>Preço Colorido R$/kg</label>
+          <input type="number" id="pes-c-preco" value="0" step="0.01" oninput="c()">
+        </div>
       </div>
-    </div><!-- fim prec-grid -->
-  </div><!-- fim tab-content -->
-</div><!-- fim main -->
-</div><!-- fim layout -->
+      <div class="row2" style="margin-top:10px">
+        <div class="f"><label>Elastano %</label>
+          <input type="number" id="ela-pct" value="20" min="0" max="100" id="ela-pct" oninput="c()">
+        </div>
+        <div class="f"><label>Preço Elastano R$/kg</label>
+          <input type="number" id="ela-preco" value="0" step="0.01" oninput="c()">
+        </div>
+      </div>
+      <div id="aviso-pct" style="display:none;margin-top:8px;padding:8px 12px;background:#fee2e2;
+        border-radius:8px;font-size:12px;font-weight:700;color:#991b1b">
+        ⚠️ A soma das % não bate em 100%. Verifique os valores.
+      </div>
+    </div>
+
+    <!-- PRODUÇÃO E EMBALAGEM -->
+    <div class="bloco">
+      <div class="bloco-titulo">🏭 Produção e Embalagem</div>
+      <div class="row3">
+        <div class="f"><label>Faccionista R$/kg</label>
+          <input type="number" id="facc" value="0" step="0.01" oninput="c()">
+        </div>
+        <div class="f"><label>Embalagem R$/pct</label>
+          <input type="number" id="emb" value="0" step="0.001" oninput="c()">
+        </div>
+        <div class="f"><label>Etiqueta R$/pct</label>
+          <input type="number" id="etq" value="0" step="0.001" oninput="c()">
+        </div>
+      </div>
+      <!-- Envelope só aparece no marketplace -->
+      <div id="bloco-env" style="margin-top:10px;display:none">
+        <div class="f"><label>Envelope de segurança R$/pct</label>
+          <input type="number" id="env" value="0" step="0.001" oninput="c()">
+        </div>
+      </div>
+    </div>
+
+    <!-- CANAL ESPECÍFICO -->
+    <!-- LOJA -->
+    <div id="cfg-loja" class="bloco">
+      <div class="bloco-titulo">🏪 Configurações — Loja / Atacado</div>
+      <div class="row3">
+        <div class="f"><label>Comissão rep. %</label>
+          <input type="number" id="loja-rep" value="15" step="0.1" oninput="c()">
+        </div>
+        <div class="f"><label>Imposto Simples %</label>
+          <input type="number" id="loja-imp" value="6" step="0.1" oninput="c()">
+        </div>
+        <div class="f"><label>Markup</label>
+          <input type="number" id="loja-mk" value="2.0" step="0.1" min="1" oninput="c()">
+        </div>
+      </div>
+    </div>
+
+    <!-- SHOPEE -->
+    <div id="cfg-shopee" class="bloco" style="display:none">
+      <div class="bloco-titulo">🛍️ Configurações — Shopee</div>
+      <div class="row3">
+        <div class="f"><label>Taxa Shopee %</label>
+          <input type="number" id="shopee-taxa" value="20" step="0.1" oninput="c()">
+        </div>
+        <div class="f"><label>Imposto Simples %</label>
+          <input type="number" id="shopee-imp" value="6" step="0.1" oninput="c()">
+        </div>
+        <div class="f"><label>Markup</label>
+          <input type="number" id="shopee-mk" value="2.5" step="0.1" min="1" oninput="c()">
+        </div>
+      </div>
+    </div>
+
+    <!-- TIKTOK -->
+    <div id="cfg-tiktok" class="bloco" style="display:none">
+      <div class="bloco-titulo">🎵 Configurações — TikTok Shop</div>
+      <div class="row3">
+        <div class="f"><label>Taxa TikTok %</label>
+          <input type="number" id="tiktok-taxa" value="12" step="0.1" oninput="c()">
+        </div>
+        <div class="f"><label>Imposto Simples %</label>
+          <input type="number" id="tiktok-imp" value="6" step="0.1" oninput="c()">
+        </div>
+        <div class="f"><label>Markup</label>
+          <input type="number" id="tiktok-mk" value="2.5" step="0.1" min="1" oninput="c()">
+        </div>
+      </div>
+    </div>
+
+    <!-- RESULTADO -->
+    <div id="resultado"></div>
+
+    <!-- NECESSIDADE DE COMPRA -->
+    <div id="necessidade"></div>
+
+  </div><!-- calc-wrap -->
+  </div><!-- tab-content -->
+</div><!-- main -->
+</div><!-- layout -->
 
 <script src="mes-global.js"></script>
 <script>
-// ── UTILS ─────────────────────────────────────────────────────
-function v(id){return parseFloat(document.getElementById(id)?.value||0)||0;}
-function fmt(n){return 'R$ '+Number(n).toFixed(2).replace('.',',');}
-function pct(n){return n.toFixed(1).replace('.',',')+'%'}
+var _canal = 'loja';
 
-// ── PLATFORM ─────────────────────────────────────────────────
-var _plat = 'shopee';
-function setPlat(p){
-  _plat = p;
-  ['shopee','tiktok'].forEach(function(x){
-    document.getElementById('tab-'+x).classList.toggle('on', x===p);
-    document.getElementById('cfg-'+x).style.display = x===p?'block':'none';
+function canal(ch){
+  _canal = ch;
+  ['loja','shopee','tiktok'].forEach(function(x){
+    document.getElementById('tab-'+x).classList.toggle('on', x===ch);
+    document.getElementById('cfg-'+x).style.display = x===ch?'block':'none';
   });
-  calc();
+  document.getElementById('bloco-env').style.display = ch==='loja'?'none':'block';
+  c();
 }
 
-// ── CUSTO BASE (por pacote) ───────────────────────────────────
-function calcCusto(){
-  var unid  = v('p-unid')  || 12;   // peças/pacote
-  var rend  = v('p-rend')  || 150;  // peças/kg
-  var kgPct = unid / rend;          // kg de fio por pacote
+function v(id){ return parseFloat(document.getElementById(id)?.value||0)||0; }
+function fmt(n){ return 'R$ '+n.toFixed(2).replace('.',','); }
+function pp(n){ return n.toFixed(1)+'%'; }
 
-  // MP
-  var pesPct  = v('mp-pes-pct') / 100;
-  var elaPct  = v('mp-ela-pct') / 100;
-  var pesPreco= v('mp-pes-preco');
-  var elaPreco= v('mp-ela-preco');
-  var custoMP = kgPct * (pesPct * pesPreco + elaPct * elaPreco);
-
-  // Produção
-  var custoFacc = kgPct * v('p-facc');
-  var custoMob  = v('p-mob');
-
-  // Embalagem
-  var custoEmb = v('p-emb') + v('p-etq');
-
-  return {
-    mp:    custoMP,
-    facc:  custoFacc,
-    mob:   custoMob,
-    emb:   custoEmb,
-    base:  custoMP + custoFacc + custoMob + custoEmb,
-    kgPct: kgPct
-  };
+function syncEla(){
+  // auto-adjust elastano if user changes branco
+  var b=v('pes-b-pct'), col=v('pes-c-pct');
+  var ela=100-b-col;
+  if(ela>=0) document.getElementById('ela-pct').value=ela;
 }
 
-// ── PRECIFICAR ────────────────────────────────────────────────
-function precificar(custoVariavel, taxaPlat, markup, repPct, freteFixo, embExtra){
-  var impPct   = v('p-imp') / 100;
-  var custoVar = custoVariavel + embExtra + freteFixo;
-  var divisor  = 1 - impPct - taxaPlat - repPct;
-  if(divisor <= 0) divisor = 0.01;
-  var precoMin = custoVar / divisor;
-  var precoSug = precoMin * markup;
-  var imposto  = precoSug * impPct;
-  var taxaVal  = precoSug * taxaPlat;
-  var repVal   = precoSug * repPct;
-  var lucro    = precoSug - custoVar - imposto - taxaVal - repVal;
-  var margem   = precoSug > 0 ? lucro / precoSug * 100 : 0;
-  var mc       = precoSug > 0 ? (precoSug - custoVar) / precoSug * 100 : 0;
-  return {precoMin:precoMin, precoSug:precoSug, imposto:imposto, taxaVal:taxaVal,
-          repVal:repVal, lucro:lucro, margem:margem, mc:mc, custoVar:custoVar, embExtra:embExtra};
+function custo(){
+  var unid = v('unid')||12;
+  var rend = v('rend')||150;
+  var kg   = unid/rend; // kg por pacote
+
+  var bPct = v('pes-b-pct')/100;
+  var cPct = v('pes-c-pct')/100;
+  var ePct = v('ela-pct')/100;
+
+  var soma = v('pes-b-pct')+v('pes-c-pct')+v('ela-pct');
+  document.getElementById('aviso-pct').style.display = Math.abs(soma-100)>0.5?'block':'none';
+
+  var mp = kg*(bPct*v('pes-b-preco') + cPct*v('pes-c-preco') + ePct*v('ela-preco'));
+  var facc = kg*v('facc');
+  var emb  = v('emb')+v('etq');
+  var env  = _canal!=='loja'?v('env'):0;
+  return {mp:mp, facc:facc, emb:emb, env:env, total:mp+facc+emb+env, kg:kg};
 }
 
-// ── RENDER ROW ────────────────────────────────────────────────
-function rRow(label, val, cor){
-  return '<div class="result-row">'+
-    '<span class="result-row-label">'+label+'</span>'+
-    '<span class="result-row-val" style="color:'+(cor||'var(--ink)')+'">'+val+'</span>'+
+function calcPreco(custoVar, impPct, taxaPct, repPct, mk){
+  // Preço mínimo = cobre tudo sem lucro
+  var div = 1 - impPct - taxaPct - repPct;
+  if(div<=0) div=0.01;
+  var pMin = custoVar/div;
+  var pSug = pMin*mk;
+  var imp  = pSug*impPct;
+  var taxa = pSug*taxaPct;
+  var rep  = pSug*repPct;
+  var lucro= pSug-custoVar-imp-taxa-rep;
+  var mg   = pSug>0?lucro/pSug*100:0;
+  var mc   = pSug>0?(pSug-custoVar)/pSug*100:0;
+  return {pMin:pMin, pSug:pSug, imp:imp, taxa:taxa, rep:rep, lucro:lucro, mg:mg, mc:mc};
+}
+
+function sem(mc){
+  if(mc>=35) return {cls:'s-verde', icon:'🟢', txt:'Margem saudável'};
+  if(mc>=20) return {cls:'s-amarelo', icon:'🟡', txt:'Margem apertada — revise os custos'};
+  return {cls:'s-vermelho', icon:'🔴', txt:'Margem insuficiente — prejuízo ou inviável'};
+}
+
+function rLinha(label,val,cor,bold){
+  return '<div class="res-linha'+(bold?' sep':'')+'">'+
+    '<span style="color:var(--ink-2)">'+label+'</span>'+
+    '<span style="font-weight:'+(bold?'800':'600')+';color:'+(cor||'var(--ink)')+'">'+val+'</span>'+
   '</div>';
 }
-function margemCor(m){return m>=35?'#10b981':m>=20?'#f59e0b':'#ef4444';}
-function margemIcon(m){return m>=35?'🟢':m>=20?'🟡':'🔴';}
 
-// ── MAIN CALC ─────────────────────────────────────────────────
-function calc(){
-  var c = calcCusto();
+function c(){
+  var cu = custo();
+  var res = document.getElementById('resultado');
+  var cor, icon, taxaLabel, taxaV, impPct, taxaPct, repPct, mk;
 
-  // ATACADO FÍSICO / LOJAS
-  var atacRepPct   = v('atac-rep') / 100;
-  var atacEmbExtra = v('atac-emb-extra');
-  var atacFrete    = v('atac-frete');
-  var atacMcMin    = v('atac-mc-min');
-  var atac = precificar(c.base, 0, v('atac-markup'), atacRepPct, atacFrete, atacEmbExtra);
-  var atacCustoTotal = c.base + atacEmbExtra + atacFrete;
-  document.getElementById('atac-preco-display').textContent = fmt(atac.precoSug);
-  document.getElementById('atac-margem-display').textContent =
-    'Margem: '+pct(atac.margem)+' · MC: '+pct(atac.mc)+' · Mín: '+fmt(atac.precoMin);
-  var atacSemaforo = atac.mc >= atacMcMin ? 'verde' : atac.mc >= atacMcMin*0.7 ? 'amarelo' : 'vermelho';
-  var atacSemIcon  = atac.mc >= atacMcMin ? '🟢' : atac.mc >= atacMcMin*0.7 ? '🟡' : '🔴';
-  document.getElementById('atac-rows').innerHTML =
-    '<div style="margin-bottom:10px">'+
-      '<div style="font-size:11px;font-weight:700;color:var(--ink-3);text-transform:uppercase;margin-bottom:6px">Custo por pacote</div>'+
-      rRow('🧶 MP ('+v('p-unid')+'pçs × '+(c.kgPct*1000).toFixed(0)+'g)', fmt(c.mp))+
-      rRow('🏭 Faccionista', fmt(c.facc))+
-      (c.mob>0?rRow('👐 Mão de obra', fmt(c.mob)):'')+
-      rRow('📦 Embalagem + Etiqueta', fmt(c.emb))+
-      (atacEmbExtra>0?rRow('📦 Embalagem extra loja', fmt(atacEmbExtra)):'')+
-      (atacFrete>0?rRow('🚚 Frete', fmt(atacFrete)):'')+
-      rRow('Total custo variável', fmt(atacCustoTotal),'#64748b')+
-    '</div>'+
-    '<div style="font-size:11px;font-weight:700;color:var(--ink-3);text-transform:uppercase;margin-bottom:6px">Sobre o preço de venda</div>'+
-    rRow('📋 Imposto Simples ('+v('p-imp')+'%)', '-'+fmt(atac.imposto),'var(--red)')+
-    rRow('🤝 Comissão rep ('+v('atac-rep')+'%)', '-'+fmt(atac.repVal),'var(--red)')+
-    '<div class="result-row total">'+
-      '<span class="result-row-label">💰 Lucro por pacote</span>'+
-      '<span class="result-row-val" style="color:'+(atac.lucro>=0?'var(--green)':'var(--red)')+'">'+fmt(atac.lucro)+'</span>'+
-    '</div>'+
-    '<div style="margin-top:10px;padding:10px 12px;border-radius:8px;background:'+(margemCor(atac.mc)+'18')+';display:flex;align-items:center;gap:8px">'+
-      '<span style="font-size:18px">'+atacSemIcon+'</span>'+
-      '<div>'+
-        '<div style="font-size:14px;font-weight:900;color:'+margemCor(atac.mc)+'">MC: '+pct(atac.mc)+'  ·  Margem: '+pct(atac.margem)+'</div>'+
-        '<div style="font-size:11px;color:var(--ink-3)">MC mínima configurada: '+pct(atacMcMin)+' · Preço mín: '+fmt(atac.precoMin)+'</div>'+
-        (atac.mc < atacMcMin?'<div style="font-size:11px;color:#ef4444;font-weight:700;margin-top:2px">⚠️ Abaixo da MC mínima — revise o markup</div>':'')+
+  if(_canal==='loja'){
+    impPct=v('loja-imp')/100; taxaPct=0; repPct=v('loja-rep')/100; mk=v('loja-mk');
+    cor='linear-gradient(135deg,#3b82f6,#6366f1)'; icon='🏪'; taxaLabel='';
+  } else if(_canal==='shopee'){
+    impPct=v('shopee-imp')/100; taxaPct=v('shopee-taxa')/100; repPct=0; mk=v('shopee-mk');
+    cor='linear-gradient(135deg,#e11d48,#f97316)'; icon='🛍️'; taxaLabel='Shopee';
+  } else {
+    impPct=v('tiktok-imp')/100; taxaPct=v('tiktok-taxa')/100; repPct=0; mk=v('tiktok-mk');
+    cor='linear-gradient(135deg,#111827,#374151)'; icon='🎵'; taxaLabel='TikTok Shop';
+  }
+
+  var r = calcPreco(cu.total, impPct, taxaPct, repPct, mk);
+  var s = sem(r.mc);
+
+  // NECESSIDADE DE COMPRA
+  var qtdPct = v('qtd-pct');
+  var ne = document.getElementById('necessidade');
+  if(qtdPct>0 && ne){
+    var kgTotal = qtdPct * cu.kg;
+    var bPct2 = v('pes-b-pct')/100;
+    var cPct2 = v('pes-c-pct')/100;
+    var ePct2 = v('ela-pct')/100;
+    var kgB   = kgTotal * bPct2;
+    var kgCol = kgTotal * cPct2;
+    var kgEla = kgTotal * ePct2;
+    var vlB   = kgB   * v('pes-b-preco');
+    var vlCol = kgCol * v('pes-c-preco');
+    var vlEla = kgEla * v('ela-preco');
+    var vlMP  = vlB+vlCol+vlEla;
+    var vlFacc= kgTotal * v('facc');
+    var vlEmb = qtdPct * (v('emb')+v('etq'));
+    var vlEnv = _canal!=='loja'?qtdPct*v('env'):0;
+    var vlTotal= vlMP+vlFacc+vlEmb+vlEnv;
+    var receitaBruta = qtdPct * r.pSug;
+    var lucroTotal   = qtdPct * r.lucro;
+    function nLinha(l,kg,vl,bold){
+      return '<div style="display:flex;justify-content:space-between;align-items:center;'+
+        'padding:'+(bold?'10':'7')+'px 0;border-bottom:1px solid #f1f5f9;'+
+        (bold?'border-top:2px solid #e2e8f0;margin-top:4px;':'')+'">'+
+        '<span style="font-size:13px;color:var(--ink-2);font-weight:'+(bold?'700':'400')+'">'+l+'</span>'+
+        '<div style="text-align:right">'+
+          (kg!==null?'<div style="font-size:11px;color:var(--ink-3)">'+kg.toFixed(3)+' kg</div>':'')+
+          '<div style="font-size:13px;font-weight:'+(bold?'800':'600')+';color:var(--ink)">'+fmt(vl)+'</div>'+
+        '</div>'+
+      '</div>';
+    }
+    ne.innerHTML = '<div style="background:var(--surface);border:1px solid var(--border);'+
+      'border-radius:12px;overflow:hidden;margin-top:12px">'+
+      '<div style="background:linear-gradient(135deg,#0f172a,#1e3a5f);padding:14px 20px;'+
+        'display:flex;justify-content:space-between;align-items:center">'+
+        '<div>'+
+          '<div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.6);'+
+            'text-transform:uppercase;letter-spacing:.5px">Projeção do Pedido</div>'+
+          '<div style="font-size:18px;font-weight:900;color:#fff">'+
+            qtdPct.toLocaleString('pt-BR')+' pacotes</div>'+
+        '</div>'+
+        '<div style="text-align:right">'+
+          '<div style="font-size:11px;color:rgba(255,255,255,.6)">Receita bruta</div>'+
+          '<div style="font-size:22px;font-weight:900;color:#fff">'+fmt(receitaBruta)+'</div>'+
+          '<div style="font-size:12px;color:'+(lucroTotal>=0?'#6ee7b7':'#fca5a5')+';margin-top:2px">'+
+            'Lucro: '+fmt(lucroTotal)+'</div>'+
+        '</div>'+
+      '</div>'+
+      '<div style="padding:16px 20px">'+
+        '<div style="font-size:11px;font-weight:800;color:var(--ink-3);text-transform:uppercase;'+
+          'letter-spacing:.5px;margin-bottom:8px">🛒 Compras necessárias</div>'+
+        (kgB>0?nLinha('🧶 Fio Branco',kgB,vlB,false):'')+
+        (kgCol>0?nLinha('🎨 Fio Colorido',kgCol,vlCol,false):'')+
+        (kgEla>0?nLinha('⚡ Elastano',kgEla,vlEla,false):'')+
+        nLinha('🏭 Faccionista',kgTotal,vlFacc,false)+
+        nLinha('📦 Embalagem + Etiqueta',null,vlEmb,false)+
+        (vlEnv>0?nLinha('📬 Envelopes',null,vlEnv,false):'')+
+        nLinha('💰 Total a investir',kgTotal,vlTotal,true)+
+        '<div style="margin-top:12px;padding:12px;border-radius:8px;'+
+          'background:'+(lucroTotal/receitaBruta>0.2?'#d1fae5':'#fef3c7')+';'+
+          'display:flex;justify-content:space-between;align-items:center">'+
+          '<div>'+
+            '<div style="font-size:11px;font-weight:700;color:#64748b">Investe</div>'+
+            '<div style="font-size:18px;font-weight:900;color:#1e293b">'+fmt(vlTotal)+'</div>'+
+          '</div>'+
+          '<div style="font-size:20px">→</div>'+
+          '<div style="text-align:right">'+
+            '<div style="font-size:11px;font-weight:700;color:#64748b">Recebe</div>'+
+            '<div style="font-size:18px;font-weight:900;color:#1e293b">'+fmt(receitaBruta)+'</div>'+
+          '</div>'+
+          '<div style="font-size:20px">→</div>'+
+          '<div style="text-align:right">'+
+            '<div style="font-size:11px;font-weight:700;color:#64748b">Lucra</div>'+
+            '<div style="font-size:18px;font-weight:900;color:'+(lucroTotal>=0?'#10b981':'#ef4444')+'">'+
+              fmt(lucroTotal)+'</div>'+
+          '</div>'+
+        '</div>'+
       '</div>'+
     '</div>';
+  } else if(ne) { ne.innerHTML=''; }
 
-  // MARKETPLACE
-  var plat = _plat;
-  var taxa = v(plat+'-taxa') / 100;
-  var frete = v(plat+'-frete');
-  var platLabel = plat==='shopee'?'Shopee':'TikTok Shop';
-  var platIcon  = plat==='shopee'?'🛍️':'🎵';
-
-  var mkt = precificar(c.base, taxa, v('mkt-markup'), 0, frete, v('p-env'));
-  document.getElementById('mkt-plat-label').textContent = platIcon+' '+platLabel+' — Preço por pacote';
-  document.getElementById('mkt-preco-display').textContent = fmt(mkt.precoSug);
-  document.getElementById('mkt-margem-display').textContent = 'Margem: '+pct(mkt.margem)+' · Mín: '+fmt(mkt.precoMin);
-  document.getElementById('mkt-rows').innerHTML =
-    '<div style="margin-bottom:10px">'+
-      '<div style="font-size:11px;font-weight:700;color:var(--ink-3);text-transform:uppercase;margin-bottom:6px">Custo por pacote</div>'+
-      rRow('🧶 Matéria-Prima', fmt(c.mp),'var(--ink)')+
-      rRow('🏭 Faccionista', fmt(c.facc),'var(--ink)')+
-      (c.mob>0?rRow('👐 Mão de obra', fmt(c.mob),'var(--ink)'):'')+
-      rRow('📦 Embalagem + Etiqueta', fmt(c.emb),'var(--ink)')+
-      (mkt.env>0?rRow('📬 Envelope segurança', fmt(mkt.env),'var(--ink)'):'')+
-      (frete>0?rRow('🚚 Frete subsidiado', fmt(frete),'var(--ink)'):'')+
-      rRow('Total custo variável', fmt(mkt.custoVar),'var(--ink-2)')+
-    '</div>'+
-    '<div style="font-size:11px;font-weight:700;color:var(--ink-3);text-transform:uppercase;margin-bottom:6px">Descontos sobre venda</div>'+
-    rRow('📋 Imposto Simples ('+v('p-imp')+'%)', '-'+fmt(mkt.imposto),'var(--red)')+
-    rRow(platIcon+' Taxa '+platLabel+' ('+v(plat+'-taxa')+'%)', '-'+fmt(mkt.taxaVal),'var(--red)')+
-    '<div class="result-row total">'+
-      '<span class="result-row-label">💰 Lucro por pacote</span>'+
-      '<span class="result-row-val" style="color:'+(mkt.lucro>=0?'var(--green)':'var(--red)')+'">'+fmt(mkt.lucro)+'</span>'+
-    '</div>'+
-    '<div style="margin-top:10px;padding:10px 12px;border-radius:8px;background:'+(margemCor(mkt.margem)+'18')+';display:flex;align-items:center;gap:8px">'+
-      '<span style="font-size:18px">'+margemIcon(mkt.margem)+'</span>'+
-      '<div><div style="font-size:14px;font-weight:900;color:'+margemCor(mkt.margem)+'">'+pct(mkt.margem)+' de margem</div>'+
-      '<div style="font-size:11px;color:var(--ink-3)">Preço mínimo para não prejuízo: '+fmt(mkt.precoMin)+'</div></div>'+
-    '</div>';
-
-  // COMPARATIVO
-  var atacTikTok = precificar(c.base, v('tiktok-taxa')/100, v('mkt-markup'), 0, v('tiktok-frete'), v('p-env'));
-  var atacShopee = precificar(c.base, v('shopee-taxa')/100, v('mkt-markup'), 0, v('shopee-frete'), v('p-env'));
-  document.getElementById('comparativo').innerHTML =
-    ['🏪 Atacado','🛍️ Shopee','🎵 TikTok'].reduce(function(html, nome, i){
-      var res = i===0?atac:i===1?atacShopee:atacTikTok;
-      return html+
-        '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)">'+
-          '<span style="font-size:13px;font-weight:700">'+nome+'</span>'+
-          '<div style="display:flex;gap:16px;align-items:center">'+
-            '<span style="font-size:12px;color:var(--ink-2)">'+fmt(res.precoSug)+'/pct</span>'+
-            '<span style="font-size:12px;font-weight:800;color:'+margemCor(res.margem)+'">'+margemIcon(res.margem)+' '+pct(res.margem)+'</span>'+
-            '<span style="font-size:12px;color:var(--green);font-weight:700">'+fmt(res.lucro)+'</span>'+
+  res.innerHTML =
+    '<div class="resultado">'+
+      '<div class="res-topo" style="background:'+cor+'">'+
+        '<div>'+
+          '<div class="res-label">'+icon+' Preço sugerido por pacote</div>'+
+          '<div class="res-preco">'+fmt(r.pSug)+'</div>'+
+          '<div class="res-min">Preço mínimo: '+fmt(r.pMin)+'</div>'+
+        '</div>'+
+        '<div style="text-align:right">'+
+          '<div style="color:rgba(255,255,255,.7);font-size:11px;font-weight:700;margin-bottom:4px">Markup</div>'+
+          '<div style="font-size:28px;font-weight:900;color:#fff">'+mk.toFixed(1)+'×</div>'+
+          '<div style="color:rgba(255,255,255,.8);font-size:12px;margin-top:2px">'+
+            'MC <span class="badge-pct">'+pp(r.mc)+'</span>'+
           '</div>'+
-        '</div>';
-    },'');
+          '<div style="color:rgba(255,255,255,.8);font-size:12px">'+
+            'Margem <span class="badge-pct">'+pp(r.mg)+'</span>'+
+          '</div>'+
+        '</div>'+
+      '</div>'+
+      '<div class="res-body">'+
+        rLinha('🧶 Matéria-Prima ('+( cu.kg*1000).toFixed(0)+'g/pct)',fmt(cu.mp))+
+        rLinha('🏭 Faccionista',fmt(cu.facc))+
+        rLinha('📦 Embalagem + Etiqueta',fmt(cu.emb))+
+        (cu.env>0?rLinha('📬 Envelope segurança',fmt(cu.env)):'')+
+        rLinha('Total custo variável',fmt(cu.total),'#64748b')+
+        '<div style="height:6px"></div>'+
+        rLinha('📋 Imposto Simples ('+pp(impPct*100)+')','-'+fmt(r.imp),'#ef4444')+
+        (taxaPct>0?rLinha(icon+' Taxa '+taxaLabel+' ('+pp(taxaPct*100)+')','-'+fmt(r.taxa),'#ef4444'):'')+
+        (repPct>0?rLinha('🤝 Comissão rep. ('+pp(repPct*100)+')','-'+fmt(r.rep),'#ef4444'):'')+
+        rLinha('💰 Lucro por pacote',fmt(r.lucro),r.lucro>=0?'#10b981':'#ef4444',true)+
+        '<div class="semaforo '+s.cls+'"><span style="font-size:20px">'+s.icon+'</span>'+s.txt+'</div>'+
+      '</div>'+
+    '</div>';
 }
 
 function resetar(){
-  if(!confirm('Resetar todos os valores?')) return;
-  ['p-unid','p-rend','mp-pes-pct','mp-pes-preco','mp-ela-pct','mp-ela-preco',
-   'p-facc','p-mob','p-emb','p-etq','p-env','p-imp',
-   'atac-markup','atac-rep','atac-emb-extra','atac-frete','atac-mc-min',
-   'mkt-markup','shopee-taxa','shopee-frete','tiktok-taxa','tiktok-frete'].forEach(function(id){
-    var el=document.getElementById(id);
-    if(!el) return;
-    var defaults={'p-unid':12,'p-rend':150,'mp-pes-pct':80,'mp-ela-pct':20,
-      'p-imp':6,'atac-rep':15,'atac-mc-min':35,'atac-markup':2.0,'mkt-markup':2.5,
-      'shopee-taxa':20,'tiktok-taxa':12};
-    el.value=defaults[id]||0;
+  if(!confirm('Zerar todos os valores?'))return;
+  var defs={unid:12,rend:150,'pes-b-pct':80,'pes-c-pct':0,'ela-pct':20,
+    'loja-rep':15,'loja-imp':6,'loja-mk':2.0,
+    'shopee-taxa':20,'shopee-imp':6,'shopee-mk':2.5,
+    'tiktok-taxa':12,'tiktok-imp':6,'tiktok-mk':2.5};
+  Object.keys(defs).forEach(function(k){
+    var el=document.getElementById(k);
+    if(el)el.value=defs[k];
   });
-  document.getElementById('p-nome').value='';
-  calc();
+  ['pes-b-preco','pes-c-preco','ela-preco','facc','emb','etq','env'].forEach(function(k){
+    var el=document.getElementById(k);if(el)el.value=0;
+  });
+  c();
 }
 
-// Clock
 function tick(){
   var n=new Date();
-  document.getElementById('sb-time').textContent=n.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
-  document.getElementById('sb-date').textContent=n.toLocaleDateString('pt-BR',{weekday:'short',day:'numeric',month:'short'});
+  var te=document.getElementById('sb-time');
+  var de=document.getElementById('sb-date');
+  if(te)te.textContent=n.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  if(de)de.textContent=n.toLocaleDateString('pt-BR',{weekday:'short',day:'numeric',month:'short'});
 }
 setInterval(tick,1000);tick();
-
-// Init
-calc();
+c();
 </script>
 <script src="firebase-sync.js"></script>
 </body>
