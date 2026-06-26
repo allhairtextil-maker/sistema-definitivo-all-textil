@@ -4,24 +4,7 @@
 <meta charset="UTF-8">
 <script src="mes-global.js"></script>
 <link rel="stylesheet" href="design.css">
-<style>/* ── Layout completo ── */
-html,body{height:100%;margin:0;padding:0;overflow:hidden;}
-.layout{display:flex;height:100vh;overflow:hidden;}
-.sidebar{flex-shrink:0;}
-.main{flex:1;display:flex;flex-direction:column;height:100vh;overflow:hidden;min-width:0;}
-.topbar{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;
-  padding:0 20px;height:52px;background:var(--surface,#fff);
-  border-bottom:1px solid var(--border,#e2e8f0);position:sticky;top:0;z-index:20;}
-.tabs{flex-shrink:0;display:flex;padding:0 20px;
-  background:var(--surface,#fff);border-bottom:1px solid var(--border,#e2e8f0);
-  overflow-x:auto;}
-.tab{padding:11px 14px;font-size:13px;font-weight:600;color:var(--ink-3,#94a3b8);
-  cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;}
-.tab.on{color:var(--purple,#8b5cf6);border-color:var(--purple,#8b5cf6);}
-.tc{display:none;}
-.tc.on{display:block;flex:1;overflow-y:auto;padding:20px;min-height:0;}
-/* ── End layout ── */
-
+<style>
 
 /* Estoque overlay/modal */
 .ov{display:none;position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:200;align-items:center;justify-content:center;padding:16px;}
@@ -33,11 +16,11 @@ html,body{height:100%;margin:0;padding:0;overflow:hidden;}
 .mb{padding:20px;display:flex;flex-direction:column;gap:12px;}
 .mf{padding:14px 20px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;}
 /* Tabs */
-.tabs{display:flex!important;padding:0 20px;background:var(--surface);border-bottom:1px solid var(--border);overflow-x:auto;flex-shrink:0;}
+.tabs{display:flex;padding:0 20px;background:var(--surface);border-bottom:1px solid var(--border);overflow-x:auto;}
 .tab{padding:12px 16px;font-size:13px;font-weight:600;color:var(--ink-3);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:color .15s,border-color .15s;}
 .tab.on{color:var(--purple);border-color:var(--purple);}
-.tc{display:none;}
-.tc.on{display:block;padding:20px;overflow-y:auto;flex:1;min-height:0;}
+.tc{display:none;padding:20px;}
+.tc.on{display:block;}
 /* Buttons */
 .btn{padding:7px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;border:none;font-family:inherit;}
 .bp{background:var(--purple);color:#fff;}
@@ -61,8 +44,8 @@ a.sl:hover,a.sl.on{background:rgba(255,255,255,.1);color:#fff;}
 .tabs{display:flex;padding:0 20px;background:var(--white);border-bottom:1px solid var(--border);overflow-x:auto;}
 .tab{padding:12px 14px;font-size:13px;font-weight:600;color:var(--t2);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;user-select:none;}
 .tab.on{color:var(--purple);border-color:var(--purple);}
-.tc{display:none;}
-.tc.on{display:block;padding:20px;overflow-y:auto;flex:1;min-height:0;}
+.tc{display:none;padding:20px;overflow-y:auto;flex:1;}
+.tc.on{display:block;}
 /* CARDS */
 .card{background:var(--white);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--sh);}
 .btn{padding:8px 16px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;border:none;font-family:inherit;transition:opacity .15s;}
@@ -189,7 +172,7 @@ tr:last-child td{border-bottom:none;}
   <!-- ABA HISTORICO -->
   <div class="tc" id="tc-historico">
     <div class="card" style="overflow:hidden"><table>
-      <thead><tr><th>Data</th><th>Tipo</th><th>Item</th><th style="text-align:right">Qtd</th><th>Obs</th><th style="width:80px"></th></tr></thead>
+      <thead><tr><th>Data</th><th>Tipo</th><th>Item</th><th style="text-align:right">Qtd</th><th>Obs</th><th style="width:76px"></th></tr></thead>
       <tbody id="hist-tbody"></tbody>
     </table></div>
     <div id="hist-empty" style="display:none;text-align:center;padding:40px;color:var(--t3)">Nenhuma movimentação registrada.</div>
@@ -330,18 +313,18 @@ function rMP(){
   var fios=d.estoque.mp||{};
 
   // Stock values
-  var vals=JSON.parse(localStorage.getItem('allhair_estoque_valores')||'{}');
-  function getVal(k){return(vals[k]||{}).valor||0;}
-  function getPmU(k,q){return q>0&&(vals[k]||{}).valor?(vals[k].valor/q):pm30(k);}
+  var _vs2=JSON.parse(localStorage.getItem('allhair_estoque_valores')||'{}');
+  function _gv(k){return(_vs2[k]||{}).valor||0;}
+  function _gp(k,q){return q>0&&(_vs2[k]||{}).valor?(_vs2[k].valor/q):pm30(k);}
   var qtyB=parseFloat(fios.PES_BRANCO||fios.PES||0);
   var qtyP=parseFloat(fios.PES_PRETO||0);
   var qtyE=parseFloat(fios.ELA||0);
-  var valB=getVal('PES_BRANCO'),valP=getVal('PES_PRETO'),valEla=getVal('ELA');
-  var pmPESB=getPmU('PES_BRANCO',qtyB),pmPESP=getPmU('PES_PRETO',qtyP),pmEla=getPmU('ELA',qtyE);
+  var valB=_gv('PES_BRANCO'),valP=_gv('PES_PRETO'),valEla=_gv('ELA');
+  var pmPESB=_gp('PES_BRANCO',qtyB),pmPESP=_gp('PES_PRETO',qtyP),pmEla=_gp('ELA',qtyE);
   var qtyCores=0,valCores=0;
   d.cores.forEach(function(cor){
     var qty=parseFloat(fios['FIO_'+cor.id]||0);
-    qtyCores+=qty;valCores+=getVal('FIO_'+cor.id);
+    qtyCores+=qty;valCores+=_gv('FIO_'+cor.id);
   });
   var pmCoresMed=qtyCores>0?valCores/qtyCores:0;
   var totalVal=valB+valP+valEla+valCores;
@@ -683,62 +666,6 @@ function rInsumos(){
 // ──────────────────────────────────────────────
 // ABA HISTÓRICO
 // ──────────────────────────────────────────────
-function editarMov(id){
-  var d=D();var movs=d.movimentos;
-  var m=movs.find(function(x){return x.id===id;});
-  if(!m){alert('Não encontrado');return;}
-  var qa=parseFloat(m.qty||m.kg||0);
-  var nq=prompt('Quantidade (atual: '+qa+' '+(m.un||'kg')+'):',qa);if(nq===null)return;
-  var no=prompt('Observação:',m.obs||'');if(no===null)return;
-  var nd=prompt('Data (AAAA-MM-DD):',m.data||'');if(nd===null)return;
-  var qn=parseFloat(nq)||0,diff=qn-qa;
-  if(diff!==0){
-    if(m.tipo==='entrada_mp'){
-      var mat=m.material||m.item;
-      var mp2=d.estoque.mp||{};
-      mp2[mat]=Math.max(0,(parseFloat(mp2[mat]||0)+diff));
-      d.estoque.mp=mp2;S('allhair_estoque_v2',d.estoque);
-      var vs=JSON.parse(localStorage.getItem('allhair_estoque_valores')||'{}');
-      if(vs[mat]&&qa>0){var pu=(vs[mat].valor||0)/qa;vs[mat].qty=parseFloat(mp2[mat]);vs[mat].valor=Math.max(0,(vs[mat].valor||0)+diff*pu);}
-      localStorage.setItem('allhair_estoque_valores',JSON.stringify(vs));
-    } else if(m.tipo==='entrada_insumo'){
-      var ins2=d.estoque.insumos||{};
-      Object.keys(ins2).forEach(function(k){if(ins2[k].nome===m.item)ins2[k].qty=Math.max(0,(Number(ins2[k].qty||0)+diff));});
-      d.estoque.insumos=ins2;S('allhair_estoque_v2',d.estoque);
-    }
-  }
-  if(m.qty!==undefined)m.qty=qn;if(m.kg!==undefined)m.kg=qn;
-  m.obs=no;m.data=nd||m.data;m.editadoEm=new Date().toISOString();
-  S('allhair_movimentos',movs);R(_aba);
-  alert('✅ Corrigido! Estoque ajustado.');
-}
-function excluirMov(id){
-  var d=D();var m=d.movimentos.find(function(x){return x.id===id;});
-  if(!m)return;
-  var qty=parseFloat(m.qty||m.kg||0);
-  if(!confirm('Excluir "'+(m.item||m.material)+'" ('+qty+' '+(m.un||'kg')+')?\nEstoque será ajustado automaticamente.'))return;
-  if(m.tipo==='entrada_mp'){
-    var mat=m.material||m.item;var mp2=d.estoque.mp||{};
-    mp2[mat]=Math.max(0,(parseFloat(mp2[mat]||0)-qty));
-    d.estoque.mp=mp2;S('allhair_estoque_v2',d.estoque);
-    var vs=JSON.parse(localStorage.getItem('allhair_estoque_valores')||'{}');
-    if(vs[mat]){vs[mat].qty=parseFloat(mp2[mat]);vs[mat].valor=Math.max(0,(vs[mat].valor||0)-(m.valorTotal||0));}
-    localStorage.setItem('allhair_estoque_valores',JSON.stringify(vs));
-  } else if(m.tipo==='entrada_insumo'){
-    var ins2=d.estoque.insumos||{};
-    Object.keys(ins2).forEach(function(k){if(ins2[k].nome===m.item)ins2[k].qty=Math.max(0,(Number(ins2[k].qty||0)-qty));});
-    d.estoque.insumos=ins2;S('allhair_estoque_v2',d.estoque);
-  }
-  d.movimentos=d.movimentos.filter(function(x){return x.id!==id;});
-  S('allhair_movimentos',d.movimentos);R(_aba);
-  alert('✅ Excluído e estoque ajustado!');
-}
-document.addEventListener('click',function(ev){
-  var btn=ev.target.closest('button[data-hid]');if(!btn)return;
-  var id=btn.dataset.hid,act=btn.dataset.haction;
-  if(act==='edit')editarMov(id);else if(act==='del')excluirMov(id);
-});
-
 function rHistorico(){
   var d=D();
   var movs=d.movimentos.slice().sort(function(a,b){return new Date(b.criadoEm||b.data)-new Date(a.criadoEm||a.data);}).slice(0,100);
@@ -757,8 +684,8 @@ function rHistorico(){
       '<td style="text-align:right;font-weight:800;color:'+corT+'">'+(isEnt?'+':'')+(m.qty||m.kg||0)+' '+(m.un||'kg')+'</td>'+
       '<td style="font-size:12px;color:var(--t2)">'+(m.obs||'—')+'</td>'+
       '<td style="text-align:center;white-space:nowrap">'+
-        '<button data-hid="'+mid+'" data-haction="edit" style="background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:3px 7px;font-size:11px;cursor:pointer;margin-right:2px">✏️</button>'+
-        '<button data-hid="'+mid+'" data-haction="del" style="background:#fee2e2;border:1px solid #fca5a5;border-radius:5px;padding:3px 7px;font-size:11px;cursor:pointer;color:#ef4444">🗑️</button>'+
+        '<button data-hid="'+mid+'" data-ha="e" style="padding:3px 7px;font-size:11px;cursor:pointer;border:1px solid var(--border);border-radius:5px;background:var(--bg);margin-right:2px">✏️</button>'+
+        '<button data-hid="'+mid+'" data-ha="d" style="padding:3px 7px;font-size:11px;cursor:pointer;border:1px solid #fca5a5;border-radius:5px;background:#fee2e2;color:#ef4444">🗑️</button>'+
       '</td>'+
     '</tr>';
   }).join('');
@@ -792,23 +719,28 @@ function salvarEntradaMP(){
   if(!kg||kg<=0){alert('Informe a quantidade!');return;}
   if(!data){alert('Informe a data!');return;}
   var d=D();
+  // Update stock
   var mp=d.estoque.mp||{};
   mp[mat]=(parseFloat(mp[mat]||0)+kg);
   d.estoque.mp=mp;
-  var vals=JSON.parse(localStorage.getItem('allhair_estoque_valores')||'{}');
-  if(!vals[mat])vals[mat]={qty:0,valor:0};
-  vals[mat].qty=parseFloat(mp[mat])||0;
-  vals[mat].valor=(vals[mat].valor||0)+(preco>0?kg*preco:0);
-  localStorage.setItem('allhair_estoque_valores',JSON.stringify(vals));
   S('allhair_estoque_v2',d.estoque);
+  // Register compra (for price avg)
   if(preco>0){
     var compras=d.compras;
-    compras.push({id:'c_'+Date.now(),itemId:mat,precoUnit:preco,kg:kg,valor:kg*preco,data:data,nf:document.getElementById('mp-nf').value,forn:document.getElementById('mp-forn').value,criadoEm:new Date().toISOString()});
+    compras.push({id:'c_'+Date.now(),itemId:mat,precoUnit:preco,kg:kg,data:data,nf:document.getElementById('mp-nf').value,forn:document.getElementById('mp-forn').value,criadoEm:new Date().toISOString()});
     S('allhair_compras',compras);
   }
+  // Log movement
   var movs=d.movimentos;
-  movs.push({id:'m_'+Date.now(),tipo:'entrada_mp',material:mat,item:mat,kg:kg,qty:kg,un:'kg',preco:preco,valorTotal:kg*preco,data:data,obs:document.getElementById('mp-obs').value,criadoEm:new Date().toISOString()});
+  var movId2='m_'+Date.now();
+  movs.push({id:movId2,tipo:'entrada_mp',material:mat,item:mat,kg:kg,qty:kg,un:'kg',preco:preco,valorTotal:kg*preco,data:data,obs:document.getElementById('mp-obs').value,criadoEm:new Date().toISOString()});
   S('allhair_movimentos',movs);
+  // Registra valor individual no tracking de valores
+  var _vs=JSON.parse(localStorage.getItem('allhair_estoque_valores')||'{}');
+  if(!_vs[mat])_vs[mat]={qty:0,valor:0};
+  _vs[mat].qty=parseFloat(d.estoque.mp[mat]||0);
+  _vs[mat].valor=(_vs[mat].valor||0)+(preco>0?kg*preco:0);
+  localStorage.setItem('allhair_estoque_valores',JSON.stringify(_vs));
   X('mp');R(_aba);
   alert('✅ '+kg.toFixed(3)+'kg adicionados! Valor: R$ '+(kg*preco).toFixed(2));
 }
@@ -967,6 +899,60 @@ document.addEventListener('click', function(ev){
   else if(action==='delEmb') apagarEmbalado(key);
 });
 
+
+function _editMov(id){
+  var d=D(),movs=d.movimentos,m=movs.find(function(x){return x.id===id;});
+  if(!m)return;
+  var qa=parseFloat(m.qty||m.kg||0);
+  var nq=prompt('Qtd (atual: '+qa+' '+(m.un||'kg')+'):',qa);if(nq===null)return;
+  var no=prompt('Obs:',m.obs||'');if(no===null)return;
+  var nd=prompt('Data (AAAA-MM-DD):',m.data||'');if(nd===null)return;
+  var qn=parseFloat(nq)||0,diff=qn-qa;
+  if(diff!==0){
+    if(m.tipo==='entrada_mp'){
+      var mat=m.material||m.item,mp2=d.estoque.mp||{};
+      mp2[mat]=Math.max(0,(parseFloat(mp2[mat]||0)+diff));
+      d.estoque.mp=mp2;S('allhair_estoque_v2',d.estoque);
+      var vs=JSON.parse(localStorage.getItem('allhair_estoque_valores')||'{}');
+      if(vs[mat]&&qa>0){var pu=(vs[mat].valor||0)/qa;vs[mat].qty=parseFloat(mp2[mat]);vs[mat].valor=Math.max(0,(vs[mat].valor||0)+diff*pu);}
+      localStorage.setItem('allhair_estoque_valores',JSON.stringify(vs));
+    } else if(m.tipo==='entrada_insumo'){
+      var ins2=d.estoque.insumos||{};
+      Object.keys(ins2).forEach(function(k){if(ins2[k].nome===m.item)ins2[k].qty=Math.max(0,(Number(ins2[k].qty||0)+diff));});
+      d.estoque.insumos=ins2;S('allhair_estoque_v2',d.estoque);
+    }
+  }
+  if(m.qty!==undefined)m.qty=qn;if(m.kg!==undefined)m.kg=qn;
+  m.obs=no;m.data=nd||m.data;S('allhair_movimentos',movs);R(_aba);
+  alert('✅ Corrigido e estoque ajustado!');
+}
+function _delMov(id){
+  var d=D(),m=d.movimentos.find(function(x){return x.id===id;});
+  if(!m)return;
+  var qty=parseFloat(m.qty||m.kg||0);
+  if(!confirm('Excluir "'+( m.item||m.material)+'" ('+qty+')?\nEstoque ajustado automaticamente.'))return;
+  if(m.tipo==='entrada_mp'){
+    var mat=m.material||m.item,mp2=d.estoque.mp||{};
+    mp2[mat]=Math.max(0,(parseFloat(mp2[mat]||0)-qty));
+    d.estoque.mp=mp2;S('allhair_estoque_v2',d.estoque);
+    var vs=JSON.parse(localStorage.getItem('allhair_estoque_valores')||'{}');
+    if(vs[mat]){vs[mat].qty=parseFloat(mp2[mat]);vs[mat].valor=Math.max(0,(vs[mat].valor||0)-(m.valorTotal||0));}
+    localStorage.setItem('allhair_estoque_valores',JSON.stringify(vs));
+  } else if(m.tipo==='entrada_insumo'){
+    var ins2=d.estoque.insumos||{};
+    Object.keys(ins2).forEach(function(k){if(ins2[k].nome===m.item)ins2[k].qty=Math.max(0,(Number(ins2[k].qty||0)-qty));});
+    d.estoque.insumos=ins2;S('allhair_estoque_v2',d.estoque);
+  }
+  d.movimentos=d.movimentos.filter(function(x){return x.id!==id;});
+  S('allhair_movimentos',d.movimentos);R(_aba);
+  alert('✅ Excluído e estoque ajustado!');
+}
+document.addEventListener('click',function(ev){
+  var btn=ev.target.closest('button[data-hid]');if(!btn)return;
+  ev.stopPropagation();
+  var id=btn.dataset.hid,a=btn.dataset.ha;
+  if(a==='e')_editMov(id);else if(a==='d')_delMov(id);
+});
 
 // ──────────────────────────────────────────────
 // CLOSE MODAL
