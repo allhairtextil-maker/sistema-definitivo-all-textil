@@ -16,10 +16,10 @@
 .mb{padding:20px;display:flex;flex-direction:column;gap:12px;}
 .mf{padding:14px 20px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;}
 /* Tabs */
-.tabs{display:flex;padding:0 20px;background:var(--surface);border-bottom:1px solid var(--border);overflow-x:auto;}
+.tabs{display:flex!important;padding:0 20px;background:var(--surface);border-bottom:1px solid var(--border);overflow-x:auto;flex-shrink:0;position:relative;z-index:5;}
 .tab{padding:12px 16px;font-size:13px;font-weight:600;color:var(--ink-3);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:color .15s,border-color .15s;}
 .tab.on{color:var(--purple);border-color:var(--purple);}
-.tc{display:none;padding:20px;}
+.tc{display:none;padding:20px;overflow-y:auto;flex:1;}
 .tc.on{display:block;}
 /* Buttons */
 .btn{padding:7px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;border:none;font-family:inherit;}
@@ -172,7 +172,7 @@ tr:last-child td{border-bottom:none;}
   <!-- ABA HISTORICO -->
   <div class="tc" id="tc-historico">
     <div class="card" style="overflow:hidden"><table>
-      <thead><tr><th>Data</th><th>Tipo</th><th>Item</th><th style="text-align:right">Qtd</th><th>Obs</th><th style="text-align:center;width:80px">Ação</th></tr></thead>
+      <thead><tr><th>Data</th><th>Tipo</th><th>Item</th><th style="text-align:right">Qtd</th><th>Obs</th><th style="width:80px"></th></tr></thead>
       <tbody id="hist-tbody"></tbody>
     </table></div>
     <div id="hist-empty" style="display:none;text-align:center;padding:40px;color:var(--t3)">Nenhuma movimentação registrada.</div>
@@ -313,25 +313,18 @@ function rMP(){
   var fios=d.estoque.mp||{};
 
   // Stock values
-  // Valor em estoque = soma dos valores individuais registrados
   var vals=JSON.parse(localStorage.getItem('allhair_estoque_valores')||'{}');
-  function getValor(key){ return (vals[key]||{}).valor||0; }
-  function getPmUnit(key,qty){ return qty>0&&(vals[key]||{}).valor?((vals[key].valor)/qty):pm30(key); }
-
+  function getVal(k){return(vals[k]||{}).valor||0;}
+  function getPmU(k,q){return q>0&&(vals[k]||{}).valor?(vals[k].valor/q):pm30(k);}
   var qtyB=parseFloat(fios.PES_BRANCO||fios.PES||0);
   var qtyP=parseFloat(fios.PES_PRETO||0);
   var qtyE=parseFloat(fios.ELA||0);
-  var valB=getValor('PES_BRANCO');
-  var valP=getValor('PES_PRETO');
-  var valEla=getValor('ELA');
-  var pmPESB=getPmUnit('PES_BRANCO',qtyB);
-  var pmPESP=getPmUnit('PES_PRETO',qtyP);
-  var pmEla=getPmUnit('ELA',qtyE);
+  var valB=getVal('PES_BRANCO'),valP=getVal('PES_PRETO'),valEla=getVal('ELA');
+  var pmPESB=getPmU('PES_BRANCO',qtyB),pmPESP=getPmU('PES_PRETO',qtyP),pmEla=getPmU('ELA',qtyE);
   var qtyCores=0,valCores=0;
   d.cores.forEach(function(cor){
     var qty=parseFloat(fios['FIO_'+cor.id]||0);
-    var val=getValor('FIO_'+cor.id);
-    qtyCores+=qty;valCores+=val;
+    qtyCores+=qty;valCores+=getVal('FIO_'+cor.id);
   });
   var pmCoresMed=qtyCores>0?valCores/qtyCores:0;
   var totalVal=valB+valP+valEla+valCores;
@@ -673,107 +666,61 @@ function rInsumos(){
 // ──────────────────────────────────────────────
 // ABA HISTÓRICO
 // ──────────────────────────────────────────────
-// ── HISTORICO EDIT / DELETE ──────────────────────────────────
-function editarMovimento(id){
-  var d=D();
-  var movs=d.movimentos;
+function editarMov(id){
+  var d=D();var movs=d.movimentos;
   var m=movs.find(function(x){return x.id===id;});
-  if(!m){alert('Registro não encontrado.');return;}
-  var qtyAtual=parseFloat(m.qty||m.kg||0);
-  var novaQty=prompt('Corrigir quantidade (atual: '+qtyAtual+' '+(m.un||'kg')+'):',qtyAtual);
-  if(novaQty===null)return;
-  var novaObs=prompt('Corrigir observação:',m.obs||'');
-  if(novaObs===null)return;
-  var novaData=prompt('Corrigir data (AAAA-MM-DD):',m.data||'');
-  if(novaData===null)return;
-  var qtyNova=parseFloat(novaQty)||0;
-  var diff=qtyNova-qtyAtual; // positivo = aumentou, negativo = diminuiu
-
-  // Ajusta o estoque automaticamente
-  if(diff!==0&&m.tipo==='entrada_mp'){
-    var mat=m.material||m.item;
-    var mp2=d.estoque.mp||{};
-    mp2[mat]=Math.max(0,(parseFloat(mp2[mat]||0)+diff));
-    d.estoque.mp=mp2;
-    S('allhair_estoque_v2',d.estoque);
-    // Ajusta valor proporcional
-    var vals=JSON.parse(localStorage.getItem('allhair_estoque_valores')||'{}');
-    if(vals[mat]&&qtyAtual>0){
-      var precoUnit=(vals[mat].valor||0)/qtyAtual;
-      vals[mat].qty=parseFloat(mp2[mat]);
-      vals[mat].valor=Math.max(0,(vals[mat].valor||0)+(diff*precoUnit));
-      localStorage.setItem('allhair_estoque_valores',JSON.stringify(vals));
+  if(!m){alert('Não encontrado');return;}
+  var qa=parseFloat(m.qty||m.kg||0);
+  var nq=prompt('Quantidade (atual: '+qa+' '+(m.un||'kg')+'):',qa);if(nq===null)return;
+  var no=prompt('Observação:',m.obs||'');if(no===null)return;
+  var nd=prompt('Data (AAAA-MM-DD):',m.data||'');if(nd===null)return;
+  var qn=parseFloat(nq)||0,diff=qn-qa;
+  if(diff!==0){
+    if(m.tipo==='entrada_mp'){
+      var mat=m.material||m.item;
+      var mp2=d.estoque.mp||{};
+      mp2[mat]=Math.max(0,(parseFloat(mp2[mat]||0)+diff));
+      d.estoque.mp=mp2;S('allhair_estoque_v2',d.estoque);
+      var vs=JSON.parse(localStorage.getItem('allhair_estoque_valores')||'{}');
+      if(vs[mat]&&qa>0){var pu=(vs[mat].valor||0)/qa;vs[mat].qty=parseFloat(mp2[mat]);vs[mat].valor=Math.max(0,(vs[mat].valor||0)+diff*pu);}
+      localStorage.setItem('allhair_estoque_valores',JSON.stringify(vs));
+    } else if(m.tipo==='entrada_insumo'){
+      var ins2=d.estoque.insumos||{};
+      Object.keys(ins2).forEach(function(k){if(ins2[k].nome===m.item)ins2[k].qty=Math.max(0,(Number(ins2[k].qty||0)+diff));});
+      d.estoque.insumos=ins2;S('allhair_estoque_v2',d.estoque);
     }
-  } else if(diff!==0&&m.tipo==='entrada_insumo'){
-    var itemId=m.itemId||(m.item?m.item.replace(/\s.*/,''):'');
-    var ins2=d.estoque.insumos||{};
-    if(ins2[itemId])ins2[itemId].qty=Math.max(0,(Number(ins2[itemId].qty||0)+diff));
-    d.estoque.insumos=ins2;
-    S('allhair_estoque_v2',d.estoque);
   }
-
-  if(m.qty!==undefined)m.qty=qtyNova;
-  if(m.kg!==undefined)m.kg=qtyNova;
-  m.obs=novaObs;
-  m.data=novaData||m.data;
-  m.editadoEm=new Date().toISOString();
-  S('allhair_movimentos',movs);
-  R(_aba);
-  alert('✅ Registro corrigido! Estoque ajustado automaticamente.');
+  if(m.qty!==undefined)m.qty=qn;if(m.kg!==undefined)m.kg=qn;
+  m.obs=no;m.data=nd||m.data;m.editadoEm=new Date().toISOString();
+  S('allhair_movimentos',movs);R(_aba);
+  alert('✅ Corrigido! Estoque ajustado.');
 }
-
-function excluirMovimento(id){
-  var d=D();
-  var m=d.movimentos.find(function(x){return x.id===id;});
-  if(!m){alert('Registro não encontrado.');return;}
+function excluirMov(id){
+  var d=D();var m=d.movimentos.find(function(x){return x.id===id;});
+  if(!m)return;
   var qty=parseFloat(m.qty||m.kg||0);
-  var desc=m.item||m.material||'';
-  if(!confirm('Excluir: "'+desc+'" ('+qty+' '+(m.un||'kg')+')?\n\nO saldo do estoque será ajustado automaticamente.'))return;
-
-  // Reverte o estoque
+  if(!confirm('Excluir "'+(m.item||m.material)+'" ('+qty+' '+(m.un||'kg')+')?\nEstoque será ajustado automaticamente.'))return;
   if(m.tipo==='entrada_mp'){
-    var mat=m.material||m.item;
-    var mp2=d.estoque.mp||{};
+    var mat=m.material||m.item;var mp2=d.estoque.mp||{};
     mp2[mat]=Math.max(0,(parseFloat(mp2[mat]||0)-qty));
-    d.estoque.mp=mp2;
-    S('allhair_estoque_v2',d.estoque);
-    // Reverte valor
-    var vals=JSON.parse(localStorage.getItem('allhair_estoque_valores')||'{}');
-    if(vals[mat]){
-      var valorMov=m.valorTotal||(m.preco>0?qty*m.preco:0);
-      vals[mat].qty=parseFloat(mp2[mat]);
-      vals[mat].valor=Math.max(0,(vals[mat].valor||0)-valorMov);
-      localStorage.setItem('allhair_estoque_valores',JSON.stringify(vals));
-    }
+    d.estoque.mp=mp2;S('allhair_estoque_v2',d.estoque);
+    var vs=JSON.parse(localStorage.getItem('allhair_estoque_valores')||'{}');
+    if(vs[mat]){vs[mat].qty=parseFloat(mp2[mat]);vs[mat].valor=Math.max(0,(vs[mat].valor||0)-(m.valorTotal||0));}
+    localStorage.setItem('allhair_estoque_valores',JSON.stringify(vs));
   } else if(m.tipo==='entrada_insumo'){
-    var itemId=m.itemId||(m.item?'ins_'+m.item:'');
-    // Try to find the key
     var ins2=d.estoque.insumos||{};
-    Object.keys(ins2).forEach(function(k){
-      if(ins2[k].nome===m.item||k===itemId){
-        ins2[k].qty=Math.max(0,(Number(ins2[k].qty||0)-qty));
-      }
-    });
-    d.estoque.insumos=ins2;
-    S('allhair_estoque_v2',d.estoque);
+    Object.keys(ins2).forEach(function(k){if(ins2[k].nome===m.item)ins2[k].qty=Math.max(0,(Number(ins2[k].qty||0)-qty));});
+    d.estoque.insumos=ins2;S('allhair_estoque_v2',d.estoque);
   }
-
   d.movimentos=d.movimentos.filter(function(x){return x.id!==id;});
-  S('allhair_movimentos',d.movimentos);
-  R(_aba);
-  alert('✅ Registro excluído e estoque ajustado!');
+  S('allhair_movimentos',d.movimentos);R(_aba);
+  alert('✅ Excluído e estoque ajustado!');
 }
-
-// Event delegation para histórico
 document.addEventListener('click',function(ev){
-  var btn=ev.target.closest('button[data-action]');
-  if(!btn)return;
-  var action=btn.dataset.action;
-  var id=btn.dataset.id;
-  if(action==='edit-mov')editarMovimento(id);
-  else if(action==='del-mov')excluirMovimento(id);
+  var btn=ev.target.closest('button[data-hid]');if(!btn)return;
+  var id=btn.dataset.hid,act=btn.dataset.haction;
+  if(act==='edit')editarMov(id);else if(act==='del')excluirMov(id);
 });
-
 
 function rHistorico(){
   var d=D();
@@ -790,15 +737,11 @@ function rHistorico(){
       '<td style="color:var(--t2);font-size:12px">'+(m.data?fmtD(m.data):'—')+'</td>'+
       '<td><span class="badge" style="background:'+corT+'22;color:'+corT+'">'+(isEnt?'Entrada':'Saída/Ajuste')+'</span></td>'+
       '<td style="font-weight:600">'+(m.item||m.material||'—')+'</td>'+
-      '<td style="text-align:right;font-weight:800;color:'+corT+'">'+(isEnt?'+':'')+( m.qty||m.kg||0)+' '+(m.un||'kg')+'</td>'+
+      '<td style="text-align:right;font-weight:800;color:'+corT+'">'+(isEnt?'+':'')+(m.qty||m.kg||0)+' '+(m.un||'kg')+'</td>'+
       '<td style="font-size:12px;color:var(--t2)">'+(m.obs||'—')+'</td>'+
       '<td style="text-align:center;white-space:nowrap">'+
-        '<button data-action="edit-mov" data-id="'+mid+'" '+
-          'style="background:var(--bg);border:1px solid var(--border);border-radius:5px;'+
-          'padding:3px 8px;font-size:11px;cursor:pointer;margin-right:3px">✏️</button>'+
-        '<button data-action="del-mov" data-id="'+mid+'" '+
-          'style="background:#fee2e2;border:1px solid #fca5a5;border-radius:5px;'+
-          'padding:3px 8px;font-size:11px;cursor:pointer;color:#ef4444">🗑️</button>'+
+        '<button data-hid="'+mid+'" data-haction="edit" style="background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:3px 7px;font-size:11px;cursor:pointer;margin-right:2px">✏️</button>'+
+        '<button data-hid="'+mid+'" data-haction="del" style="background:#fee2e2;border:1px solid #fca5a5;border-radius:5px;padding:3px 7px;font-size:11px;cursor:pointer;color:#ef4444">🗑️</button>'+
       '</td>'+
     '</tr>';
   }).join('');
@@ -832,30 +775,25 @@ function salvarEntradaMP(){
   if(!kg||kg<=0){alert('Informe a quantidade!');return;}
   if(!data){alert('Informe a data!');return;}
   var d=D();
-  // Update stock qty
   var mp=d.estoque.mp||{};
   mp[mat]=(parseFloat(mp[mat]||0)+kg);
   d.estoque.mp=mp;
-  // Update stock valor (soma dos valores individuais)
   var vals=JSON.parse(localStorage.getItem('allhair_estoque_valores')||'{}');
   if(!vals[mat])vals[mat]={qty:0,valor:0};
   vals[mat].qty=parseFloat(mp[mat])||0;
   vals[mat].valor=(vals[mat].valor||0)+(preco>0?kg*preco:0);
   localStorage.setItem('allhair_estoque_valores',JSON.stringify(vals));
   S('allhair_estoque_v2',d.estoque);
-  // Register compra
   if(preco>0){
     var compras=d.compras;
     compras.push({id:'c_'+Date.now(),itemId:mat,precoUnit:preco,kg:kg,valor:kg*preco,data:data,nf:document.getElementById('mp-nf').value,forn:document.getElementById('mp-forn').value,criadoEm:new Date().toISOString()});
     S('allhair_compras',compras);
   }
-  // Log movement (inclui preco para rastreio individual)
-  var movId='m_'+Date.now();
   var movs=d.movimentos;
-  movs.push({id:movId,tipo:'entrada_mp',material:mat,item:mat,kg:kg,qty:kg,un:'kg',preco:preco,valorTotal:kg*preco,data:data,obs:document.getElementById('mp-obs').value,criadoEm:new Date().toISOString()});
+  movs.push({id:'m_'+Date.now(),tipo:'entrada_mp',material:mat,item:mat,kg:kg,qty:kg,un:'kg',preco:preco,valorTotal:kg*preco,data:data,obs:document.getElementById('mp-obs').value,criadoEm:new Date().toISOString()});
   S('allhair_movimentos',movs);
   X('mp');R(_aba);
-  alert('✅ '+kg.toFixed(3)+'kg de '+mat+' adicionados!\nValor registrado: R$ '+(kg*preco).toFixed(2));
+  alert('✅ '+kg.toFixed(3)+'kg adicionados! Valor: R$ '+(kg*preco).toFixed(2));
 }
 
 // ──────────────────────────────────────────────
