@@ -207,6 +207,31 @@ a.sl:hover,a.sl.on{background:rgba(255,255,255,.1);color:#fff;}
 </div>
 
 <script>
+// ── FORÇA LAYOUT (sobrescreve qualquer CSS externo) ──────────
+(function forceLayout(){
+  function apply(){
+    var main=document.querySelector('.main');
+    if(main){
+      main.style.cssText='flex:1;display:flex;flex-direction:column;height:100vh;overflow:hidden;min-width:0;';
+    }
+    var tabs=document.querySelector('.tabs');
+    if(tabs){
+      tabs.style.cssText='flex-shrink:0;display:flex;padding:0 20px;background:#fff;border-bottom:1px solid #e2e8f0;overflow-x:auto;';
+    }
+    document.querySelectorAll('.tab').forEach(function(t){
+      t.style.cssText='padding:11px 14px;font-size:13px;font-weight:600;color:#94a3b8;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;user-select:none;';
+    });
+  }
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',apply);
+  } else {
+    apply();
+  }
+  // Re-apply after mes-global may have changed things
+  setTimeout(apply, 200);
+})();
+
+
 // ──────────────────────────────────────────────
 // DATA
 // ──────────────────────────────────────────────
@@ -240,11 +265,32 @@ function D(){
 var _aba='mp';
 function mudarAba(id){
   _aba=id;
-  document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('on');});
-  document.querySelectorAll('.tc').forEach(function(t){t.classList.remove('on');});
+  // Reset all tabs and content
+  document.querySelectorAll('.tab').forEach(function(t){
+    t.classList.remove('on');
+    t.style.color='#94a3b8';
+    t.style.borderBottom='2px solid transparent';
+  });
+  document.querySelectorAll('.tc').forEach(function(t){
+    t.style.display='none';
+    t.classList.remove('on');
+  });
+  // Activate selected
   var tabs=['mp','processo','virado','pronto','insumos','historico'];
-  document.querySelectorAll('.tab')[tabs.indexOf(id)].classList.add('on');
-  document.getElementById('tc-'+id).classList.add('on');
+  var activeTab=document.querySelectorAll('.tab')[tabs.indexOf(id)];
+  if(activeTab){
+    activeTab.classList.add('on');
+    activeTab.style.color='#8b5cf6';
+    activeTab.style.borderBottom='2px solid #8b5cf6';
+  }
+  var activeContent=document.getElementById('tc-'+id);
+  if(activeContent){
+    activeContent.style.display='block';
+    activeContent.style.flex='1';
+    activeContent.style.overflowY='auto';
+    activeContent.style.padding='20px';
+    activeContent.classList.add('on');
+  }
   R(id);
 }
 function R(id){
