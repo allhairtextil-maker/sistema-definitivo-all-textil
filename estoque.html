@@ -214,6 +214,10 @@ a.sl:hover,a.sl.on{background:rgba(255,255,255,.1);color:#fff;}
     if(main){
       main.style.cssText='flex:1;display:flex;flex-direction:column;height:100vh;overflow:hidden;min-width:0;';
     }
+    // mes-global injeta .topbar{top:44px!important} — num .main app-shell (overflow:hidden)
+    // isso desloca o topbar sticky 44px pra baixo, cobrindo as abas. Neutraliza:
+    var tb=document.querySelector('.topbar');
+    if(tb){ tb.style.setProperty('top','0','important'); }
     var tabs=document.querySelector('.tabs');
     if(tabs){
       tabs.style.cssText='flex-shrink:0;display:flex;padding:0 20px;background:#fff;border-bottom:1px solid #e2e8f0;overflow-x:auto;';
