@@ -508,6 +508,31 @@ function rProcesso(){
   if(!wrap)return;
   wrap.innerHTML='';
 
+  // ── RESUMO: total em processo por modelo (Cru + No Faccionista) ──
+  var LBL={liso:'📏 Liso',meia:'🧶 Meia',mini:'🔹 Mini'};
+  var CLR={liso:'#3b82f6',meia:'#8b5cf6',mini:'#10b981'};
+  var porModelo={},totProc=0;
+  Object.values(d.estoque.cru||{}).forEach(function(v){var kg=Number(v.kg||0);if(kg>0){var m=(v.tecido||'').toLowerCase();porModelo[m]=(porModelo[m]||0)+kg;totProc+=kg;}});
+  d.envios.filter(function(e){return e.status==='enviado';}).forEach(function(e){var kg=Number(e.kg||0);if(kg>0){var m=(e.tipo||'').toLowerCase();porModelo[m]=(porModelo[m]||0)+kg;totProc+=kg;}});
+  if(totProc>0){
+    var ordem=['liso','meia','mini'].concat(Object.keys(porModelo).filter(function(m){return['liso','meia','mini'].indexOf(m)<0;}));
+    var cards=ordem.filter(function(m){return porModelo[m];}).map(function(m){
+      var c=CLR[m]||'#64748b';
+      return '<div style="flex:1;min-width:130px;background:var(--surface,#fff);border:1px solid var(--border);border-left:4px solid '+c+';border-radius:12px;padding:12px 14px">'+
+        '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--t2)">'+(LBL[m]||m.toUpperCase())+'</div>'+
+        '<div style="font-size:24px;font-weight:800;color:'+c+';line-height:1.1;margin-top:4px">'+porModelo[m].toFixed(2)+'<span style="font-size:13px;font-weight:700"> kg</span></div>'+
+      '</div>';
+    }).join('');
+    cards+='<div style="flex:1;min-width:130px;background:#0f172a;border-radius:12px;padding:12px 14px">'+
+      '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:rgba(255,255,255,.6)">Total em processo</div>'+
+      '<div style="font-size:24px;font-weight:800;color:#fff;line-height:1.1;margin-top:4px">'+totProc.toFixed(2)+'<span style="font-size:13px;font-weight:700"> kg</span></div>'+
+    '</div>';
+    var resumo=document.createElement('div');
+    resumo.style.cssText='display:flex;gap:12px;flex-wrap:wrap;margin-bottom:18px';
+    resumo.innerHTML=cards;
+    wrap.appendChild(resumo);
+  }
+
   // CRU
   var cruItems=Object.entries(d.estoque.cru||{}).filter(function(e){return Number(e[1].kg||0)>0;});
   if(cruItems.length){
