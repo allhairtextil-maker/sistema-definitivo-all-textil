@@ -6,6 +6,21 @@
 <title>Produção — ALL HAIR</title>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="favicon.ico">
+<script src="mes-global.js"></script>
+<script>
+// Fix: o mes-global injeta .topbar{top:44px!important} num .main app-shell (overflow:hidden),
+// deslocando o topbar sticky 44px pra baixo e cobrindo as abas. Neutraliza + alinha a barra à sidebar (220px).
+(function(){
+  function fix(){
+    var tb=document.querySelector('.topbar');
+    if(tb)tb.style.setProperty('top','0','important');
+    var bar=document.getElementById('mg-barra-global');
+    if(bar)bar.style.left='220px';
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',fix);else fix();
+  setTimeout(fix,300);setTimeout(fix,1000);
+})();
+</script>
 <style>
 :root{--bg:#f8fafc;--white:#fff;--border:#e2e8f0;--b2:#cbd5e1;--text:#1e293b;--t2:#64748b;--t3:#94a3b8;--purple:#8b5cf6;--pl:#ede9fe;--green:#10b981;--gl:#d1fae5;--red:#ef4444;--rl:#fee2e2;--orange:#f59e0b;--ol:#fff7ed;--blue:#3b82f6;--navy:#0f172a;--r:12px;}
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -1057,46 +1072,99 @@ function rHist(){
 }
 
 // ──────────────────────────────────────────────
-// ABA PRODUZIDO — por dia, por cor, total por modelo
+// ABA PRODUZIDO — mês selecionado (aba do mês); média da semana atual em destaque
 // ──────────────────────────────────────────────
 var MODELO_LABEL={liso:'📏 Liso',meia:'🧶 Meia',mini:'🔹 Mini'};
+var MODELO_COR={liso:'#3b82f6',meia:'#8b5cf6',mini:'#10b981'};
+function _mesSelYM(){
+  if(window.MG&&MG.getMesAno)return MG.getMesAno();
+  var n=new Date();var m=n.getMonth()+1;return n.getFullYear()+'-'+(m<10?'0'+m:m);
+}
 function rProduzido(){
   var d=D();
-  var maq=d.producoes.filter(function(p){return p.etapa==='maquina'&&Number(p.kg)>0;});
+  var maqAll=d.producoes.filter(function(p){return p.etapa==='maquina'&&Number(p.kg)>0;});
   var wrap=document.getElementById('produzido-wrap');
-  if(!maq.length){wrap.innerHTML='<div style="text-align:center;padding:44px;color:var(--t3)">Nenhuma produção de máquina lançada ainda.</div>';return;}
+  var modelosOrd=['liso','meia','mini'];
 
-  // agrupa por dia → modelo → cor
+  // ── MÉDIA DA SEMANA ATUAL (segunda → hoje), por modelo ──
+  var hoje0=new Date();hoje0.setHours(0,0,0,0);
+  var dow=(hoje0.getDay()+6)%7;           // 0=segunda
+  var iniSem=new Date(hoje0);iniSem.setDate(hoje0.getDate()-dow);
+  var diasCorridos=dow+1;                  // seg..hoje
+  var semKg={};
+  maqAll.forEach(function(p){
+    if(!p.data)return;var dt=new Date(p.data+'T00:00');
+    if(dt>=iniSem&&dt<=hoje0){var m=(p.tecido||'liso').toLowerCase();semKg[m]=(semKg[m]||0)+Number(p.kg);}
+  });
+  var bigCards=modelosOrd.map(function(m){
+    var tot=semKg[m]||0;var media=tot/diasCorridos;var c=MODELO_COR[m];
+    return '<div style="flex:1;min-width:150px;background:var(--white);border:1px solid var(--border);border-left:4px solid '+c+';border-radius:var(--r);padding:14px 16px">'+
+      '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--t2)">Semana atual — '+MODELO_LABEL[m]+'</div>'+
+      '<div style="font-size:30px;font-weight:800;color:'+c+';line-height:1.1;margin-top:5px">'+tot.toFixed(1)+'<span style="font-size:14px;font-weight:700"> kg</span></div>'+
+      '<div style="font-size:11px;color:var(--t3);margin-top:2px">média '+media.toFixed(1)+' kg/dia</div>'+
+    '</div>';
+  }).join('');
+
+  // ── MÊS SELECIONADO ──
+  var ym=_mesSelYM();
+  var maq=maqAll.filter(function(p){return p.data&&p.data.substring(0,7)===ym;});
+  var mesLabel=(window.MG&&MG.getNome)?MG.getNome():ym;
+  mesLabel=mesLabel.charAt(0).toUpperCase()+mesLabel.slice(1);
+
+  var html='<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px">'+bigCards+'</div>';
+  html+='<div style="font-size:13px;font-weight:800;margin:2px 0 10px;color:var(--t2)">📆 Produzido em '+mesLabel+'</div>';
+
+  if(!maq.length){
+    html+='<div style="text-align:center;padding:40px;color:var(--t3);background:var(--white);border:1px solid var(--border);border-radius:var(--r)">Nenhuma produção neste mês.</div>';
+    wrap.innerHTML=html;return;
+  }
+
+  // resumo do mês: total por modelo + por cor
+  var mesModelo={},totMes=0;
+  maq.forEach(function(p){
+    var m=(p.tecido||'liso').toLowerCase();var corN=p.corNome||'—';
+    mesModelo[m]=mesModelo[m]||{total:0,cores:{}};
+    mesModelo[m].total+=Number(p.kg);mesModelo[m].cores[corN]=(mesModelo[m].cores[corN]||0)+Number(p.kg);
+    totMes+=Number(p.kg);
+  });
+  html+='<div class="kc" style="margin-bottom:16px"><table style="width:100%"><thead><tr>'+
+    '<th style="text-align:left">Modelo / Cor</th><th style="text-align:right">Kg no mês</th></tr></thead><tbody>';
+  modelosOrd.concat(Object.keys(mesModelo).filter(function(m){return modelosOrd.indexOf(m)<0;})).forEach(function(m){
+    var mm=mesModelo[m];if(!mm)return;var c=MODELO_COR[m]||'#64748b';
+    html+='<tr style="background:'+c+'11"><td style="font-weight:800;color:'+c+';padding:8px 14px">'+(MODELO_LABEL[m]||m)+'</td>'+
+      '<td style="text-align:right;font-weight:800;color:'+c+';padding:8px 14px">'+mm.total.toFixed(2)+' kg</td></tr>';
+    Object.keys(mm.cores).sort().forEach(function(cor){
+      html+='<tr><td style="padding:6px 14px 6px 28px;font-size:13px">'+cor+'</td>'+
+        '<td style="text-align:right;font-size:13px;color:var(--t2);padding:6px 14px">'+mm.cores[cor].toFixed(2)+' kg</td></tr>';
+    });
+  });
+  html+='<tr style="border-top:2px solid var(--border)"><td style="font-weight:800;padding:9px 14px">Total do mês</td>'+
+    '<td style="text-align:right;font-weight:800;color:var(--green);padding:9px 14px">'+totMes.toFixed(2)+' kg</td></tr>';
+  html+='</tbody></table></div>';
+
+  // lista por dia (dentro do mês)
   var dias={};
   maq.forEach(function(p){
-    var dia=p.data||'—';
-    var tipo=(p.tecido||'liso').toLowerCase();
-    var corN=p.corNome||'—';
-    dias[dia]=dias[dia]||{total:0,modelos:{}};
-    dias[dia].total+=Number(p.kg);
-    var M=dias[dia].modelos;
-    M[tipo]=M[tipo]||{total:0,cores:{}};
-    M[tipo].total+=Number(p.kg);
-    M[tipo].cores[corN]=(M[tipo].cores[corN]||0)+Number(p.kg);
+    var dia=p.data;var tipo=(p.tecido||'liso').toLowerCase();var corN=p.corNome||'—';
+    dias[dia]=dias[dia]||{total:0,modelos:{}};dias[dia].total+=Number(p.kg);
+    var M=dias[dia].modelos;M[tipo]=M[tipo]||{total:0,cores:{}};
+    M[tipo].total+=Number(p.kg);M[tipo].cores[corN]=(M[tipo].cores[corN]||0)+Number(p.kg);
   });
-  var ordem=Object.keys(dias).sort(function(a,b){return new Date(b)-new Date(a);});
-
-  var html='';
-  ordem.forEach(function(dia){
+  Object.keys(dias).sort(function(a,b){return new Date(b)-new Date(a);}).forEach(function(dia){
     var dd=dias[dia];
-    html+='<div style="background:var(--white);border:1px solid var(--border);border-radius:var(--r);margin-bottom:14px;overflow:hidden">';
-    html+='<div style="display:flex;justify-content:space-between;align-items:center;padding:11px 16px;background:var(--bg);border-bottom:1px solid var(--border)">'+
-      '<span style="font-weight:800;font-size:14px">📅 '+fmtD(dia)+'</span>'+
-      '<span style="font-weight:800;font-size:14px;color:var(--roxo,#8b5cf6)">'+dd.total.toFixed(2)+' kg</span></div>';
+    html+='<div style="background:var(--white);border:1px solid var(--border);border-radius:var(--r);margin-bottom:12px;overflow:hidden">';
+    html+='<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--bg);border-bottom:1px solid var(--border)">'+
+      '<span style="font-weight:800;font-size:13px">📅 '+fmtD(dia)+'</span>'+
+      '<span style="font-weight:800;font-size:13px;color:var(--purple)">'+dd.total.toFixed(2)+' kg</span></div>';
     Object.keys(dd.modelos).forEach(function(tipo){
-      var m=dd.modelos[tipo];var tc=tipoCor(tipo);
-      html+='<div style="padding:8px 16px;display:flex;justify-content:space-between;align-items:center;background:'+tc.bg+'">'+
-        '<span style="font-weight:700;font-size:12px;color:'+tc.c+'">'+(MODELO_LABEL[tipo]||tipo)+'</span>'+
-        '<span style="font-weight:800;font-size:12px;color:'+tc.c+'">total '+m.total.toFixed(2)+' kg</span></div>';
+      var m=dd.modelos[tipo];var c=MODELO_COR[tipo]||'#64748b';
+      html+='<div style="padding:7px 14px;display:flex;justify-content:space-between;background:'+c+'11">'+
+        '<span style="font-weight:700;font-size:12px;color:'+c+'">'+(MODELO_LABEL[tipo]||tipo)+'</span>'+
+        '<span style="font-weight:800;font-size:12px;color:'+c+'">total '+m.total.toFixed(2)+' kg</span></div>';
       html+='<table style="width:100%"><tbody>';
       Object.keys(m.cores).sort().forEach(function(cor){
-        html+='<tr><td style="padding:7px 16px 7px 28px;font-size:13px">'+cor+'</td>'+
-          '<td style="padding:7px 16px;text-align:right;font-weight:700;font-size:13px;color:var(--t2)">'+m.cores[cor].toFixed(2)+' kg</td></tr>';
+        html+='<tr><td style="padding:6px 14px 6px 26px;font-size:13px">'+cor+'</td>'+
+          '<td style="padding:6px 14px;text-align:right;font-weight:700;font-size:13px;color:var(--t2)">'+m.cores[cor].toFixed(2)+' kg</td></tr>';
       });
       html+='</tbody></table>';
     });
@@ -1104,6 +1172,8 @@ function rProduzido(){
   });
   wrap.innerHTML=html;
 }
+// re-render ao trocar o mês na barra global
+window.addEventListener('mesChanged',function(){if(_aba==='produzido')rProduzido();});
 
 // ──────────────────────────────────────────────
 // CORRIGIR / EXCLUIR PRODUÇÃO (estorna MP + cru)  [somente etapa 'maquina']
