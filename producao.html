@@ -1083,14 +1083,36 @@ function _mesSelYM(){
 function rProduzido(){
   var d=D();
   var wrap=document.getElementById('produzido-wrap');
+
+  // ── MÉDIA DIÁRIA DA SEMANA ATUAL, por modelo (segunda → hoje) ──
+  var hoje0=new Date();hoje0.setHours(0,0,0,0);
+  var dow=(hoje0.getDay()+6)%7;                  // 0=segunda
+  var iniSem=new Date(hoje0);iniSem.setDate(hoje0.getDate()-dow);
+  var diasCorridos=dow+1;                         // seg..hoje
+  var semKg={};
+  d.producoes.forEach(function(p){
+    if(p.etapa!=='maquina'||!p.data)return;
+    var dt=new Date(p.data+'T00:00');
+    if(dt>=iniSem&&dt<=hoje0){var m=(p.tecido||'liso').toLowerCase();semKg[m]=(semKg[m]||0)+Number(p.kg||0);}
+  });
+  var cards=['liso','meia','mini'].map(function(m){
+    var tot=semKg[m]||0;var media=tot/diasCorridos;var c=MODELO_COR[m];
+    return '<div style="flex:1;min-width:150px;background:var(--white);border:1px solid var(--border);border-left:4px solid '+c+';border-radius:var(--r);padding:14px 16px">'+
+      '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--t2)">Média/dia — '+MODELO_LABEL[m]+'</div>'+
+      '<div style="font-size:30px;font-weight:800;color:'+c+';line-height:1.1;margin-top:5px">'+media.toFixed(1)+'<span style="font-size:14px;font-weight:700"> kg/dia</span></div>'+
+      '<div style="font-size:11px;color:var(--t3);margin-top:2px">semana atual · '+tot.toFixed(1)+' kg em '+diasCorridos+' dia'+(diasCorridos>1?'s':'')+'</div>'+
+    '</div>';
+  }).join('');
+  var html='<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:18px">'+cards+'</div>';
+
+  // ── LISTA POR DIA, POR MODELO (do mês selecionado) ──
   var ym=_mesSelYM();
   var maq=d.producoes.filter(function(p){return p.etapa==='maquina'&&Number(p.kg)>0&&p.data&&p.data.substring(0,7)===ym;});
   var mesLabel=(window.MG&&MG.getNome)?MG.getNome():ym;
   mesLabel=mesLabel.charAt(0).toUpperCase()+mesLabel.slice(1);
-
   if(!maq.length){
-    wrap.innerHTML='<div style="text-align:center;padding:44px;color:var(--t3)">Nenhuma produção em '+mesLabel+'.</div>';
-    return;
+    html+='<div style="text-align:center;padding:36px;color:var(--t3);background:var(--white);border:1px solid var(--border);border-radius:var(--r)">Nenhuma produção em '+mesLabel+'.</div>';
+    wrap.innerHTML=html;return;
   }
 
   // agrupa por dia → modelo → cor
@@ -1101,8 +1123,6 @@ function rProduzido(){
     var M=dias[dia].modelos;M[tipo]=M[tipo]||{total:0,cores:{}};
     M[tipo].total+=Number(p.kg);M[tipo].cores[corN]=(M[tipo].cores[corN]||0)+Number(p.kg);
   });
-
-  var html='';
   Object.keys(dias).sort(function(a,b){return new Date(b)-new Date(a);}).forEach(function(dia){
     var dd=dias[dia];
     html+='<div style="background:var(--white);border:1px solid var(--border);border-radius:var(--r);margin-bottom:14px;overflow:hidden">';
