@@ -645,19 +645,78 @@ function apagarVirado(key){
 // ──────────────────────────────────────────────
 // ABA PRONTO
 // ──────────────────────────────────────────────
+var MODELO_LABEL={liso:'📏 Liso',meia:'🧶 Meia',mini:'🔹 Mini'};
 function rPronto(){
   var d=D();
   var wrap=document.getElementById('pronto-wrap');
-  var rows=Object.entries(d.estoque.embalado||{}).filter(function(e){return Number(e[1].pacotes||0)>0;});
-  if(!rows.length){wrap.innerHTML='<div style="text-align:center;padding:40px;color:var(--t3)">Nenhum produto pronto em estoque</div>';return;}
-  wrap.innerHTML='<div class="card" style="overflow:hidden"><table>'+
-    '<thead><tr><th>Produto</th><th style="text-align:right">Pacotes</th><th></th></tr></thead>'+
-    '<tbody>'+rows.map(function(e){
-      var v=e[1];var pcts=Number(v.pacotes||0);
-      return '<tr><td style="font-weight:700">'+( v.prodNome||e[0])+'</td>'+
-        '<td style="text-align:right;font-weight:800;color:var(--green)">'+pcts+' pct</td>'+
-        '<td><button class="btn bg2" style="font-size:11px;padding:4px 10px" onclick="ajustarEmbalado(\''+e[0]+'\','+pcts+')">✏️ Ajustar</button></td></tr>';
-    }).join('')+'</tbody></table></div>';
+  var modelosOrd=['liso','meia','mini'];
+
+  // ── MÉDIA SEMANAL PRODUZIDA POR MODELO (últimos 28 dias ÷ 4) ──
+  var corte=new Date();corte.setDate(corte.getDate()-28);
+  var semKg={};
+  (d.producoes||[]).filter(function(p){return p.etapa==='maquina'&&p.data&&new Date(p.data+'T00:00')>=corte;}).forEach(function(p){
+    var m=(p.tecido||'liso').toLowerCase();
+    semKg[m]=(semKg[m]||0)+Number(p.kg||0);
+  });
+  var bigCards=modelosOrd.map(function(m){
+    var media=(semKg[m]||0)/4;var tc=({liso:'#3b82f6',meia:'#8b5cf6',mini:'#10b981'})[m];
+    return '<div style="flex:1;min-width:160px;background:var(--surface,#fff);border:1px solid var(--border);border-left:4px solid '+tc+';border-radius:14px;padding:16px 18px">'+
+      '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--t2,#64748b)">Média/semana — '+MODELO_LABEL[m]+'</div>'+
+      '<div style="font-size:32px;font-weight:800;color:'+tc+';line-height:1.1;margin-top:6px">'+media.toFixed(1)+'<span style="font-size:15px;font-weight:700"> kg</span></div>'+
+      '<div style="font-size:10px;color:var(--t3,#94a3b8);margin-top:2px">produzido — últimas 4 semanas</div>'+
+    '</div>';
+  }).join('');
+
+  // ── ESTOQUE PRONTO POR MODELO / VARIANTE (em kg) ──
+  var porModelo={},totalPcs=0,totalKg=0;
+  Object.entries(d.estoque.embalado||{}).filter(function(e){return Number(e[1].pacotes||0)>0;}).forEach(function(e){
+    var v=e[1];var pacotes=Number(v.pacotes||0);
+    var prod=d.produtos.find(function(x){return x.id===(v.prodId||e[0]);});
+    var tipo=prod?(prod.tecidoTipo||'liso').toLowerCase():'liso';
+    var unid=prod?(prod['unid-pacote']||12):12;
+    var rend=prod?(prod.rendimento||1000):1000;
+    var pcs=pacotes*unid;var kg=pcs/rend;
+    porModelo[tipo]=porModelo[tipo]||{kg:0,pcs:0,itens:[]};
+    porModelo[tipo].kg+=kg;porModelo[tipo].pcs+=pcs;
+    porModelo[tipo].itens.push({nome:(v.prodNome||(prod&&prod.nome)||e[0]),kg:kg,pcs:pcs,pacotes:pacotes,key:e[0]});
+    totalPcs+=pcs;totalKg+=kg;
+  });
+  var modelosComEstoque=Object.keys(porModelo);
+  var mediaPcsModelo=modelosComEstoque.length?Math.round(totalPcs/modelosComEstoque.length):0;
+
+  // ── monta HTML ──
+  var html='<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px">'+bigCards+'</div>';
+
+  // faixa de totais
+  html+='<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px">'+
+    '<div class="kpi-card" style="flex:1;min-width:150px"><div class="kpi-label">Pronto em estoque</div><div class="kpi-val" style="color:var(--green)">'+totalKg.toFixed(1)+' kg</div></div>'+
+    '<div class="kpi-card" style="flex:1;min-width:150px"><div class="kpi-label">Total de peças</div><div class="kpi-val">'+totalPcs.toLocaleString('pt-BR')+' pç</div></div>'+
+    '<div class="kpi-card" style="flex:1;min-width:150px"><div class="kpi-label">Média de peças / modelo</div><div class="kpi-val">'+mediaPcsModelo.toLocaleString('pt-BR')+' pç</div></div>'+
+  '</div>';
+
+  if(!modelosComEstoque.length){
+    html+='<div style="text-align:center;padding:36px;color:var(--t3)">Nenhum produto pronto em estoque</div>';
+    wrap.innerHTML=html;return;
+  }
+
+  // tabela por modelo → variante(cor)
+  html+='<div class="card" style="overflow:hidden"><table>'+
+    '<thead><tr><th>Modelo / Variante</th><th style="text-align:right">Peças</th><th style="text-align:right">Kg</th><th></th></tr></thead><tbody>';
+  modelosOrd.concat(modelosComEstoque.filter(function(m){return modelosOrd.indexOf(m)<0;})).forEach(function(tipo){
+    var mm=porModelo[tipo];if(!mm)return;
+    var tc=({liso:'#3b82f6',meia:'#8b5cf6',mini:'#10b981'})[tipo]||'#64748b';
+    html+='<tr style="background:'+tc+'11"><td style="font-weight:800;color:'+tc+'">'+(MODELO_LABEL[tipo]||tipo)+'</td>'+
+      '<td style="text-align:right;font-weight:800;color:'+tc+'">'+mm.pcs.toLocaleString('pt-BR')+' pç</td>'+
+      '<td style="text-align:right;font-weight:800;color:'+tc+'">'+mm.kg.toFixed(1)+' kg</td><td></td></tr>';
+    mm.itens.sort(function(a,b){return b.kg-a.kg;}).forEach(function(it){
+      html+='<tr><td style="padding-left:26px">'+it.nome+'</td>'+
+        '<td style="text-align:right;color:var(--t2)">'+it.pcs.toLocaleString('pt-BR')+' pç</td>'+
+        '<td style="text-align:right;font-weight:700">'+it.kg.toFixed(2)+' kg</td>'+
+        '<td style="text-align:right"><button class="btn bg2" style="font-size:11px;padding:4px 10px" onclick="ajustarEmbalado(\''+it.key+'\','+it.pacotes+')">✏️ Ajustar</button></td></tr>';
+    });
+  });
+  html+='</tbody></table></div>';
+  wrap.innerHTML=html;
 }
 
 // ──────────────────────────────────────────────

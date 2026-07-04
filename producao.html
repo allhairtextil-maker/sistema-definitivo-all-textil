@@ -127,6 +127,7 @@ td{padding:10px 14px;font-size:13px;border-bottom:1px solid var(--border);}
   <div class="tabs">
         <div class="tab on" onclick="aba('kanban')">🔄 Kanban</div>
     <div class="tab" onclick="aba('agenda')">📅 Agenda</div>
+    <div class="tab" onclick="aba('produzido')">🧵 Produzido</div>
     <div class="tab" onclick="aba('capacidade')">📊 Capacidade</div>
     <div class="tab" onclick="aba('historico')">📋 Histórico</div>
   </div>
@@ -135,12 +136,13 @@ td{padding:10px 14px;font-size:13px;border-bottom:1px solid var(--border);}
   <div class="tc on" id="tc-kanban">
     <div class="kb" id="kb-board"></div>
   </div>
+  <div class="tc" id="tc-produzido"><div id="produzido-wrap"></div></div>
   <div class="tc" id="tc-agenda"><div id="agenda-wrap"></div></div>
   <div class="tc" id="tc-capacidade"><div id="cap-wrap"></div></div>
   <div class="tc" id="tc-historico">
     <div style="display:flex;gap:6px;margin-bottom:14px" id="hist-filtros"></div>
     <div style="background:var(--white);border:1px solid var(--border);border-radius:var(--r);overflow:hidden">
-      <table><thead><tr><th>DATA</th><th>ETAPA</th><th>LOTE</th><th style="text-align:right">QTD</th></tr></thead>
+      <table><thead><tr><th>DATA</th><th>ETAPA</th><th>LOTE</th><th style="text-align:right">QTD</th><th style="text-align:center">AÇÕES</th></tr></thead>
       <tbody id="hist-body"></tbody></table>
     </div>
   </div>
@@ -195,6 +197,22 @@ td{padding:10px 14px;font-size:13px;border-bottom:1px solid var(--border);}
       <div class="field"><label>Obs (opcional)</label><input type="text" id="mq-obs" placeholder="Máquina, operador..."></div>
     </div>
     <div class="mf"><button class="btn bg2" onclick="X('maq')">Cancelar</button><button class="btn bp" onclick="salvarMaquina()">✅ Lançar</button></div>
+  </div>
+</div>
+
+<!-- MODAL CORRIGIR PRODUÇÃO -->
+<div class="ov" id="ov-editprod">
+  <div class="modal" style="max-width:420px">
+    <div class="mh"><h2>✏️ Corrigir Produção</h2><button class="mx" onclick="X('editprod')">×</button></div>
+    <div class="mb">
+      <div class="info-box" style="display:block;font-size:12px;margin-bottom:4px">Ao salvar, o consumo de fio/elastano e o estoque cru são <strong>reajustados automaticamente</strong> (estorna o antigo e aplica o novo).</div>
+      <div class="field"><label>Tipo de Tecido</label>
+        <select id="ep-tipo"><option value="liso">📏 Liso</option><option value="meia">🧶 Meia</option><option value="mini">🔹 Mini</option></select></div>
+      <div class="field"><label>Cor</label><select id="ep-cor"></select></div>
+      <div class="field"><label>Kg Produzidos</label><input type="number" id="ep-kg" step="0.01" min="0"></div>
+      <div class="field"><label>Data</label><input type="date" id="ep-data"></div>
+    </div>
+    <div class="mf"><button class="btn bg2" onclick="X('editprod')">Cancelar</button><button class="btn bp" onclick="salvarEditProd()">💾 Salvar correção</button></div>
   </div>
 </div>
 
@@ -269,6 +287,55 @@ function saveD(d){
   S('allhair_producoes2',d.producoes);
   S('allhair_envios_v2',d.envios);
   S('allhair_lotes',d.lotes);
+}
+
+// ──────────────────────────────────────────────
+// CONSUMO DE MATÉRIA-PRIMA (espelha a "Necessidade de Insumos")
+// calcMPUso: quanto de ELA / PES_BRANCO / PES_PRETO / FIO_<cor> um lançamento consome
+// ──────────────────────────────────────────────
+function calcMPUso(prod, corId, kg){
+  var uso={ELA:0,PES_BRANCO:0,PES_PRETO:0,fios:{}};
+  kg=Number(kg)||0;
+  if(!prod){ uso.ELA=kg*0.20; uso.PES_BRANCO=kg*0.80; return uso; } // fallback genérico 80/20
+  var pctEla=(Number(prod.elastano)||20)/100;
+  var pctFio=(Number(prod.poliester)||80)/100;
+  var compTipo=prod.compTipo||'simples';
+  var temCor=corId&&corId!=='';
+  if(compTipo==='colorido_branco'&&temCor){
+    uso.ELA+=kg*((Number(prod.elastanoColor)||0)/100);
+    uso.PES_BRANCO+=kg*((Number(prod.fioCru)||0)/100);
+    uso.fios[corId]=(uso.fios[corId]||0)+kg*((Number(prod.fioColorido)||0)/100);
+  } else if((compTipo==='colorido_puro'||compTipo==='colorido')&&temCor){
+    uso.ELA+=kg*((Number(prod.elastanoColor)||Number(prod.elastano)||20)/100);
+    uso.fios[corId]=(uso.fios[corId]||0)+kg*pctFio;
+  } else if(temCor&&(prod.cores||[]).length){
+    uso.ELA+=kg*pctEla;
+    uso.fios[corId]=(uso.fios[corId]||0)+kg*pctFio;
+  } else {
+    uso.ELA+=kg*pctEla;
+    uso.PES_BRANCO+=kg*pctFio;
+  }
+  return uso;
+}
+// aplica o consumo no estoque de MP. sinal=-1 desconta (lançar), +1 devolve (editar/excluir)
+function aplicarMP(d, uso, sinal){
+  if(!d.estoque.mp)d.estoque.mp={};
+  var mp=d.estoque.mp;
+  mp.ELA=Number(mp.ELA||0)+sinal*(uso.ELA||0);
+  mp.PES_BRANCO=Number(mp.PES_BRANCO||0)+sinal*(uso.PES_BRANCO||0);
+  mp.PES_PRETO=Number(mp.PES_PRETO||0)+sinal*(uso.PES_PRETO||0);
+  Object.keys(uso.fios||{}).forEach(function(cid){
+    var k='FIO_'+cid;
+    mp[k]=Number(mp[k]||0)+sinal*(uso.fios[cid]||0);
+  });
+  d.estoque.mp=mp;
+}
+// acha o produto que corresponde a um lançamento (tipo de tecido + cor)
+function prodDoLancamento(d, tipo, corId, match){
+  var p=match?d.produtos.find(function(x){return x.id===match.prodId;}):null;
+  if(!p)p=d.produtos.find(function(x){return (x.tecidoTipo||'liso').toLowerCase()===tipo&&(x.cores||[]).indexOf(corId)>=0;});
+  if(!p)p=d.produtos.find(function(x){return (x.tecidoTipo||'liso').toLowerCase()===tipo;});
+  return p||null;
 }
 
 // ──────────────────────────────────────────────
@@ -358,7 +425,7 @@ function aba(id){
   _aba=id;
   document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('on');});
   document.querySelectorAll('.tc').forEach(function(t){t.classList.remove('on');});
-  var tabs=['kanban','agenda','capacidade','historico'];
+  var tabs=['kanban','agenda','produzido','capacidade','historico'];
   document.querySelectorAll('.tab')[tabs.indexOf(id)].classList.add('on');
   document.getElementById('tc-'+id).classList.add('on');
   R(id);
@@ -366,6 +433,7 @@ function aba(id){
 function R(id){
   if(id==='hoje')rHoje();
   else if(id==='kanban')rKanban();
+  else if(id==='produzido')rProduzido();
   else if(id==='agenda')rAgenda();
   else if(id==='capacidade')rCap();
   else if(id==='historico')rHist();
@@ -976,11 +1044,125 @@ function rHist(){
     .sort(function(a,b){return new Date(b.data||b.criadoEm)-new Date(a.data||a.criadoEm);}).slice(0,60);
   document.getElementById('hist-body').innerHTML=prods.map(function(p){
     var cor=cors2[p.etapa]||'#94a3b8';
-    return '<tr><td style="color:var(--t2);font-size:12px">'+(p.data||'—')+'</td>'+
+    var acoes=p.etapa==='maquina'
+      ? '<button onclick="editProd(\''+p.id+'\')" title="Corrigir" style="padding:3px 8px;font-size:12px;cursor:pointer;border:1px solid var(--border);border-radius:6px;background:var(--white);margin-right:4px">✏️</button>'+
+        '<button onclick="delProd(\''+p.id+'\')" title="Excluir (estorna MP e cru)" style="padding:3px 8px;font-size:12px;cursor:pointer;border:1px solid #fca5a5;border-radius:6px;background:#fee2e2;color:#dc2626">🗑️</button>'
+      : '<span style="font-size:11px;color:var(--t3)">—</span>';
+    return '<tr><td style="color:var(--t2);font-size:12px">'+(p.data||'—')+(p.editadoEm?' <span title="editado" style="color:#f59e0b">✎</span>':'')+'</td>'+
       '<td><span style="background:'+cor+'22;color:'+cor+';padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700">'+(labels[p.etapa]||p.etapa)+'</span></td>'+
       '<td style="font-weight:600">'+(p.prodNome||p.corNome||p.tecido||'—')+(p.corNome&&p.prodNome?' — '+p.corNome:'')+'</td>'+
-      '<td style="text-align:right;font-weight:700;color:'+cor+'">'+(p.kg?p.kg.toFixed(2)+'kg':p.pacotes?p.pacotes+' pct':'—')+'</td></tr>';
+      '<td style="text-align:right;font-weight:700;color:'+cor+'">'+(p.kg?p.kg.toFixed(2)+'kg':p.pacotes?p.pacotes+' pct':'—')+'</td>'+
+      '<td style="text-align:center;white-space:nowrap">'+acoes+'</td></tr>';
   }).join('');
+}
+
+// ──────────────────────────────────────────────
+// ABA PRODUZIDO — por dia, por cor, total por modelo
+// ──────────────────────────────────────────────
+var MODELO_LABEL={liso:'📏 Liso',meia:'🧶 Meia',mini:'🔹 Mini'};
+function rProduzido(){
+  var d=D();
+  var maq=d.producoes.filter(function(p){return p.etapa==='maquina'&&Number(p.kg)>0;});
+  var wrap=document.getElementById('produzido-wrap');
+  if(!maq.length){wrap.innerHTML='<div style="text-align:center;padding:44px;color:var(--t3)">Nenhuma produção de máquina lançada ainda.</div>';return;}
+
+  // agrupa por dia → modelo → cor
+  var dias={};
+  maq.forEach(function(p){
+    var dia=p.data||'—';
+    var tipo=(p.tecido||'liso').toLowerCase();
+    var corN=p.corNome||'—';
+    dias[dia]=dias[dia]||{total:0,modelos:{}};
+    dias[dia].total+=Number(p.kg);
+    var M=dias[dia].modelos;
+    M[tipo]=M[tipo]||{total:0,cores:{}};
+    M[tipo].total+=Number(p.kg);
+    M[tipo].cores[corN]=(M[tipo].cores[corN]||0)+Number(p.kg);
+  });
+  var ordem=Object.keys(dias).sort(function(a,b){return new Date(b)-new Date(a);});
+
+  var html='';
+  ordem.forEach(function(dia){
+    var dd=dias[dia];
+    html+='<div style="background:var(--white);border:1px solid var(--border);border-radius:var(--r);margin-bottom:14px;overflow:hidden">';
+    html+='<div style="display:flex;justify-content:space-between;align-items:center;padding:11px 16px;background:var(--bg);border-bottom:1px solid var(--border)">'+
+      '<span style="font-weight:800;font-size:14px">📅 '+fmtD(dia)+'</span>'+
+      '<span style="font-weight:800;font-size:14px;color:var(--roxo,#8b5cf6)">'+dd.total.toFixed(2)+' kg</span></div>';
+    Object.keys(dd.modelos).forEach(function(tipo){
+      var m=dd.modelos[tipo];var tc=tipoCor(tipo);
+      html+='<div style="padding:8px 16px;display:flex;justify-content:space-between;align-items:center;background:'+tc.bg+'">'+
+        '<span style="font-weight:700;font-size:12px;color:'+tc.c+'">'+(MODELO_LABEL[tipo]||tipo)+'</span>'+
+        '<span style="font-weight:800;font-size:12px;color:'+tc.c+'">total '+m.total.toFixed(2)+' kg</span></div>';
+      html+='<table style="width:100%"><tbody>';
+      Object.keys(m.cores).sort().forEach(function(cor){
+        html+='<tr><td style="padding:7px 16px 7px 28px;font-size:13px">'+cor+'</td>'+
+          '<td style="padding:7px 16px;text-align:right;font-weight:700;font-size:13px;color:var(--t2)">'+m.cores[cor].toFixed(2)+' kg</td></tr>';
+      });
+      html+='</tbody></table>';
+    });
+    html+='</div>';
+  });
+  wrap.innerHTML=html;
+}
+
+// ──────────────────────────────────────────────
+// CORRIGIR / EXCLUIR PRODUÇÃO (estorna MP + cru)  [somente etapa 'maquina']
+// ──────────────────────────────────────────────
+var _editProdId=null;
+function estornaCru(d,tecido,corId,kg){
+  var ck=tecido+'_'+corId;
+  if(d.estoque.cru[ck]){
+    d.estoque.cru[ck].kg=Math.max(0,Number(d.estoque.cru[ck].kg||0)-Number(kg||0));
+    if(d.estoque.cru[ck].kg<=0)delete d.estoque.cru[ck];
+  }
+}
+function editProd(id){
+  var d=D();var p=d.producoes.find(function(x){return x.id===id;});
+  if(!p||p.etapa!=='maquina'){alert('Só é possível corrigir lançamentos de máquina.');return;}
+  _editProdId=id;
+  document.getElementById('ep-tipo').value=p.tecido||'liso';
+  // preenche cores (todas as cadastradas)
+  var sel=document.getElementById('ep-cor');
+  sel.innerHTML=d.cores.map(function(c){return '<option value="'+c.id+'">'+c.nome+'</option>';}).join('');
+  if(p.corId){for(var i=0;i<sel.options.length;i++){if(sel.options[i].value===p.corId){sel.selectedIndex=i;break;}}}
+  document.getElementById('ep-kg').value=Number(p.kg||0);
+  document.getElementById('ep-data').value=p.data||hoje();
+  document.getElementById('ov-editprod').classList.add('on');
+}
+function salvarEditProd(){
+  var d=D();var p=d.producoes.find(function(x){return x.id===_editProdId;});
+  if(!p)return;
+  var novoTipo=document.getElementById('ep-tipo').value;
+  var novaCor=document.getElementById('ep-cor').value;
+  var novoKg=parseFloat(document.getElementById('ep-kg').value||0);
+  var novaData=document.getElementById('ep-data').value;
+  if(!novoKg||novoKg<=0){alert('Informe os kg!');return;}
+  if(!novaData){alert('Informe a data!');return;}
+  // 1) estorna o antigo
+  if(p.mpUso)aplicarMP(d,p.mpUso,+1);
+  estornaCru(d,p.tecido,p.corId,p.kg);
+  // 2) aplica o novo
+  var cor=d.cores.find(function(c){return c.id===novaCor;})||{nome:novaCor||'Padrão'};
+  var prodLote=prodDoLancamento(d,novoTipo,novaCor,null);
+  var uso=calcMPUso(prodLote,novaCor,novoKg);
+  aplicarMP(d,uso,-1);
+  var ck=novoTipo+'_'+novaCor;
+  if(!d.estoque.cru[ck])d.estoque.cru[ck]={tecido:novoTipo,corId:novaCor,corNome:cor.nome,kg:0};
+  d.estoque.cru[ck].kg=Number(d.estoque.cru[ck].kg||0)+novoKg;
+  // 3) atualiza o registro
+  p.tecido=novoTipo;p.corId=novaCor;p.corNome=cor.nome;p.kg=novoKg;p.data=novaData;
+  p.prodId=prodLote?prodLote.id:'';p.mpUso=uso;p.editadoEm=new Date().toLocaleString();
+  saveD(d);X('editprod');R(_aba);
+  alert('✅ Correção salva. Fio/elastano e estoque cru reajustados.');
+}
+function delProd(id){
+  var d=D();var p=d.producoes.find(function(x){return x.id===id;});
+  if(!p||p.etapa!=='maquina'){alert('Só é possível excluir lançamentos de máquina por aqui.');return;}
+  if(!confirm('Excluir este lançamento de '+(p.kg||0).toFixed(2)+'kg?\nO fio/elastano volta ao estoque e o cru é estornado.'))return;
+  if(p.mpUso)aplicarMP(d,p.mpUso,+1);
+  estornaCru(d,p.tecido,p.corId,p.kg);
+  d.producoes=d.producoes.filter(function(x){return x.id!==id;});
+  saveD(d);R(_aba);
 }
 
 // ──────────────────────────────────────────────
@@ -1041,15 +1223,19 @@ function salvarMaquina(){
   if(!data){alert('Informe a data!');return;}
   var d=D();
   var cor=d.cores.find(function(c){return c.id===corId;})||{nome:corId||'Padrão'};
-  // Add to producoes
-  d.producoes.push({id:'p_'+Date.now(),etapa:'maquina',tecido:tipo,corId:corId,corNome:cor.nome,kg:kg,data:data,obs:document.getElementById('mq-obs').value||'',criadoEm:new Date().toLocaleString()});
+  // Track kgLancado per lote and only advance when >= kgPorCor
+  var lotes=buildLotes(d);
+  var match=lotes.find(function(l){return l.tipo===tipo&&l.corId===corId&&['aguardando','maquina'].includes(l.status);});
+  // ── DESCONTA MATÉRIA-PRIMA (fio + elastano) ──
+  var prodLote=prodDoLancamento(d,tipo,corId,match);
+  var uso=calcMPUso(prodLote,corId,kg);
+  aplicarMP(d,uso,-1);
+  // Add to producoes (guarda mpUso e prodId p/ permitir correção/estorno depois)
+  d.producoes.push({id:'p_'+Date.now(),etapa:'maquina',tecido:tipo,corId:corId,corNome:cor.nome,kg:kg,data:data,obs:document.getElementById('mq-obs').value||'',prodId:prodLote?prodLote.id:'',mpUso:uso,criadoEm:new Date().toLocaleString()});
   // Add to estoque cru
   var ck=tipo+'_'+corId;
   if(!d.estoque.cru[ck])d.estoque.cru[ck]={tecido:tipo,corId:corId,corNome:cor.nome,kg:0};
   d.estoque.cru[ck].kg=Number(d.estoque.cru[ck].kg||0)+kg;
-  // Track kgLancado per lote and only advance when >= kgPorCor
-  var lotes=buildLotes(d);
-  var match=lotes.find(function(l){return l.tipo===tipo&&l.corId===corId&&['aguardando','maquina'].includes(l.status);});
   if(match){
     if(!d.lotes._kg)d.lotes._kg={};
     var kgKey=match.id+'_kg';
