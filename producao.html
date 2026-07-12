@@ -395,43 +395,61 @@ function saveD(d){
 // CONSUMO DE MATÉRIA-PRIMA (espelha a "Necessidade de Insumos")
 // calcMPUso: quanto de ELA / PES_BRANCO / PES_PRETO / FIO_<cor> um lançamento consome
 // ──────────────────────────────────────────────
-function calcMPUso(prod, corId, kg){
+// resolve qual fio uma cor consome: branco/cru → Fio Branco, preto → Fio Preto, senão → fio daquela cor
+function fioKeyDaCor(corId, corNome){
+  var n=(corNome||'').toLowerCase();
+  if(!corId||n.indexOf('branc')>=0||n.indexOf('cru')>=0||n.indexOf('natural')>=0)return 'PES_BRANCO';
+  if(n.indexOf('pret')>=0)return 'PES_PRETO';
+  return 'FIO_'+corId;
+}
+function calcMPUso(prod, corId, kg, corNome){
   var uso={ELA:0,PES_BRANCO:0,PES_PRETO:0,fios:{}};
   kg=Number(kg)||0;
   if(kg<=0)return uso;
-  var pctEla=(prod&&Number(prod.elastano)?Number(prod.elastano):20)/100;
-  var pctFio=(prod&&Number(prod.poliester)?Number(prod.poliester):80)/100;
-  var fluxo=(prod&&prod.fluxo)||'maquina_facc';
-  var compTipo=(prod&&prod.compTipo)||'';
-  var temCor=corId&&corId!=='';
-  uso.ELA=kg*pctEla;
-  if(compTipo==='colorido_branco'&&temCor){
-    // mistura: parte fio cru (branco) + parte fio já colorido
-    var pctCru=(Number(prod.fioCru)||0)/100, pctCol=(Number(prod.fioColorido)||0)/100;
-    if(pctCru||pctCol){uso.PES_BRANCO=kg*pctCru;uso.fios[corId]=kg*pctCol;}
-    else uso.PES_BRANCO=kg*pctFio;
-    if(prod&&prod.elastanoColor)uso.ELA=kg*((Number(prod.elastanoColor))/100);
-  } else if((fluxo==='corte'||compTipo==='colorido_puro'||compTipo==='colorido')&&temCor){
-    // fio JÁ colorido (não passa pela facção) → consome o fio da cor
-    uso.fios[corId]=kg*pctFio;
+  function addFio(key,amt){
+    if(!amt)return;
+    if(key==='PES_BRANCO')uso.PES_BRANCO+=amt;
+    else if(key==='PES_PRETO')uso.PES_PRETO+=amt;
+    else uso.fios[key.slice(4)]=(uso.fios[key.slice(4)]||0)+amt;
+  }
+  var corKey=fioKeyDaCor(corId,corNome);
+  if(!prod){ addFio(corKey,kg*0.80); uso.ELA=kg*0.20; return uso; } // fallback 80/20 no fio da cor
+  var compTipo=prod.compTipo||'simples';
+  if(compTipo==='colorido_branco'){
+    // mistura: % fio cru (branco) + % fio colorido (da cor) + % elastano
+    addFio('PES_BRANCO', kg*((Number(prod.fioCru)||0)/100));
+    addFio(corKey,       kg*((Number(prod.fioColorido)||0)/100));
+    uso.ELA=kg*((Number(prod.elastanoColor)||Number(prod.elastano)||20)/100);
+  } else if(compTipo==='colorido_puro'||compTipo==='colorido'){
+    // 100% fio da cor + elastano
+    addFio(corKey, kg*((Number(prod.poliester)||80)/100));
+    uso.ELA=kg*((Number(prod.elastano)||20)/100);
   } else {
-    // padrão (máquina → facção): consome FIO BRANCO; a cor entra depois, na facção
-    uso.PES_BRANCO=kg*pctFio;
+    // simples: fio branco + elastano
+    addFio('PES_BRANCO', kg*((Number(prod.poliester)||80)/100));
+    uso.ELA=kg*((Number(prod.elastano)||20)/100);
   }
   return uso;
 }
-// aplica o consumo no estoque de MP. sinal=-1 desconta (lançar), +1 devolve (editar/excluir)
+// aplica o consumo no estoque de MP (kg E valor R$). sinal=-1 desconta (lançar), +1 devolve (editar/excluir)
 function aplicarMP(d, uso, sinal){
   if(!d.estoque.mp)d.estoque.mp={};
   var mp=d.estoque.mp;
-  mp.ELA=Number(mp.ELA||0)+sinal*(uso.ELA||0);
-  mp.PES_BRANCO=Number(mp.PES_BRANCO||0)+sinal*(uso.PES_BRANCO||0);
-  mp.PES_PRETO=Number(mp.PES_PRETO||0)+sinal*(uso.PES_PRETO||0);
-  Object.keys(uso.fios||{}).forEach(function(cid){
-    var k='FIO_'+cid;
-    mp[k]=Number(mp[k]||0)+sinal*(uso.fios[cid]||0);
-  });
+  var vals=L('allhair_estoque_valores',{});
+  function ap(k,amt){
+    if(!amt)return;
+    var qAntes=Number(mp[k]||0);
+    var vAntes=Number((vals[k]||{}).valor||0);
+    var pm=qAntes>0?vAntes/qAntes:0;               // preço médio atual
+    mp[k]=qAntes+sinal*amt;
+    if(pm>0){ if(!vals[k])vals[k]={}; vals[k].valor=Math.max(0,vAntes+sinal*amt*pm); }
+  }
+  ap('ELA',uso.ELA||0);
+  ap('PES_BRANCO',uso.PES_BRANCO||0);
+  ap('PES_PRETO',uso.PES_PRETO||0);
+  Object.keys(uso.fios||{}).forEach(function(cid){ap('FIO_'+cid,uso.fios[cid]||0);});
   d.estoque.mp=mp;
+  S('allhair_estoque_valores',vals);
 }
 // acha o produto que corresponde a um lançamento (tipo de tecido + cor)
 function prodDoLancamento(d, tipo, corId, match){
@@ -447,26 +465,26 @@ function recalcularConsumoMP(){
   function nomeCor(c){var x=d.cores.find(function(z){return z.id===c;});return x?x.nome:c;}
   // 1) agrega o produzido por (tecido, cor)
   var agg={};
-  function addAgg(tecido,corId,kg){
+  function addAgg(tecido,corId,kg,corNome){
     kg=Number(kg||0);if(!(kg>0))return;tecido=(tecido||'').toLowerCase();
     var k=tecido+'|'+(corId||'');
-    if(!agg[k])agg[k]={tecido:tecido,corId:corId||'',kg:0};
+    if(!agg[k])agg[k]={tecido:tecido,corId:corId||'',corNome:corNome||nomeCor(corId||''),kg:0};
     agg[k].kg+=kg;
   }
-  Object.values(d.estoque.cru||{}).forEach(function(v){addAgg(v.tecido,v.corId,v.kg);});
-  Object.values(d.estoque.virado||{}).forEach(function(v){addAgg(v.tecido,v.corId,v.kg);});
-  (d.envios||[]).filter(function(e){return e.status==='enviado';}).forEach(function(e){addAgg(e.tipo,e.corId,e.kg);});
+  Object.values(d.estoque.cru||{}).forEach(function(v){addAgg(v.tecido,v.corId,v.kg,v.corNome);});
+  Object.values(d.estoque.virado||{}).forEach(function(v){addAgg(v.tecido,v.corId,v.kg,v.corNome);});
+  (d.envios||[]).filter(function(e){return e.status==='enviado';}).forEach(function(e){addAgg(e.tipo,e.corId,e.kg,e.corNome);});
   Object.values(d.estoque.embalado||{}).forEach(function(v){
     var prod=d.produtos.find(function(x){return x.id===v.prodId;});if(!prod)return;
     var unid=Number(prod['unid-pacote']||12),rend=Number(prod.rendimento||1000);
-    addAgg(prod.tecidoTipo,'',Number(v.pacotes||0)*unid/(rend||1000));
+    addAgg(prod.tecidoTipo,'',Number(v.pacotes||0)*unid/(rend||1000),'');
   });
   if(!Object.keys(agg).length){alert('Nenhum material produzido encontrado no estoque (cru, facção, virado ou embalado).\nProduza algo primeiro pra ter o que descontar.');return;}
   // 2) consumo-alvo por material
   var alvo={ELA:0,PES_BRANCO:0,PES_PRETO:0,fios:{}};
   Object.values(agg).forEach(function(a){
     var prod=prodDoLancamento(d,a.tecido,a.corId,null);
-    var uso=calcMPUso(prod,a.corId,a.kg);
+    var uso=calcMPUso(prod,a.corId,a.kg,a.corNome);
     alvo.ELA+=uso.ELA;alvo.PES_BRANCO+=uso.PES_BRANCO;alvo.PES_PRETO+=uso.PES_PRETO;
     Object.keys(uso.fios||{}).forEach(function(c){alvo.fios[c]=(alvo.fios[c]||0)+uso.fios[c];});
   });
@@ -495,13 +513,21 @@ function recalcularConsumoMP(){
   if(!deltas.length){alert('✅ A matéria-prima já está baixada de acordo com o produzido. Nada a ajustar.');return;}
   var linhas=deltas.map(function(x){return '• '+x.nome+': '+(x.delta>0?'−':'+')+Math.abs(x.delta).toFixed(2)+' kg';});
   if(!confirm('Baixar a matéria-prima do que já foi produzido?\n\nAjuste no estoque:\n'+linhas.join('\n')+'\n\n(−  desconta   +  devolve)'))return;
-  // 5) aplica: est.mp[k] -= delta
+  // 5) aplica: est.mp[k] -= delta (kg E valor R$ proporcional ao preço médio)
   if(!d.estoque.mp)d.estoque.mp={};
-  deltas.forEach(function(x){d.estoque.mp[x.mkey]=Number(d.estoque.mp[x.mkey]||0)-x.delta;});
+  var vals=L('allhair_estoque_valores',{});
+  deltas.forEach(function(x){
+    var qAntes=Number(d.estoque.mp[x.mkey]||0);
+    var vAntes=Number((vals[x.mkey]||{}).valor||0);
+    var pm=qAntes>0?vAntes/qAntes:0;
+    d.estoque.mp[x.mkey]=qAntes-x.delta;
+    if(pm>0){if(!vals[x.mkey])vals[x.mkey]={};vals[x.mkey].valor=Math.max(0,vAntes-x.delta*pm);}
+  });
   saveD(d);
+  S('allhair_estoque_valores',vals);
   S('allhair_mp_baixa_processo',newBase);
   R(_aba);
-  alert('✅ Pronto! Matéria-prima baixada conforme o produzido. Confira no Estoque → Matéria-Prima.');
+  alert('✅ Pronto! Matéria-prima baixada conforme o produzido (kg e valor). Confira no Estoque → Matéria-Prima.');
 }
 
 // ──────────────────────────────────────────────
@@ -1351,7 +1377,7 @@ function salvarEditProd(){
   // 2) aplica o novo
   var cor=d.cores.find(function(c){return c.id===novaCor;})||{nome:novaCor||'Padrão'};
   var prodLote=prodDoLancamento(d,novoTipo,novaCor,null);
-  var uso=calcMPUso(prodLote,novaCor,novoKg);
+  var uso=calcMPUso(prodLote,novaCor,novoKg,cor.nome);
   aplicarMP(d,uso,-1);
   var ck=novoTipo+'_'+novaCor;
   if(!d.estoque.cru[ck])d.estoque.cru[ck]={tecido:novoTipo,corId:novaCor,corNome:cor.nome,kg:0};
@@ -1436,7 +1462,7 @@ function salvarMaquina(){
   var match=lotes.find(function(l){return l.tipo===tipo&&l.corId===corId&&['aguardando','maquina'].includes(l.status);});
   // ── DESCONTA MATÉRIA-PRIMA (fio + elastano) ──
   var prodLote=prodDoLancamento(d,tipo,corId,match);
-  var uso=calcMPUso(prodLote,corId,kg);
+  var uso=calcMPUso(prodLote,corId,kg,cor.nome);
   aplicarMP(d,uso,-1);
   // Add to producoes (guarda mpUso e prodId p/ permitir correção/estorno depois)
   d.producoes.push({id:'p_'+Date.now(),etapa:'maquina',tecido:tipo,corId:corId,corNome:cor.nome,kg:kg,data:data,obs:document.getElementById('mq-obs').value||'',prodId:prodLote?prodLote.id:'',mpUso:uso,criadoEm:new Date().toLocaleString()});
