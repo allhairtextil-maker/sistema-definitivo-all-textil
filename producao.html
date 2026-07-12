@@ -440,48 +440,68 @@ function prodDoLancamento(d, tipo, corId, match){
   if(!p)p=d.produtos.find(function(x){return (x.tecidoTipo||'liso').toLowerCase()===tipo;});
   return p||null;
 }
-// Recalcula/aplica o consumo de MP de TODOS os lançamentos de máquina já registrados.
-// Idempotente: usa o mpUso guardado em cada registro pra estornar o antigo antes de aplicar o novo,
-// então rodar de novo não desconta duas vezes.
+// Baixa a MP com base em TUDO que já foi produzido e está no estoque (cru + facção + virado + embalado).
+// Idempotente: guarda em allhair_mp_baixa_processo o quanto já baixou; só aplica a diferença.
 function recalcularConsumoMP(){
   var d=D();
-  // tolerante: conta como produção de máquina se tem kg+tecido e NÃO é movimentação/embalagem
-  function ehProd(p){
-    if(!(Number(p.kg)>0))return false;
-    if(p.etapa==='envio_facc'||p.etapa==='retorno_facc'||p.etapa==='embalagem')return false;
-    return p.etapa==='maquina'||!!p.tecido;
-  }
-  var maq=d.producoes.filter(ehProd);
-  if(!maq.length){alert('Nenhum lançamento de produção encontrado no histórico.');return;}
   function nomeCor(c){var x=d.cores.find(function(z){return z.id===c;});return x?x.nome:c;}
-  // 1) calcula o delta líquido (novo − já aplicado) por material, sem aplicar ainda
-  var net={};
-  function add(k,v){net[k]=(net[k]||0)+v;}
-  maq.forEach(function(p){
-    var antigo=p.mpUso||{ELA:0,PES_BRANCO:0,PES_PRETO:0,fios:{}};
-    var prodLote=prodDoLancamento(d,(p.tecido||'').toLowerCase(),p.corId,null);
-    var novo=calcMPUso(prodLote,p.corId,p.kg);
-    add('Elastano',(novo.ELA||0)-(antigo.ELA||0));
-    add('Fio Branco',(novo.PES_BRANCO||0)-(antigo.PES_BRANCO||0));
-    add('Fio Preto',(novo.PES_PRETO||0)-(antigo.PES_PRETO||0));
-    var cids={};Object.keys(novo.fios||{}).forEach(function(c){cids[c]=1;});Object.keys(antigo.fios||{}).forEach(function(c){cids[c]=1;});
-    Object.keys(cids).forEach(function(c){add('Fio '+nomeCor(c),(novo.fios[c]||0)-((antigo.fios||{})[c]||0));});
+  // 1) agrega o produzido por (tecido, cor)
+  var agg={};
+  function addAgg(tecido,corId,kg){
+    kg=Number(kg||0);if(!(kg>0))return;tecido=(tecido||'').toLowerCase();
+    var k=tecido+'|'+(corId||'');
+    if(!agg[k])agg[k]={tecido:tecido,corId:corId||'',kg:0};
+    agg[k].kg+=kg;
+  }
+  Object.values(d.estoque.cru||{}).forEach(function(v){addAgg(v.tecido,v.corId,v.kg);});
+  Object.values(d.estoque.virado||{}).forEach(function(v){addAgg(v.tecido,v.corId,v.kg);});
+  (d.envios||[]).filter(function(e){return e.status==='enviado';}).forEach(function(e){addAgg(e.tipo,e.corId,e.kg);});
+  Object.values(d.estoque.embalado||{}).forEach(function(v){
+    var prod=d.produtos.find(function(x){return x.id===v.prodId;});if(!prod)return;
+    var unid=Number(prod['unid-pacote']||12),rend=Number(prod.rendimento||1000);
+    addAgg(prod.tecidoTipo,'',Number(v.pacotes||0)*unid/(rend||1000));
   });
-  var linhas=Object.keys(net).filter(function(k){return Math.abs(net[k])>0.001;}).map(function(k){return '• '+k+': '+(net[k]>0?'−':'+')+Math.abs(net[k]).toFixed(2)+' kg';});
-  if(!linhas.length){alert('✅ Tudo já está descontado corretamente. Nada a ajustar.');return;}
-  if(!confirm('Recalcular o consumo de '+maq.length+' lançamento(s) de máquina?\n\nAjuste no estoque de MP:\n'+linhas.join('\n')+'\n\n(−  desconta do estoque   +  devolve)'))return;
-  // 2) aplica de fato: estorna o antigo e aplica o novo em cada registro
-  maq.forEach(function(p){
-    var antigo=p.mpUso||{ELA:0,PES_BRANCO:0,PES_PRETO:0,fios:{}};
-    var prodLote=prodDoLancamento(d,(p.tecido||'').toLowerCase(),p.corId,null);
-    var novo=calcMPUso(prodLote,p.corId,p.kg);
-    aplicarMP(d,antigo,+1);
-    aplicarMP(d,novo,-1);
-    p.mpUso=novo;
-    if(!p.prodId&&prodLote)p.prodId=prodLote.id;
+  if(!Object.keys(agg).length){alert('Nenhum material produzido encontrado no estoque (cru, facção, virado ou embalado).\nProduza algo primeiro pra ter o que descontar.');return;}
+  // 2) consumo-alvo por material
+  var alvo={ELA:0,PES_BRANCO:0,PES_PRETO:0,fios:{}};
+  Object.values(agg).forEach(function(a){
+    var prod=prodDoLancamento(d,a.tecido,a.corId,null);
+    var uso=calcMPUso(prod,a.corId,a.kg);
+    alvo.ELA+=uso.ELA;alvo.PES_BRANCO+=uso.PES_BRANCO;alvo.PES_PRETO+=uso.PES_PRETO;
+    Object.keys(uso.fios||{}).forEach(function(c){alvo.fios[c]=(alvo.fios[c]||0)+uso.fios[c];});
   });
-  saveD(d);R(_aba);
-  alert('✅ Pronto! Consumo recalculado em '+maq.length+' lançamento(s). Estoque de MP ajustado.');
+  // 3) o que o auto-desconto (Lançar Máquina) já baixou, via mpUso dos registros
+  var pl={ELA:0,PES_BRANCO:0,PES_PRETO:0,fios:{}};
+  (d.producoes||[]).forEach(function(p){var u=p.mpUso;if(!u)return;
+    pl.ELA+=Number(u.ELA||0);pl.PES_BRANCO+=Number(u.PES_BRANCO||0);pl.PES_PRETO+=Number(u.PES_PRETO||0);
+    Object.keys(u.fios||{}).forEach(function(c){pl.fios[c]=(pl.fios[c]||0)+Number(u.fios[c]||0);});});
+  // baseline já baixado por ESTA ferramenta
+  var oldBase=L('allhair_mp_baixa_processo',{ELA:0,PES_BRANCO:0,PES_PRETO:0,fios:{}});if(!oldBase.fios)oldBase.fios={};
+  function gv(o,mk){return mk.indexOf('FIO_')===0?((o.fios||{})[mk.slice(4)]||0):(o[mk]||0);}
+  // materiais envolvidos
+  var mats=[['ELA','Elastano'],['PES_BRANCO','Fio Branco'],['PES_PRETO','Fio Preto']];
+  var fioCids={};[alvo.fios,pl.fios,oldBase.fios].forEach(function(o){Object.keys(o||{}).forEach(function(c){fioCids[c]=1;});});
+  Object.keys(fioCids).forEach(function(c){mats.push(['FIO_'+c,'Fio '+nomeCor(c)]);});
+  // 4) alvo da ferramenta = consumo total − o que o auto-desconto já cobriu ; delta = alvo − baseline
+  var newBase={ELA:0,PES_BRANCO:0,PES_PRETO:0,fios:{}};
+  var deltas=[];
+  mats.forEach(function(par){
+    var mk=par[0];
+    var target=Math.max(0,gv(alvo,mk)-gv(pl,mk));
+    if(mk.indexOf('FIO_')===0)newBase.fios[mk.slice(4)]=target;else newBase[mk]=target;
+    var delta=target-gv(oldBase,mk);
+    if(Math.abs(delta)>0.001)deltas.push({nome:par[1],mkey:mk,delta:delta});
+  });
+  if(!deltas.length){alert('✅ A matéria-prima já está baixada de acordo com o produzido. Nada a ajustar.');return;}
+  var linhas=deltas.map(function(x){return '• '+x.nome+': '+(x.delta>0?'−':'+')+Math.abs(x.delta).toFixed(2)+' kg';});
+  if(!confirm('Baixar a matéria-prima do que já foi produzido?\n\nAjuste no estoque:\n'+linhas.join('\n')+'\n\n(−  desconta   +  devolve)'))return;
+  // 5) aplica: est.mp[k] -= delta
+  if(!d.estoque.mp)d.estoque.mp={};
+  deltas.forEach(function(x){d.estoque.mp[x.mkey]=Number(d.estoque.mp[x.mkey]||0)-x.delta;});
+  saveD(d);
+  S('allhair_mp_baixa_processo',newBase);
+  R(_aba);
+  alert('✅ Pronto! Matéria-prima baixada conforme o produzido. Confira no Estoque → Matéria-Prima.');
 }
 
 // ──────────────────────────────────────────────
