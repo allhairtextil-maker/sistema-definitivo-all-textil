@@ -3160,7 +3160,8 @@ main { padding: 24px 28px; }
       var prod=prods_at[idx];
       var ref=(prod&&prod.ref||'').toLowerCase();
       var cod=(prod&&prod.codigo||'').toLowerCase();
-      el.style.display=(txt.includes(ql)||ref.includes(ql)||cod.includes(ql))?'':'none';
+      var tec=(prod&&prod.tecidoTipo||'').toLowerCase();
+      el.style.display=(txt.includes(ql)||ref.includes(ql)||cod.includes(ql)||tec.includes(ql))?'':'none';
     });
   }
 
@@ -3266,7 +3267,7 @@ main { padding: 24px 28px; }
             id="prod-search-${i}">
           <div id="prod-drop-${i}" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--white);border:1.5px solid var(--purple);border-radius:8px;max-height:200px;overflow-y:auto;z-index:999;box-shadow:0 4px 16px rgba(0,0,0,0.12)">
             ${produtos.filter(ehAtivo).map(p=>`
-              <div onclick="selecionarProdItem(${i},'${p.id}')"
+              <div onmousedown="event.preventDefault();selecionarProdItem(${i},'${p.id}')"
                 style="padding:8px 12px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--border);display:flex;gap:8px;align-items:center"
                 onmouseover="this.style.background='var(--purple-light)'"
                 onmouseout="this.style.background=''">
@@ -3490,7 +3491,8 @@ main { padding: 24px 28px; }
     if(!entrega){alert('Informe a data de entrega!');return;}
     if(!itensTemp.length){alert('Adicione pelo menos um produto!');return;}
 
-    const itens=itensTemp.map(i=>({...i,total:Number(i.qtd||0)*Number(i.preco||0)}));
+    const itens=itensTemp.filter(i=>i.prodId).map(i=>({...i,total:Number(i.qtd||0)*Number(i.preco||0)}));
+    if(!itens.length){alert('Adicione pelo menos um produto!');return;}
     const total=itens.reduce((s,i)=>s+Number(i.total||0),0);
     const cliente=clientes.find(c=>c.id===clienteId);
     const pctNF=parseFloat(cliente?.pctNF??100);
