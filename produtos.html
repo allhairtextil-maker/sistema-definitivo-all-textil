@@ -3022,6 +3022,9 @@ window.addEventListener('mesChanged',function(){try{if(typeof renderLista==="fun
   --teal:#0d9488;         --teal-light:#ccfbf1;
   --yellow:#eab308;       --yellow-light:#fef9c3;
 }
+/* o modal cortava o conteúdo (max-height:90vh + overflow:hidden), sem rolagem —
+   não dava pra chegar nos campos de baixo nem no botão Salvar. Torna rolável. */
+#overlay-prod .modal{ max-height:90vh !important; overflow-y:auto !important; -webkit-overflow-scrolling:touch; }
 </style>
 </body>
 </html>
