@@ -156,7 +156,10 @@ td{padding:10px 14px;font-size:13px;border-bottom:1px solid var(--border);}
   <div class="tc" id="tc-agenda"><div id="agenda-wrap"></div></div>
   <div class="tc" id="tc-capacidade"><div id="cap-wrap"></div></div>
   <div class="tc" id="tc-historico">
-    <div style="display:flex;gap:6px;margin-bottom:14px" id="hist-filtros"></div>
+    <div style="display:flex;gap:6px;margin-bottom:14px;align-items:center;flex-wrap:wrap">
+      <div style="display:flex;gap:6px;flex:1" id="hist-filtros"></div>
+      <button class="btn bg2" style="font-size:12px" onclick="recalcularConsumoMP()" title="Ajusta o estoque de MP com base em tudo que já foi produzido">🔄 Recalcular consumo MP</button>
+    </div>
     <div style="background:var(--white);border:1px solid var(--border);border-radius:var(--r);overflow:hidden">
       <table><thead><tr><th>DATA</th><th>ETAPA</th><th>LOTE</th><th style="text-align:right">QTD</th><th style="text-align:center">AÇÕES</th></tr></thead>
       <tbody id="hist-body"></tbody></table>
@@ -436,6 +439,43 @@ function prodDoLancamento(d, tipo, corId, match){
   if(!p)p=d.produtos.find(function(x){return (x.tecidoTipo||'liso').toLowerCase()===tipo&&(x.cores||[]).indexOf(corId)>=0;});
   if(!p)p=d.produtos.find(function(x){return (x.tecidoTipo||'liso').toLowerCase()===tipo;});
   return p||null;
+}
+// Recalcula/aplica o consumo de MP de TODOS os lançamentos de máquina já registrados.
+// Idempotente: usa o mpUso guardado em cada registro pra estornar o antigo antes de aplicar o novo,
+// então rodar de novo não desconta duas vezes.
+function recalcularConsumoMP(){
+  var d=D();
+  var maq=d.producoes.filter(function(p){return p.etapa==='maquina'&&Number(p.kg)>0;});
+  if(!maq.length){alert('Nenhuma produção de máquina registrada.');return;}
+  function nomeCor(c){var x=d.cores.find(function(z){return z.id===c;});return x?x.nome:c;}
+  // 1) calcula o delta líquido (novo − já aplicado) por material, sem aplicar ainda
+  var net={};
+  function add(k,v){net[k]=(net[k]||0)+v;}
+  maq.forEach(function(p){
+    var antigo=p.mpUso||{ELA:0,PES_BRANCO:0,PES_PRETO:0,fios:{}};
+    var prodLote=prodDoLancamento(d,(p.tecido||'').toLowerCase(),p.corId,null);
+    var novo=calcMPUso(prodLote,p.corId,p.kg);
+    add('Elastano',(novo.ELA||0)-(antigo.ELA||0));
+    add('Fio Branco',(novo.PES_BRANCO||0)-(antigo.PES_BRANCO||0));
+    add('Fio Preto',(novo.PES_PRETO||0)-(antigo.PES_PRETO||0));
+    var cids={};Object.keys(novo.fios||{}).forEach(function(c){cids[c]=1;});Object.keys(antigo.fios||{}).forEach(function(c){cids[c]=1;});
+    Object.keys(cids).forEach(function(c){add('Fio '+nomeCor(c),(novo.fios[c]||0)-((antigo.fios||{})[c]||0));});
+  });
+  var linhas=Object.keys(net).filter(function(k){return Math.abs(net[k])>0.001;}).map(function(k){return '• '+k+': '+(net[k]>0?'−':'+')+Math.abs(net[k]).toFixed(2)+' kg';});
+  if(!linhas.length){alert('✅ Tudo já está descontado corretamente. Nada a ajustar.');return;}
+  if(!confirm('Recalcular o consumo de '+maq.length+' lançamento(s) de máquina?\n\nAjuste no estoque de MP:\n'+linhas.join('\n')+'\n\n(−  desconta do estoque   +  devolve)'))return;
+  // 2) aplica de fato: estorna o antigo e aplica o novo em cada registro
+  maq.forEach(function(p){
+    var antigo=p.mpUso||{ELA:0,PES_BRANCO:0,PES_PRETO:0,fios:{}};
+    var prodLote=prodDoLancamento(d,(p.tecido||'').toLowerCase(),p.corId,null);
+    var novo=calcMPUso(prodLote,p.corId,p.kg);
+    aplicarMP(d,antigo,+1);
+    aplicarMP(d,novo,-1);
+    p.mpUso=novo;
+    if(!p.prodId&&prodLote)p.prodId=prodLote.id;
+  });
+  saveD(d);R(_aba);
+  alert('✅ Pronto! Consumo recalculado em '+maq.length+' lançamento(s). Estoque de MP ajustado.');
 }
 
 // ──────────────────────────────────────────────
