@@ -2716,6 +2716,8 @@ table { width: 100%; border-collapse: collapse; }
     } else{document.getElementById('modal-prod-title').textContent='Novo Produto';}
     renderCoresSel();renderCorOptions();
     renderCoresModal(coresSel||[]);
+    var _ov=document.getElementById('overlay-prod');
+    if(_ov&&_ov.parentElement!==document.body)document.body.appendChild(_ov);
     document.getElementById('overlay-prod').classList.add('open');
   }
   function closeModalProd(){document.getElementById('overlay-prod').classList.remove('open');editingProdId=null;coresSel=[];}
@@ -2997,5 +2999,10 @@ function _sbTick(){var n=new Date();var t=document.getElementById('sb-time');var
 window.addEventListener('mesChanged',function(){try{if(typeof renderLista==="function")renderLista();else if(typeof render==="function")render();}catch(e){console.warn('mesChanged:',e);}});
 </script>
 
+<style id="fix-layout-margin">
+/* .main já fica depois da sidebar (flex + sidebar sticky in-flow); o margin-left:240px
+   duplicava o deslocamento (main ia pra ~472px), desalinhando a página e o modal. */
+.main{ margin-left:0 !important; }
+</style>
 </body>
 </html>
