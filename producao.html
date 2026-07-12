@@ -395,24 +395,25 @@ function saveD(d){
 function calcMPUso(prod, corId, kg){
   var uso={ELA:0,PES_BRANCO:0,PES_PRETO:0,fios:{}};
   kg=Number(kg)||0;
-  if(!prod){ uso.ELA=kg*0.20; uso.PES_BRANCO=kg*0.80; return uso; } // fallback genérico 80/20
-  var pctEla=(Number(prod.elastano)||20)/100;
-  var pctFio=(Number(prod.poliester)||80)/100;
-  var compTipo=prod.compTipo||'simples';
+  if(kg<=0)return uso;
+  var pctEla=(prod&&Number(prod.elastano)?Number(prod.elastano):20)/100;
+  var pctFio=(prod&&Number(prod.poliester)?Number(prod.poliester):80)/100;
+  var fluxo=(prod&&prod.fluxo)||'maquina_facc';
+  var compTipo=(prod&&prod.compTipo)||'';
   var temCor=corId&&corId!=='';
+  uso.ELA=kg*pctEla;
   if(compTipo==='colorido_branco'&&temCor){
-    uso.ELA+=kg*((Number(prod.elastanoColor)||0)/100);
-    uso.PES_BRANCO+=kg*((Number(prod.fioCru)||0)/100);
-    uso.fios[corId]=(uso.fios[corId]||0)+kg*((Number(prod.fioColorido)||0)/100);
-  } else if((compTipo==='colorido_puro'||compTipo==='colorido')&&temCor){
-    uso.ELA+=kg*((Number(prod.elastanoColor)||Number(prod.elastano)||20)/100);
-    uso.fios[corId]=(uso.fios[corId]||0)+kg*pctFio;
-  } else if(temCor&&(prod.cores||[]).length){
-    uso.ELA+=kg*pctEla;
-    uso.fios[corId]=(uso.fios[corId]||0)+kg*pctFio;
+    // mistura: parte fio cru (branco) + parte fio já colorido
+    var pctCru=(Number(prod.fioCru)||0)/100, pctCol=(Number(prod.fioColorido)||0)/100;
+    if(pctCru||pctCol){uso.PES_BRANCO=kg*pctCru;uso.fios[corId]=kg*pctCol;}
+    else uso.PES_BRANCO=kg*pctFio;
+    if(prod&&prod.elastanoColor)uso.ELA=kg*((Number(prod.elastanoColor))/100);
+  } else if((fluxo==='corte'||compTipo==='colorido_puro'||compTipo==='colorido')&&temCor){
+    // fio JÁ colorido (não passa pela facção) → consome o fio da cor
+    uso.fios[corId]=kg*pctFio;
   } else {
-    uso.ELA+=kg*pctEla;
-    uso.PES_BRANCO+=kg*pctFio;
+    // padrão (máquina → facção): consome FIO BRANCO; a cor entra depois, na facção
+    uso.PES_BRANCO=kg*pctFio;
   }
   return uso;
 }
