@@ -240,6 +240,9 @@ a.sl:hover,a.sl.on{background:rgba(255,255,255,.1);color:#fff;}
 // DATA
 // ──────────────────────────────────────────────
 function L(k,d){try{return JSON.parse(localStorage.getItem(k)||'null')||d;}catch(e){return d;}}
+var MODELOS_DEFAULT=[{id:'liso',nome:'Liso',emoji:'📏',cor:'#3b82f6'},{id:'meia',nome:'Meia',emoji:'🧶',cor:'#8b5cf6'},{id:'mini',nome:'Mini',emoji:'🔹',cor:'#10b981'}];
+function getModelos(){var m=L('allhair_modelos',null);return (m&&m.length)?m:MODELOS_DEFAULT.slice();}
+function modeloObj(id){var m=getModelos().find(function(x){return x.id===(id||'').toLowerCase();});return m||{id:id||'',nome:(id||'—'),emoji:'📦',cor:'#64748b'};}
 function S(k,v){localStorage.setItem(k,JSON.stringify(v));}
 function hoje(){return new Date().toISOString().split('T')[0];}
 function fmtD(d){return d?new Date(d+'T00:00').toLocaleDateString('pt-BR'):'—';}
@@ -509,17 +512,16 @@ function rProcesso(){
   wrap.innerHTML='';
 
   // ── RESUMO: total em processo por modelo (Cru + No Faccionista) ──
-  var LBL={liso:'📏 Liso',meia:'🧶 Meia',mini:'🔹 Mini'};
-  var CLR={liso:'#3b82f6',meia:'#8b5cf6',mini:'#10b981'};
   var porModelo={},totProc=0;
   Object.values(d.estoque.cru||{}).forEach(function(v){var kg=Number(v.kg||0);if(kg>0){var m=(v.tecido||'').toLowerCase();porModelo[m]=(porModelo[m]||0)+kg;totProc+=kg;}});
   d.envios.filter(function(e){return e.status==='enviado';}).forEach(function(e){var kg=Number(e.kg||0);if(kg>0){var m=(e.tipo||'').toLowerCase();porModelo[m]=(porModelo[m]||0)+kg;totProc+=kg;}});
   if(totProc>0){
-    var ordem=['liso','meia','mini'].concat(Object.keys(porModelo).filter(function(m){return['liso','meia','mini'].indexOf(m)<0;}));
+    var ordIds=getModelos().map(function(x){return x.id;});
+    var ordem=ordIds.concat(Object.keys(porModelo).filter(function(m){return ordIds.indexOf(m)<0;}));
     var cards=ordem.filter(function(m){return porModelo[m];}).map(function(m){
-      var c=CLR[m]||'#64748b';
+      var mo=modeloObj(m);var c=mo.cor;
       return '<div style="flex:1;min-width:130px;background:var(--surface,#fff);border:1px solid var(--border);border-left:4px solid '+c+';border-radius:12px;padding:12px 14px">'+
-        '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--t2)">'+(LBL[m]||m.toUpperCase())+'</div>'+
+        '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--t2)">'+mo.emoji+' '+mo.nome+'</div>'+
         '<div style="font-size:24px;font-weight:800;color:'+c+';line-height:1.1;margin-top:4px">'+porModelo[m].toFixed(2)+'<span style="font-size:13px;font-weight:700"> kg</span></div>'+
       '</div>';
     }).join('');

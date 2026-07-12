@@ -2665,10 +2665,19 @@ table { width: 100%; border-collapse: collapse; }
   }
 
   /* ===== PRODUTOS ===== */
+  function getModelosProd(){
+    try{var m=JSON.parse(localStorage.getItem('allhair_modelos')||'null');if(m&&m.length)return m;}catch(e){}
+    return [{id:'liso',nome:'Liso',emoji:'📏'},{id:'meia',nome:'Meia',emoji:'🧶'},{id:'mini',nome:'Mini',emoji:'🔹'}];
+  }
+  function fillTecidoTipo(val){
+    var s=document.getElementById('p-tecido-tipo');if(!s)return;
+    s.innerHTML=getModelosProd().map(function(m){return '<option value="'+m.id+'">'+(m.emoji?m.emoji+' ':'')+m.nome+'</option>';}).join('');
+    s.value=val||'';
+  }
   function openModalProd(id=null){
     editingProdId=id;coresSel=[];
     ['nome','codigo','rendimento','unid-pacote','qtd-caixa','preco','ean13','ean14','ncm','cest','ipi','icms','obs'].forEach(k=>{const el=document.getElementById('p-'+k);if(el)el.value='';});
-    document.getElementById('p-tecido-tipo').value='';
+    fillTecidoTipo('');
     document.getElementById('p-status').value='ativo';
     if(document.getElementById('p-tipo'))document.getElementById('p-tipo').value='pai';
     if(document.getElementById('p-ref'))document.getElementById('p-ref').value='';
@@ -2692,7 +2701,7 @@ table { width: 100%; border-collapse: collapse; }
         if(document.getElementById('p-ref'))document.getElementById('p-ref').value=p.ref||'';
         populatePaiSelect(p.produtoPai||'');
         onProdTipo();
-        document.getElementById('p-tecido-tipo').value=p.tecido||'';
+        fillTecidoTipo(p.tecidoTipo||p.tecido||'');
         if(document.getElementById('p-fluxo'))document.getElementById('p-fluxo').value=p.fluxo||'maquina_facc';
         document.getElementById('p-poliester').value=p.poliester||80;
         document.getElementById('p-elastano').value=p.elastano||20;

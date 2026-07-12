@@ -136,6 +136,7 @@ td{padding:10px 14px;font-size:13px;border-bottom:1px solid var(--border);}
       <button class="btn bbl" onclick="abrirRetorno()">📦 Retorno Facc.</button>
       <button class="btn bgr" onclick="abrirEmbalar()">📦 Embalar</button>
       <button class="btn bg2" onclick="imprimirHoje()">🖨️ Imprimir</button>
+      <button class="btn bg2" onclick="abrirModelos()">⚙️ Modelos</button>
     </div>
   </div>
 
@@ -215,6 +216,27 @@ td{padding:10px 14px;font-size:13px;border-bottom:1px solid var(--border);}
   </div>
 </div>
 
+<!-- MODAL GERENCIAR MODELOS -->
+<div class="ov" id="ov-modelos">
+  <div class="modal" style="max-width:480px">
+    <div class="mh"><h2>⚙️ Modelos de Xuxinha</h2><button class="mx" onclick="X('modelos')">×</button></div>
+    <div class="mb">
+      <div class="info-box" style="display:block;font-size:12px;margin-bottom:12px">Os modelos aparecem no <strong>Lançar Máquina</strong>, na <strong>Facção</strong> e nos relatórios. O nome do produto continua sendo cadastrado em <strong>Produtos</strong>; aqui é o tipo/modelo.</div>
+      <div id="modelos-lista"></div>
+      <div style="border-top:1px solid var(--border);margin-top:12px;padding-top:12px">
+        <div style="font-weight:700;font-size:13px;margin-bottom:8px" id="modelo-form-titulo">➕ Novo modelo</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">
+          <div class="field" style="width:64px"><label>Ícone</label><input id="mo-emoji" maxlength="2" placeholder="📦" style="text-align:center"></div>
+          <div class="field" style="flex:1;min-width:120px"><label>Nome</label><input id="mo-nome" placeholder="Ex: Grosso"></div>
+          <div class="field" style="width:64px"><label>Cor</label><input id="mo-cor" type="color" value="#f59e0b" style="padding:2px;height:38px"></div>
+        </div>
+        <input type="hidden" id="mo-id">
+      </div>
+    </div>
+    <div class="mf"><button class="btn bg2" onclick="X('modelos')">Fechar</button><button class="btn bp" onclick="salvarModelo()">💾 Salvar modelo</button></div>
+  </div>
+</div>
+
 <!-- MODAL CORRIGIR PRODUÇÃO -->
 <div class="ov" id="ov-editprod">
   <div class="modal" style="max-width:420px">
@@ -281,6 +303,68 @@ td{padding:10px 14px;font-size:13px;border-bottom:1px solid var(--border);}
 // ──────────────────────────────────────────────
 function L(k,d){try{return JSON.parse(localStorage.getItem(k)||'null')||d;}catch(e){return d;}}
 function S(k,v){localStorage.setItem(k,JSON.stringify(v));}
+
+// ── MODELOS (tecidoTipo) — configuráveis, guardados em allhair_modelos ──
+var MODELOS_DEFAULT=[
+  {id:'liso',nome:'Liso',emoji:'📏',cor:'#3b82f6'},
+  {id:'meia',nome:'Meia',emoji:'🧶',cor:'#8b5cf6'},
+  {id:'mini',nome:'Mini',emoji:'🔹',cor:'#10b981'}
+];
+function getModelos(){var m=L('allhair_modelos',null);return (m&&m.length)?m:MODELOS_DEFAULT.slice();}
+function saveModelos(m){S('allhair_modelos',m);}
+function modeloObj(id){var m=getModelos().find(function(x){return x.id===(id||'').toLowerCase();});return m||{id:id||'',nome:id||'—',emoji:'📦',cor:'#64748b'};}
+function modeloLabel(id){var m=modeloObj(id);return m.emoji+' '+m.nome;}
+function modeloCor(id){return modeloObj(id).cor;}
+function fillModelos(selId,val){
+  var s=document.getElementById(selId);if(!s)return;
+  s.innerHTML=getModelos().map(function(m){return '<option value="'+m.id+'">'+m.emoji+' '+m.nome+'</option>';}).join('');
+  if(val)s.value=val;
+}
+function _slug(s){return (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'').slice(0,20);}
+function abrirModelos(){renderModelosLista();limparModeloForm();document.getElementById('ov-modelos').classList.add('on');}
+function limparModeloForm(){document.getElementById('mo-id').value='';document.getElementById('mo-emoji').value='';document.getElementById('mo-nome').value='';document.getElementById('mo-cor').value='#f59e0b';document.getElementById('modelo-form-titulo').textContent='➕ Novo modelo';}
+function renderModelosLista(){
+  var el=document.getElementById('modelos-lista');if(!el)return;
+  el.innerHTML=getModelos().map(function(m){
+    return '<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;border-left:4px solid '+m.cor+'">'+
+      '<span style="font-size:18px">'+m.emoji+'</span>'+
+      '<span style="flex:1;font-weight:700">'+m.nome+'</span>'+
+      '<button class="btn bg2" style="padding:3px 8px;font-size:12px" onclick="editarModelo(\''+m.id+'\')">✏️</button>'+
+      '<button class="btn bg2" style="padding:3px 8px;font-size:12px;color:#dc2626;border-color:#fca5a5" onclick="excluirModelo(\''+m.id+'\')">🗑️</button>'+
+    '</div>';
+  }).join('');
+}
+function editarModelo(id){var m=modeloObj(id);document.getElementById('mo-id').value=m.id;document.getElementById('mo-emoji').value=m.emoji;document.getElementById('mo-nome').value=m.nome;document.getElementById('mo-cor').value=m.cor;document.getElementById('modelo-form-titulo').textContent='✏️ Editar modelo';}
+function salvarModelo(){
+  var nome=document.getElementById('mo-nome').value.trim();
+  if(!nome){alert('Informe o nome do modelo!');return;}
+  var emoji=document.getElementById('mo-emoji').value.trim()||'📦';
+  var cor=document.getElementById('mo-cor').value||'#64748b';
+  var editId=document.getElementById('mo-id').value;
+  var lista=getModelos();
+  if(editId){
+    var m=lista.find(function(x){return x.id===editId;});
+    if(m){m.nome=nome;m.emoji=emoji;m.cor=cor;}
+  } else {
+    var id=_slug(nome);
+    if(!id){alert('Nome inválido.');return;}
+    if(lista.some(function(x){return x.id===id;})){alert('Já existe um modelo com esse nome.');return;}
+    lista.push({id:id,nome:nome,emoji:emoji,cor:cor});
+  }
+  saveModelos(lista);renderModelosLista();limparModeloForm();
+  fillModelos('mq-tipo');fillModelos('fc-tipo');
+}
+function excluirModelo(id){
+  var lista=getModelos();
+  if(lista.length<=1){alert('Precisa ter pelo menos um modelo.');return;}
+  var d=D();
+  var usoProd=(d.producoes||[]).some(function(p){return (p.tecido||'')===id;});
+  var usoProduto=(d.produtos||[]).some(function(p){return (p.tecidoTipo||'').toLowerCase()===id;});
+  var aviso=(usoProd||usoProduto)?'\n\n⚠️ Este modelo já tem '+[usoProduto?'produtos':'',usoProd?'produção lançada':''].filter(Boolean).join(' e ')+'. Os registros antigos continuam salvos, mas o modelo some das listas.':'';
+  if(!confirm('Excluir o modelo "'+modeloObj(id).nome+'"?'+aviso))return;
+  saveModelos(lista.filter(function(x){return x.id!==id;}));
+  renderModelosLista();fillModelos('mq-tipo');fillModelos('fc-tipo');
+}
 function D(){
   var e=L('allhair_estoque_v2',{});
   if(!e.cru)e.cru={};if(!e.virado)e.virado={};if(!e.embalado)e.embalado={};
@@ -1074,8 +1158,6 @@ function rHist(){
 // ──────────────────────────────────────────────
 // ABA PRODUZIDO — lista por dia (do mês selecionado, conforme aba do mês)
 // ──────────────────────────────────────────────
-var MODELO_LABEL={liso:'📏 Liso',meia:'🧶 Meia',mini:'🔹 Mini'};
-var MODELO_COR={liso:'#3b82f6',meia:'#8b5cf6',mini:'#10b981'};
 function _mesSelYM(){
   if(window.MG&&MG.getMesAno)return MG.getMesAno();
   var n=new Date();var m=n.getMonth()+1;return n.getFullYear()+'-'+(m<10?'0'+m:m);
@@ -1084,6 +1166,14 @@ function rProduzido(){
   var d=D();
   var wrap=document.getElementById('produzido-wrap');
 
+  // "produzido" = saída da máquina. Tolerante: etapa 'maquina' OU qualquer
+  // registro com tecido+kg que NÃO seja movimentação (facção) nem embalagem.
+  function ehProducao(p){
+    if(!(Number(p.kg)>0)||!p.data)return false;
+    if(p.etapa==='envio_facc'||p.etapa==='retorno_facc'||p.etapa==='embalagem')return false;
+    return p.etapa==='maquina'||!!p.tecido;
+  }
+
   // ── MÉDIA DIÁRIA DA SEMANA ATUAL, por modelo (segunda → hoje) ──
   var hoje0=new Date();hoje0.setHours(0,0,0,0);
   var dow=(hoje0.getDay()+6)%7;                  // 0=segunda
@@ -1091,14 +1181,14 @@ function rProduzido(){
   var diasCorridos=dow+1;                         // seg..hoje
   var semKg={};
   d.producoes.forEach(function(p){
-    if(p.etapa!=='maquina'||!p.data)return;
+    if(!ehProducao(p))return;
     var dt=new Date(p.data+'T00:00');
     if(dt>=iniSem&&dt<=hoje0){var m=(p.tecido||'liso').toLowerCase();semKg[m]=(semKg[m]||0)+Number(p.kg||0);}
   });
-  var cards=['liso','meia','mini'].map(function(m){
-    var tot=semKg[m]||0;var media=tot/diasCorridos;var c=MODELO_COR[m];
+  var cards=getModelos().map(function(mo){var m=mo.id;
+    var tot=semKg[m]||0;var media=tot/diasCorridos;var c=mo.cor;
     return '<div style="flex:1;min-width:150px;background:var(--white);border:1px solid var(--border);border-left:4px solid '+c+';border-radius:var(--r);padding:14px 16px">'+
-      '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--t2)">Média/dia — '+MODELO_LABEL[m]+'</div>'+
+      '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--t2)">Média/dia — '+modeloLabel(m)+'</div>'+
       '<div style="font-size:30px;font-weight:800;color:'+c+';line-height:1.1;margin-top:5px">'+media.toFixed(1)+'<span style="font-size:14px;font-weight:700"> kg/dia</span></div>'+
       '<div style="font-size:11px;color:var(--t3);margin-top:2px">semana atual · '+tot.toFixed(1)+' kg em '+diasCorridos+' dia'+(diasCorridos>1?'s':'')+'</div>'+
     '</div>';
@@ -1107,11 +1197,18 @@ function rProduzido(){
 
   // ── LISTA POR DIA, POR MODELO (do mês selecionado) ──
   var ym=_mesSelYM();
-  var maq=d.producoes.filter(function(p){return p.etapa==='maquina'&&Number(p.kg)>0&&p.data&&p.data.substring(0,7)===ym;});
+  var maq=d.producoes.filter(function(p){return ehProducao(p)&&p.data.substring(0,7)===ym;});
   var mesLabel=(window.MG&&MG.getNome)?MG.getNome():ym;
   mesLabel=mesLabel.charAt(0).toUpperCase()+mesLabel.slice(1);
   if(!maq.length){
-    html+='<div style="text-align:center;padding:36px;color:var(--t3);background:var(--white);border:1px solid var(--border);border-radius:var(--r)">Nenhuma produção em '+mesLabel+'.</div>';
+    // dica: existe produção em outros meses?
+    var outros={};
+    d.producoes.forEach(function(p){if(ehProducao(p))outros[p.data.substring(0,7)]=(outros[p.data.substring(0,7)]||0)+Number(p.kg);});
+    var meses=Object.keys(outros).sort().reverse();
+    var dica=meses.length
+      ? '<div style="font-size:12px;color:var(--t2);margin-top:8px">Há produção registrada em: '+meses.map(function(m){var a=m.split('-');return a[1]+'/'+a[0];}).join(', ')+'. Use a barra <strong>Período</strong> no topo pra trocar o mês.</div>'
+      : '<div style="font-size:12px;color:var(--t3);margin-top:8px">Lance produção em <strong>🏭 Lançar Máquina</strong> pra aparecer aqui.</div>';
+    html+='<div style="text-align:center;padding:32px 20px;color:var(--t3);background:var(--white);border:1px solid var(--border);border-radius:var(--r)">Nenhuma produção em <strong>'+mesLabel+'</strong>.'+dica+'</div>';
     wrap.innerHTML=html;return;
   }
 
@@ -1130,9 +1227,9 @@ function rProduzido(){
       '<span style="font-weight:800;font-size:14px">📅 '+fmtD(dia)+'</span>'+
       '<span style="font-weight:800;font-size:14px;color:var(--purple)">'+dd.total.toFixed(2)+' kg</span></div>';
     Object.keys(dd.modelos).forEach(function(tipo){
-      var m=dd.modelos[tipo];var c=MODELO_COR[tipo]||'#64748b';
+      var m=dd.modelos[tipo];var c=modeloCor(tipo);
       html+='<div style="padding:8px 16px;display:flex;justify-content:space-between;align-items:center;background:'+c+'11">'+
-        '<span style="font-weight:700;font-size:12px;color:'+c+'">'+(MODELO_LABEL[tipo]||tipo)+'</span>'+
+        '<span style="font-weight:700;font-size:12px;color:'+c+'">'+modeloLabel(tipo)+'</span>'+
         '<span style="font-weight:800;font-size:12px;color:'+c+'">total '+m.total.toFixed(2)+' kg</span></div>';
       html+='<table style="width:100%"><tbody>';
       Object.keys(m.cores).sort().forEach(function(cor){
@@ -1242,6 +1339,7 @@ function maqPrev(){
   prev.style.display='block';prev.innerHTML='<strong>'+kg.toFixed(2)+'kg</strong> ≈ '+pcts+' pacotes equivalentes';
 }
 function abrirMaquina(){
+  fillModelos('mq-tipo');
   maqFillCores();document.getElementById('mq-data').value=hoje();
   document.getElementById('mq-kg').value='';document.getElementById('mq-obs').value='';
   document.getElementById('mq-prev').style.display='none';
@@ -1324,6 +1422,7 @@ function faccInfo(){
   if(kg>0)document.getElementById('fc-kg').value=kg.toFixed(2);
 }
 function abrirFacc(){
+  fillModelos('fc-tipo');
   var d=D();var sel=document.getElementById('fc-facc');
   sel.innerHTML='<option value="">— Selecionar —</option>';
   if(!d.faccionistas.length){
