@@ -2671,8 +2671,9 @@ table { width: 100%; border-collapse: collapse; }
   }
   function fillTecidoTipo(val){
     var s=document.getElementById('p-tecido-tipo');if(!s)return;
-    s.innerHTML=getModelosProd().map(function(m){return '<option value="'+m.id+'">'+(m.emoji?m.emoji+' ':'')+m.nome+'</option>';}).join('');
-    s.value=val||'';
+    var modelos=getModelosProd();
+    s.innerHTML=modelos.map(function(m){return '<option value="'+m.id+'">'+(m.emoji?m.emoji+' ':'')+m.nome+'</option>';}).join('');
+    s.value=val||(modelos[0]?modelos[0].id:'');
   }
   function openModalProd(id=null){
     editingProdId=id;coresSel=[];
@@ -2770,11 +2771,16 @@ table { width: 100%; border-collapse: collapse; }
       fluxo:document.getElementById('p-fluxo')?.value||'maquina_facc',
       cores:getSelectedCores()
     };
-    if(editingProdId){const idx=produtos.findIndex(x=>x.id===editingProdId);data.id=editingProdId;data.criadoEm=produtos[idx].criadoEm;produtos[idx]=data;}
-    else{data.id='prod_'+Date.now();data.criadoEm=new Date().toLocaleDateString('pt-BR');produtos.push(data);}
-    var coresSalvas=getSelectedCores();
-    data.cores=coresSalvas;
-    data.compTipo=document.getElementById('p-comp-tipo')?.value||'colorido_puro';
+    if(editingProdId){
+      const idx=produtos.findIndex(x=>x.id===editingProdId);
+      data.id=editingProdId;
+      data.criadoEm=(idx>=0&&produtos[idx].criadoEm)?produtos[idx].criadoEm:new Date().toLocaleDateString('pt-BR');
+      if(idx>=0)produtos[idx]=data; else produtos.push(data);
+    } else {
+      data.id='prod_'+Date.now();
+      data.criadoEm=new Date().toLocaleDateString('pt-BR');
+      produtos.push(data);
+    }
     try{save();}catch(e){alert('Erro ao salvar: '+e.message);return;}
     renderProdutos();updateCounts();closeModalProd();
   }

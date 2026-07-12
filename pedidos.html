@@ -2423,6 +2423,8 @@ main { padding: 24px 28px; }
 
   let editingId = null;
   let itensTemp = [];
+  // considera ativo salvo se não for explicitamente 'inativo' (tolera 'Ativo', vazio, ausente)
+  function ehAtivo(x){ return String((x&&x.status)||'ativo').toLowerCase()!=='inativo'; }
 
   const STATUS_ORDER = ['recebido','producao','pronto','enviado','finalizado'];
   const STATUS_LABEL = {recebido:'Recebido',producao:'Em produção',pronto:'Pronto',enviado:'Enviado',finalizado:'Finalizado'};
@@ -3020,6 +3022,46 @@ main { padding: 24px 28px; }
     saveReservas();
   }
 
+  // Baixa dos PRONTOS (embalado) conforme o pedido esteja expedido/finalizado.
+  // Idempotente: guarda em p._baixadoProntos o que já baixou; sincroniza a diferença.
+  // Chave = prodId (mesma da produção/estoque). Só avisa se faltar; não bloqueia.
+  function aplicarBaixaProntos(p){
+    if(!estoque.embalado)estoque.embalado={};
+    var shipped=['enviado','finalizado'].includes(p.status);
+    var jaBaixado=p._baixadoProntos||{};
+    var desejado={};
+    if(shipped){
+      (p.itens||[]).forEach(function(it){
+        if(!it.prodId)return;
+        desejado[it.prodId]=(desejado[it.prodId]||0)+Number(it.qtd||0);
+      });
+    }
+    var keys={};Object.keys(desejado).forEach(function(k){keys[k]=1;});Object.keys(jaBaixado).forEach(function(k){keys[k]=1;});
+    var faltou=[];
+    Object.keys(keys).forEach(function(prodId){
+      var want=desejado[prodId]||0, have=jaBaixado[prodId]||0, delta=want-have;
+      if(Math.abs(delta)<0.0001)return;
+      if(!estoque.embalado[prodId]){
+        var pr=produtos.find(function(x){return x.id===prodId;});
+        estoque.embalado[prodId]={prodId:prodId,prodNome:pr?pr.nome:'',pacotes:0};
+      }
+      var atual=Number(estoque.embalado[prodId].pacotes||0);
+      if(delta>0){                       // remover do estoque
+        var rem=Math.min(delta,atual);
+        estoque.embalado[prodId].pacotes=atual-rem;
+        jaBaixado[prodId]=have+rem;
+        if(rem<delta-0.0001){var pr2=produtos.find(function(x){return x.id===prodId;});faltou.push((pr2?pr2.nome:prodId)+' (faltam '+(delta-rem).toFixed(0)+' pct)');}
+      } else {                           // devolver ao estoque
+        estoque.embalado[prodId].pacotes=atual+(-delta);
+        jaBaixado[prodId]=want;
+      }
+    });
+    Object.keys(jaBaixado).forEach(function(k){if(!jaBaixado[k])delete jaBaixado[k];});
+    p._baixadoProntos=jaBaixado;
+    localStorage.setItem('allhair_estoque_v2',JSON.stringify(estoque));
+    return faltou;
+  }
+
   function save(){
     localStorage.setItem('allhair_pedidos', JSON.stringify(pedidos));
     // Force immediate upload to Firebasece immediate upload to Firebase
@@ -3096,7 +3138,7 @@ main { padding: 24px 28px; }
   function populateClienteSelect(val=''){
     const sel=document.getElementById('ped-cliente');
     sel.innerHTML='<option value="">— Selecionar cliente —</option>';
-    clientes.filter(c=>c.status==='ativo').forEach(c=>{
+    clientes.filter(ehAtivo).forEach(c=>{
       const o=document.createElement('option');
       o.value=c.id; o.textContent=c.nome;
       if(c.id===val) o.selected=true;
@@ -3112,7 +3154,7 @@ main { padding: 24px 28px; }
     var ql=q.toLowerCase();
     drop.style.display='';
     // Match against text AND ref codes hidden in data
-    var prods_at=produtos.filter(function(p){return p.status==='ativo';});
+    var prods_at=produtos.filter(ehAtivo);
     Array.from(drop.children).forEach(function(el, idx){
       var txt=el.textContent.toLowerCase();
       var prod=prods_at[idx];
@@ -3223,7 +3265,7 @@ main { padding: 24px 28px; }
             onblur="setTimeout(()=>fecharDropdownItem(${i}),200)"
             id="prod-search-${i}">
           <div id="prod-drop-${i}" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--white);border:1.5px solid var(--purple);border-radius:8px;max-height:200px;overflow-y:auto;z-index:999;box-shadow:0 4px 16px rgba(0,0,0,0.12)">
-            ${produtos.filter(p=>p.status==='ativo').map(p=>`
+            ${produtos.filter(ehAtivo).map(p=>`
               <div onclick="selecionarProdItem(${i},'${p.id}')"
                 style="padding:8px 12px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--border);display:flex;gap:8px;align-items:center"
                 onmouseover="this.style.background='var(--purple-light)'"
@@ -3627,7 +3669,9 @@ main { padding: 24px 28px; }
     }
 
     p.status=novoStatus;
+    var falta=aplicarBaixaProntos(p);
     save(); renderKanban(); renderLista(); openDetalhe(id);
+    if(falta&&falta.length)alert('⚠️ Estoque de prontos insuficiente para:\n• '+falta.join('\n• ')+'\n\nO pedido avançou mesmo assim; esses itens ficaram zerados no estoque.');
   }
 
   /* ===== DETALHE ===== */
@@ -4002,7 +4046,10 @@ main { padding: 24px 28px; }
 
   function setStatus(id,status){
     const p=pedidos.find(x=>x.id===id); if(!p)return;
-    p.status=status; save(); renderKanban(); renderLista(); openDetalhe(id);
+    p.status=status;
+    var falta=aplicarBaixaProntos(p);
+    save(); renderKanban(); renderLista(); openDetalhe(id);
+    if(falta&&falta.length)alert('⚠️ Estoque de prontos insuficiente para:\n• '+falta.join('\n• ')+'\n\nStatus alterado mesmo assim.');
   }
 
   function closeDetalhe(){ document.getElementById('overlay-detalhe').classList.remove('open'); }
