@@ -3003,6 +3003,25 @@ window.addEventListener('mesChanged',function(){try{if(typeof renderLista==="fun
 /* .main já fica depois da sidebar (flex + sidebar sticky in-flow); o margin-left:240px
    duplicava o deslocamento (main ia pra ~472px), desalinhando a página e o modal. */
 .main{ margin-left:0 !important; }
+/* Variáveis que o produtos.html usa mas que o design.css não define — sem elas os
+   fundos (inclusive o do modal) ficam transparentes. Mapeadas pra paleta do design. */
+:root{
+  --white:#ffffff;
+  --bg:var(--surface-2);
+  --text:var(--ink);
+  --text2:var(--ink-2);
+  --text3:var(--ink-3);
+  --border2:var(--border-2);
+  --accent:var(--purple);
+  --pink:#db2777;         --pink-light:#fce7f3;
+  --purple-light:var(--purple-bg);
+  --red-light:var(--red-bg);
+  --green-light:var(--green-bg);
+  --blue-light:var(--blue-bg);
+  --orange-light:var(--amber-bg);
+  --teal:#0d9488;         --teal-light:#ccfbf1;
+  --yellow:#eab308;       --yellow-light:#fef9c3;
+}
 </style>
 </body>
 </html>
