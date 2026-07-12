@@ -445,8 +445,14 @@ function prodDoLancamento(d, tipo, corId, match){
 // então rodar de novo não desconta duas vezes.
 function recalcularConsumoMP(){
   var d=D();
-  var maq=d.producoes.filter(function(p){return p.etapa==='maquina'&&Number(p.kg)>0;});
-  if(!maq.length){alert('Nenhuma produção de máquina registrada.');return;}
+  // tolerante: conta como produção de máquina se tem kg+tecido e NÃO é movimentação/embalagem
+  function ehProd(p){
+    if(!(Number(p.kg)>0))return false;
+    if(p.etapa==='envio_facc'||p.etapa==='retorno_facc'||p.etapa==='embalagem')return false;
+    return p.etapa==='maquina'||!!p.tecido;
+  }
+  var maq=d.producoes.filter(ehProd);
+  if(!maq.length){alert('Nenhum lançamento de produção encontrado no histórico.');return;}
   function nomeCor(c){var x=d.cores.find(function(z){return z.id===c;});return x?x.nome:c;}
   // 1) calcula o delta líquido (novo − já aplicado) por material, sem aplicar ainda
   var net={};
