@@ -3025,39 +3025,64 @@ main { padding: 24px 28px; }
   // Baixa dos PRONTOS (embalado) conforme o pedido esteja expedido/finalizado.
   // Idempotente: guarda em p._baixadoProntos o que já baixou; sincroniza a diferença.
   // Chave = prodId (mesma da produção/estoque). Só avisa se faltar; não bloqueia.
-  function aplicarBaixaProntos(p){
+  // Baixa de estoque do pedido em cascata: PRONTOS (embalado) → VIRADO → CRU.
+  // O que faltar de pronto é descontado do material em processo (virado, depois cru),
+  // pelo tecidoTipo do produto. Idempotente e reversível (estorna tudo e reaplica).
+  function aplicarBaixaEstoque(p){
     if(!estoque.embalado)estoque.embalado={};
+    if(!estoque.virado)estoque.virado={};
+    if(!estoque.cru)estoque.cru={};
+    // 1) ESTORNA tudo que este pedido já baixou (prontos + processo)
+    var jaP=p._baixadoProntos||{};
+    Object.keys(jaP).forEach(function(prodId){
+      if(!estoque.embalado[prodId])estoque.embalado[prodId]={prodId:prodId,pacotes:0};
+      estoque.embalado[prodId].pacotes=Number(estoque.embalado[prodId].pacotes||0)+jaP[prodId];
+    });
+    (p._baixadoProcesso||[]).forEach(function(b){
+      var st=estoque[b.stage]; if(!st)return;
+      if(!st[b.key])st[b.key]={tecido:b.tecido,corId:b.corId,corNome:b.corNome,kg:0};
+      st[b.key].kg=Number(st[b.key].kg||0)+b.kg;
+    });
+    p._baixadoProntos={}; p._baixadoProcesso=[];
+    var faltou=[];
     var shipped=['enviado','finalizado'].includes(p.status);
-    var jaBaixado=p._baixadoProntos||{};
-    var desejado={};
     if(shipped){
       (p.itens||[]).forEach(function(it){
         if(!it.prodId)return;
-        desejado[it.prodId]=(desejado[it.prodId]||0)+Number(it.qtd||0);
+        var prod=produtos.find(function(x){return x.id===it.prodId;});
+        var unid=(prod&&Number(prod['unid-pacote']))||1;
+        var rend=(prod&&Number(prod.rendimento))||1000;
+        var tecido=(prod&&(prod.tecidoTipo||prod.tecido)||'').toLowerCase();
+        var pacotesNec=Number(it.qtd||0); if(pacotesNec<=0)return;
+        // a) PRONTOS
+        if(!estoque.embalado[it.prodId])estoque.embalado[it.prodId]={prodId:it.prodId,prodNome:prod?prod.nome:'',pacotes:0};
+        var dispP=Number(estoque.embalado[it.prodId].pacotes||0);
+        var tirarP=Math.min(pacotesNec,dispP);
+        if(tirarP>0){estoque.embalado[it.prodId].pacotes=dispP-tirarP;p._baixadoProntos[it.prodId]=(p._baixadoProntos[it.prodId]||0)+tirarP;}
+        var restoPac=pacotesNec-tirarP;
+        if(restoPac<=0.0001)return;
+        // b) PROCESSO: virado → cru, em kg, pelo tecidoTipo (qualquer cor)
+        var kgResto=(restoPac*unid)/(rend||1000);
+        ['virado','cru'].forEach(function(stage){
+          var st=estoque[stage];
+          Object.keys(st).forEach(function(key){
+            if(kgResto<=0.0001)return;
+            var e=st[key]; if(!e)return;
+            if((e.tecido||'').toLowerCase()!==tecido)return;
+            var disp=Number(e.kg||0); if(disp<=0)return;
+            var tirar=Math.min(disp,kgResto);
+            e.kg=disp-tirar; kgResto-=tirar;
+            p._baixadoProcesso.push({stage:stage,key:key,tecido:e.tecido,corId:e.corId,corNome:e.corNome,kg:tirar});
+            if(e.kg<=0.0001)delete st[key];
+          });
+        });
+        if(kgResto>0.01){
+          var pctFalta=Math.round(kgResto*(rend||1000)/(unid||1));
+          faltou.push((prod?prod.nome:it.prodId)+' (faltam ~'+pctFalta+' pct)');
+        }
       });
     }
-    var keys={};Object.keys(desejado).forEach(function(k){keys[k]=1;});Object.keys(jaBaixado).forEach(function(k){keys[k]=1;});
-    var faltou=[];
-    Object.keys(keys).forEach(function(prodId){
-      var want=desejado[prodId]||0, have=jaBaixado[prodId]||0, delta=want-have;
-      if(Math.abs(delta)<0.0001)return;
-      if(!estoque.embalado[prodId]){
-        var pr=produtos.find(function(x){return x.id===prodId;});
-        estoque.embalado[prodId]={prodId:prodId,prodNome:pr?pr.nome:'',pacotes:0};
-      }
-      var atual=Number(estoque.embalado[prodId].pacotes||0);
-      if(delta>0){                       // remover do estoque
-        var rem=Math.min(delta,atual);
-        estoque.embalado[prodId].pacotes=atual-rem;
-        jaBaixado[prodId]=have+rem;
-        if(rem<delta-0.0001){var pr2=produtos.find(function(x){return x.id===prodId;});faltou.push((pr2?pr2.nome:prodId)+' (faltam '+(delta-rem).toFixed(0)+' pct)');}
-      } else {                           // devolver ao estoque
-        estoque.embalado[prodId].pacotes=atual+(-delta);
-        jaBaixado[prodId]=want;
-      }
-    });
-    Object.keys(jaBaixado).forEach(function(k){if(!jaBaixado[k])delete jaBaixado[k];});
-    p._baixadoProntos=jaBaixado;
+    Object.keys(p._baixadoProntos).forEach(function(k){if(!p._baixadoProntos[k])delete p._baixadoProntos[k];});
     localStorage.setItem('allhair_estoque_v2',JSON.stringify(estoque));
     return faltou;
   }
@@ -3070,11 +3095,26 @@ main { padding: 24px 28px; }
     }
   }
 
+  // Aplica a baixa em cascata no ÚLTIMO pedido finalizado (uma vez) — cobre pedidos
+  // finalizados antes desta atualização. Pedidos novos já baixam ao salvar/mudar status.
+  function reconciliarUltimoFinalizado(){
+    try{
+      var fin=pedidos.filter(function(p){return p.status==='finalizado';});
+      if(!fin.length)return;
+      fin.sort(function(a,b){var ta=parseInt(String(a.id||'').replace(/\D/g,''))||0,tb=parseInt(String(b.id||'').replace(/\D/g,''))||0;return tb-ta;});
+      var ult=fin[0];
+      if(ult && ult._baixadoProcesso===undefined){
+        aplicarBaixaEstoque(ult);
+        save();
+      }
+    }catch(e){console.error('reconciliar baixa:',e);}
+  }
   window.render = function(){
     pedidos   = JSON.parse(localStorage.getItem('allhair_pedidos')||'[]');
     clientes  = JSON.parse(localStorage.getItem('allhair_clientes')||'[]');
     produtos  = JSON.parse(localStorage.getItem('allhair_produtos')||'[]');
     cores     = JSON.parse(localStorage.getItem('allhair_cores')||'[]');
+    reconciliarUltimoFinalizado();
     try{ renderKanban(); renderLista(); }catch(e){}
   };
   function fmt(v){ return 'R$ '+Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
@@ -3556,6 +3596,7 @@ main { padding: 24px 28px; }
       var gerou=gerarOrdemProducaoAuto(data.id, itens);
       if(gerou) alert('✅ Pedido registrado!\n⚡ Ordem de produção automática gerada para o que não tem em estoque.');
     }
+    var _faltaBaixa=aplicarBaixaEstoque(data);
     try{
       save();
     }catch(e){
@@ -3570,6 +3611,7 @@ main { padding: 24px 28px; }
       return;
     }
     renderKanban(); renderLista(); closeModalPedido();
+    if(_faltaBaixa&&_faltaBaixa.length)alert('⚠️ Estoque (prontos + em processo) insuficiente para:\n• '+_faltaBaixa.join('\n• ')+'\n\nO pedido foi salvo mesmo assim.');
     // Show toast with count
     var toast=document.createElement('div');
     toast.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#10b981;color:#fff;padding:12px 24px;border-radius:12px;font-size:14px;font-weight:700;z-index:99999;box-shadow:0 4px 20px rgba(0,0,0,0.2)';
@@ -3671,7 +3713,7 @@ main { padding: 24px 28px; }
     }
 
     p.status=novoStatus;
-    var falta=aplicarBaixaProntos(p);
+    var falta=aplicarBaixaEstoque(p);
     save(); renderKanban(); renderLista(); openDetalhe(id);
     if(falta&&falta.length)alert('⚠️ Estoque de prontos insuficiente para:\n• '+falta.join('\n• ')+'\n\nO pedido avançou mesmo assim; esses itens ficaram zerados no estoque.');
   }
@@ -4049,7 +4091,7 @@ main { padding: 24px 28px; }
   function setStatus(id,status){
     const p=pedidos.find(x=>x.id===id); if(!p)return;
     p.status=status;
-    var falta=aplicarBaixaProntos(p);
+    var falta=aplicarBaixaEstoque(p);
     save(); renderKanban(); renderLista(); openDetalhe(id);
     if(falta&&falta.length)alert('⚠️ Estoque de prontos insuficiente para:\n• '+falta.join('\n• ')+'\n\nStatus alterado mesmo assim.');
   }
@@ -4417,6 +4459,7 @@ main { padding: 24px 28px; }
   });
 
   window._filtroLista='pendentes';
+  reconciliarUltimoFinalizado();
   renderKanban();
   renderLista();
 </script>
