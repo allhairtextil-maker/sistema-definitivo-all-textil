@@ -552,6 +552,7 @@ function rProcesso(){
           '<td style="font-weight:700">'+(v.corNome||'—')+'</td>'+
           '<td style="text-align:right;font-weight:800;color:var(--orange)">'+kg.toFixed(3)+'kg</td>'+
           '<td style="display:flex;gap:4px;justify-content:flex-end">'+
+            '<button class="btn bp" style="font-size:11px;padding:4px 10px" data-key="'+key+'" data-action="avancarCru">➡️ P/ Embalar</button>'+
             '<button class="btn bg2" style="font-size:11px;padding:4px 10px" data-key="'+key+'" data-kg="'+kg+'" data-action="editCru">✏️ Editar</button>'+
             '<button class="btn bred" style="font-size:11px;padding:4px 10px" data-key="'+key+'" data-action="delCru">🗑️</button>'+
           '</td></tr>';
@@ -576,6 +577,7 @@ function rProcesso(){
           '<td style="text-align:right;font-weight:800;color:var(--red)">'+Number(e.kg||0).toFixed(3)+'kg</td>'+
           '<td style="color:var(--t2);font-size:12px">'+fmtD(e.previsao)+'</td>'+
           '<td style="display:flex;gap:4px;justify-content:flex-end">'+
+            '<button class="btn bp" style="font-size:11px;padding:4px 10px" data-id="'+e.id+'" data-action="avancarFacc">➡️ P/ Embalar</button>'+
             '<button class="btn bg2" style="font-size:11px;padding:4px 10px" data-id="'+e.id+'" data-action="editFacc">✏️ Editar</button>'+
             '<button class="btn bred" style="font-size:11px;padding:4px 10px" data-id="'+e.id+'" data-action="delFacc">🗑️</button>'+
           '</td></tr>';
@@ -627,6 +629,31 @@ function apagarFacc(envId){
     S('allhair_estoque_v2',d.estoque);
     S('allhair_envios_v2',d.envios);
   }
+  R(_aba);
+}
+// ➡️ Avança um lote CRU para VIRADO (P/ Embalar)
+function avancarCru(key){
+  var d=D();
+  var v=d.estoque.cru[key];
+  if(!v||!(Number(v.kg)>0))return;
+  if(!confirm('Passar '+Number(v.kg).toFixed(3)+'kg de '+(v.tecido||'').toUpperCase()+' '+(v.corNome||'')+' para VIRADO (P/ Embalar)?'))return;
+  if(!d.estoque.virado[key])d.estoque.virado[key]={tecido:v.tecido,corId:v.corId,corNome:v.corNome,kg:0};
+  d.estoque.virado[key].kg=Number(d.estoque.virado[key].kg||0)+Number(v.kg||0);
+  delete d.estoque.cru[key];
+  S('allhair_estoque_v2',d.estoque);R(_aba);
+}
+// ➡️ Registra retorno do FACCIONISTA para VIRADO (P/ Embalar)
+function avancarFacc(envId){
+  var d=D();
+  var env=d.envios.find(function(e){return e.id===envId;});
+  if(!env)return;
+  if(!confirm('Registrar retorno de '+Number(env.kg||0).toFixed(3)+'kg de '+(env.tipo||'').toUpperCase()+' '+(env.corNome||'')+' para VIRADO (P/ Embalar)?'))return;
+  var vk=env.tipo+'_'+env.corId;
+  if(!d.estoque.virado[vk])d.estoque.virado[vk]={tecido:env.tipo,corId:env.corId,corNome:env.corNome,kg:0};
+  d.estoque.virado[vk].kg=Number(d.estoque.virado[vk].kg||0)+Number(env.kg||0);
+  d.envios=d.envios.filter(function(e){return e.id!==envId;});
+  S('allhair_estoque_v2',d.estoque);
+  S('allhair_envios_v2',d.envios);
   R(_aba);
 }
 
@@ -1002,6 +1029,8 @@ document.addEventListener('click', function(ev){
   var id=btn.dataset.id;
   if(action==='editCru') editarCru(key, parseFloat(btn.dataset.kg||0));
   else if(action==='delCru') apagarCru(key);
+  else if(action==='avancarCru') avancarCru(key);
+  else if(action==='avancarFacc') avancarFacc(id);
   else if(action==='editFacc') editarFacc(id);
   else if(action==='delFacc') apagarFacc(id);
   else if(action==='editVir') editarVirado(key, parseFloat(btn.dataset.kg||0));
